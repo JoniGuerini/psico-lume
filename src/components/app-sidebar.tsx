@@ -24,6 +24,7 @@ type AppSidebarProps = {
   activeItem: string
   onSelect: (title: string) => void
   onOpenAccount: () => void
+  onLogout: () => void
   user: {
     name: string
     email: string
@@ -35,6 +36,7 @@ export function AppSidebar({
   activeItem,
   onSelect,
   onOpenAccount,
+  onLogout,
   user,
 }: AppSidebarProps) {
   return (
@@ -101,7 +103,11 @@ export function AppSidebar({
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} onOpenAccount={onOpenAccount} />
+        <NavUser
+          user={user}
+          onOpenAccount={onOpenAccount}
+          onLogout={onLogout}
+        />
       </SidebarFooter>
     </Sidebar>
   )

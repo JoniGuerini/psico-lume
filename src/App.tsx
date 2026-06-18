@@ -5,6 +5,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { CalendarPage } from "@/components/calendar-page"
 import { HomePage } from "@/components/home-page"
 import { InboxPage } from "@/components/inbox-page"
+import { LoginPage } from "@/components/login-page"
 import { NotificationsBell } from "@/components/notifications-bell"
 import { NotificationsPage } from "@/components/notifications-page"
 import { NotificationsProvider } from "@/components/notifications-provider"
@@ -23,8 +24,18 @@ const user = {
 }
 
 export function App() {
+  const [authenticated, setAuthenticated] = useState(false)
   const [activeItem, setActiveItem] = useState("Home")
   const [accountOpen, setAccountOpen] = useState(false)
+
+  function handleLogout() {
+    setAuthenticated(false)
+    setActiveItem("Home")
+  }
+
+  if (!authenticated) {
+    return <LoginPage onLogin={() => setAuthenticated(true)} />
+  }
 
   return (
     <NotificationsProvider>
@@ -33,6 +44,7 @@ export function App() {
           activeItem={activeItem}
           onSelect={setActiveItem}
           onOpenAccount={() => setAccountOpen(true)}
+          onLogout={handleLogout}
           user={user}
         />
         <SidebarInset className="overflow-hidden">

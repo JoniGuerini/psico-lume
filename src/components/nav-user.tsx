@@ -23,6 +23,7 @@ type NavUserProps = {
     avatar: string
   }
   onOpenAccount: () => void
+  onLogout: () => void
 }
 
 function getInitials(name: string) {
@@ -34,7 +35,7 @@ function getInitials(name: string) {
     .toUpperCase()
 }
 
-export function NavUser({ user, onOpenAccount }: NavUserProps) {
+export function NavUser({ user, onOpenAccount, onLogout }: NavUserProps) {
   const { isMobile } = useSidebar()
   const initials = getInitials(user.name)
 
@@ -99,7 +100,7 @@ export function NavUser({ user, onOpenAccount }: NavUserProps) {
               Conta
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={onLogout}>
               <LogOut />
               Sair
             </DropdownMenuItem>
