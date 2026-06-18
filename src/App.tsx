@@ -1,20 +1,74 @@
-import { Button } from "@/components/ui/button"
+import { useState } from "react"
+
+import { AccountDialog } from "@/components/account-dialog"
+import { AppSidebar } from "@/components/app-sidebar"
+import { CalendarPage } from "@/components/calendar-page"
+import { HomePage } from "@/components/home-page"
+import { InboxPage } from "@/components/inbox-page"
+import { NotificationsBell } from "@/components/notifications-bell"
+import { NotificationsPage } from "@/components/notifications-page"
+import { NotificationsProvider } from "@/components/notifications-provider"
+import { PatientsPage } from "@/components/patients-page"
+import { Separator } from "@/components/ui/separator"
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
+
+const user = {
+  name: "Jonathan Guerini",
+  email: "jonathan.guerini@example.com",
+  avatar: "",
+}
 
 export function App() {
+  const [activeItem, setActiveItem] = useState("Home")
+  const [accountOpen, setAccountOpen] = useState(false)
+
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
+    <NotificationsProvider>
+      <SidebarProvider className="h-svh overflow-hidden">
+        <AppSidebar
+          activeItem={activeItem}
+          onSelect={setActiveItem}
+          onOpenAccount={() => setAccountOpen(true)}
+          user={user}
+        />
+        <SidebarInset className="overflow-hidden">
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator
+              orientation="vertical"
+              className="mr-2 data-[orientation=vertical]:h-4"
+            />
+            <h1 className="text-base font-medium">
+              {activeItem === "Notifications" ? "Notificações" : activeItem}
+            </h1>
+            <div className="ml-auto flex items-center gap-1">
+              <NotificationsBell
+                onViewAll={() => setActiveItem("Notifications")}
+              />
+            </div>
+          </header>
+          <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4">
+            {activeItem === "Home" ? (
+              <HomePage onViewAgenda={() => setActiveItem("Agenda")} />
+            ) : null}
+            {activeItem === "Inbox" ? <InboxPage /> : null}
+            {activeItem === "Agenda" ? <CalendarPage /> : null}
+            {activeItem === "Pacientes" ? <PatientsPage /> : null}
+            {activeItem === "Notifications" ? <NotificationsPage /> : null}
+          </main>
+        </SidebarInset>
+
+        <AccountDialog
+          user={user}
+          open={accountOpen}
+          onOpenChange={setAccountOpen}
+        />
+      </SidebarProvider>
+    </NotificationsProvider>
   )
 }
 

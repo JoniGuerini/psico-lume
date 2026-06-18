@@ -1,0 +1,108 @@
+import { Calendar, Home, Inbox, Users } from "lucide-react"
+
+import { NavUser } from "@/components/nav-user"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar"
+
+const items = [
+  { title: "Home", url: "#", icon: Home },
+  { title: "Inbox", url: "#", icon: Inbox },
+  { title: "Agenda", url: "#", icon: Calendar },
+  { title: "Pacientes", url: "#", icon: Users },
+]
+
+type AppSidebarProps = {
+  activeItem: string
+  onSelect: (title: string) => void
+  onOpenAccount: () => void
+  user: {
+    name: string
+    email: string
+    avatar: string
+  }
+}
+
+export function AppSidebar({
+  activeItem,
+  onSelect,
+  onOpenAccount,
+  user,
+}: AppSidebarProps) {
+  return (
+    <Sidebar variant="inset" collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              tooltip="Lume"
+              className="data-[active=true]:bg-transparent data-[active=true]:text-sidebar-foreground"
+              onClick={() => onSelect("Home")}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="!size-9 shrink-0"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M12.963 2.286a.75.75 0 0 0-1.071-.136 9.742 9.742 0 0 0-3.539 6.176 7.547 7.547 0 0 1-1.705-1.715.75.75 0 0 0-1.152-.082A9 9 0 1 0 15.68 4.534a7.46 7.46 0 0 1-2.717-2.248z"
+                  fill="#a8d5ba"
+                />
+                <path
+                  d="M15.75 14.25a3.75 3.75 0 1 1-7.313-1.172c.628.465 1.35.81 2.133 1.001a5.99 5.99 0 0 1 1.925-3.546 3.75 3.75 0 0 1 3.255 3.717z"
+                  fill="#ffffff"
+                  opacity="0.28"
+                />
+              </svg>
+              <span className="truncate text-left font-heading text-lg font-semibold">
+                Lume
+              </span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-1.5">
+              {items.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    tooltip={item.title}
+                    isActive={activeItem === item.title}
+                  >
+                    <a
+                      href={item.url}
+                      onClick={(event) => {
+                        event.preventDefault()
+                        onSelect(item.title)
+                      }}
+                    >
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter>
+        <NavUser user={user} onOpenAccount={onOpenAccount} />
+      </SidebarFooter>
+    </Sidebar>
+  )
+}

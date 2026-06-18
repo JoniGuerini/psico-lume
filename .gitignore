@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Cursor local tooling
+.cursor/
+
+# Backup local snapshot (não versionar)
+backup/
