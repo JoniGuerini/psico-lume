@@ -1,4 +1,5 @@
 import type { CalendarEvent, RescheduledFrom, SessionStatus } from "@/data/types"
+import { isBillableSession } from "@/lib/session-payment"
 
 export const DEFAULT_SESSION_STATUS: SessionStatus = "agendada"
 
@@ -108,15 +109,56 @@ export function mergeEventStatuses(
   const rescheduledById = new Map(
     previous.map((event) => [event.id, event.rescheduledFrom])
   )
+  const paidById = new Map(
+    previous.map((event) => [event.id, event.paid])
+  )
+  const paidByKey = new Map(
+    previous.map((event) => [eventStatusKey(event), event.paid])
+  )
+  const amountById = new Map(
+    previous.map((event) => [event.id, event.amount])
+  )
+  const amountByKey = new Map(
+    previous.map((event) => [eventStatusKey(event), event.amount])
+  )
+  const absenceById = new Map(
+    previous.map((event) => [event.id, event.absenceWithNotice])
+  )
+  const absenceByKey = new Map(
+    previous.map((event) => [eventStatusKey(event), event.absenceWithNotice])
+  )
 
-  return next.map((event) => ({
-    ...event,
-    status:
+  return next.map((event) => {
+    const status =
       statusById.get(event.id) ??
       statusByKey.get(eventStatusKey(event)) ??
-      getEventStatus(event),
-    rescheduledFrom: rescheduledById.get(event.id) ?? event.rescheduledFrom,
-  }))
+      getEventStatus(event)
+    const paid =
+      paidById.get(event.id) ??
+      paidByKey.get(eventStatusKey(event)) ??
+      event.paid
+    const amount =
+      amountById.get(event.id) ??
+      amountByKey.get(eventStatusKey(event)) ??
+      event.amount
+    const absenceWithNotice =
+      absenceById.get(event.id) ??
+      absenceByKey.get(eventStatusKey(event)) ??
+      event.absenceWithNotice
+
+    const merged = {
+      ...event,
+      status,
+      amount,
+      absenceWithNotice: status === "faltou" ? absenceWithNotice : undefined,
+      paid: isBillableSession({ ...event, status, absenceWithNotice })
+        ? paid
+        : undefined,
+      rescheduledFrom: rescheduledById.get(event.id) ?? event.rescheduledFrom,
+    }
+
+    return merged
+  })
 }
 
 export function seedPastSessionStatus(

@@ -2,6 +2,13 @@ export type PatientStatus = "ativo" | "em-pausa" | "lista-espera" | "alta"
 
 export type PatientModality = "presencial" | "online" | "hibrido"
 
+/** Frequência do atendimento recorrente na agenda. */
+export type SessionFrequency =
+  | "semanal"
+  | "quinzenal"
+  | "3x-mes"
+  | "4x-mes"
+
 export type PatientSchedule = {
   weekday: string
   time: string
@@ -26,8 +33,10 @@ export type Patient = {
   nextSession: string | null
   sessions: number
   since: string
-  paymentOverdue?: boolean
-  biweekly?: boolean
+  /** Frequência do horário recorrente (formulário do paciente). */
+  sessionFrequency?: SessionFrequency
+  /** null/undefined = automático pelas sessões; true/false = override manual no perfil. */
+  paymentOverdueManual?: boolean | null
   birthDate?: string
   gender?: string
   cep?: string
@@ -67,6 +76,12 @@ export type CalendarEvent = {
   start: string
   end: string
   status?: SessionStatus
+  /** Valor cobrado nesta sessão (padrão: preço do paciente). */
+  amount?: number
+  /** Sessões realizadas: false/undefined = pendente de pagamento. */
+  paid?: boolean
+  /** Faltou com aviso prévio — não gera cobrança. */
+  absenceWithNotice?: boolean
   /** Horário original antes do primeiro reagendamento por arraste. */
   rescheduledFrom?: RescheduledFrom
 }

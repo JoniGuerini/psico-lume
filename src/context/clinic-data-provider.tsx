@@ -7,7 +7,6 @@ import { buildNotifications } from "@/data/notifications"
 import {
   formatNextSession,
   getActivePatients,
-  getOverduePatients,
   getScheduledPatients,
   getTodaysAppointments,
   mockPatients,
@@ -27,6 +26,13 @@ import {
   resolveRescheduledFromAfterMove,
   resolveStatusAfterMove,
 } from "@/lib/session-status"
+import {
+  buildUnpaidSessionRows,
+  getOverdueSessionRows,
+  isBillableSession,
+  isPatientOverdue,
+  resolveEventBilling,
+} from "@/lib/session-payment"
 
 type ClinicDataContextValue = {
   patients: Patient[]
@@ -40,13 +46,22 @@ type ClinicDataContextValue = {
   weekRevenue: number
   overduePatients: Patient[]
   overdueValue: number
+  overdueSessionCount: number
   addPatient: (patient: Patient) => void
   updatePatient: (patient: Patient) => void
+  setPatientPaymentOverdueManual: (
+    patientId: string,
+    manual: boolean | null
+  ) => void
   addSessionNote: (note: SessionNote) => void
   addEvent: (event: CalendarEvent) => void
   moveEvent: (id: string, date: Date, startMinutes: number) => void
   updateEvent: (event: CalendarEvent) => void
   updateEventStatus: (id: string, status: SessionStatus) => void
+  markEventPaid: (id: string, paid?: boolean) => void
+  markAllEventsPaid: (ids: string[]) => void
+  unpaidSessions: ReturnType<typeof buildUnpaidSessionRows>
+  unpaidSessionsTotal: number
   markNotificationAsRead: (id: string) => void
   markAllNotificationsAsRead: () => void
   removeNotification: (id: string) => void
@@ -65,6 +80,22 @@ function minutesToTime(total: number) {
 function toMinutes(time: string) {
   const [hours, minutes] = time.split(":").map(Number)
   return hours * 60 + minutes
+}
+
+function findPatientById(patients: Patient[], patientId: string | undefined) {
+  if (!patientId) return undefined
+  return patients.find((patient) => patient.id === patientId)
+}
+
+function rebuildRecurringEvents(
+  patients: Patient[],
+  currentEvents: CalendarEvent[]
+) {
+  const manual = currentEvents.filter((event) => event.patientId === "")
+  return mergeEventStatuses(currentEvents, [
+    ...manual,
+    ...buildCalendarEvents(patients),
+  ])
 }
 
 function applySessionCountChange(
@@ -134,11 +165,26 @@ export function ClinicDataProvider({
       ),
     [patients]
   )
-  const overduePatients = useMemo(() => getOverduePatients(patients), [patients])
+  const overduePatients = useMemo(
+    () => patients.filter((patient) => isPatientOverdue(patient, events)),
+    [patients, events]
+  )
+  const overdueRows = useMemo(
+    () => getOverdueSessionRows(events, patients),
+    [events, patients]
+  )
   const overdueValue = useMemo(
-    () =>
-      overduePatients.reduce((sum, patient) => sum + parsePrice(patient.price), 0),
-    [overduePatients]
+    () => overdueRows.reduce((sum, row) => sum + row.amount, 0),
+    [overdueRows]
+  )
+  const overdueSessionCount = overdueRows.length
+  const unpaidSessions = useMemo(
+    () => buildUnpaidSessionRows(events, patients),
+    [events, patients]
+  )
+  const unpaidSessionsTotal = useMemo(
+    () => unpaidSessions.reduce((sum, row) => sum + row.amount, 0),
+    [unpaidSessions]
   )
 
   const value = useMemo<ClinicDataContextValue>(
@@ -154,31 +200,33 @@ export function ClinicDataProvider({
       weekRevenue,
       overduePatients,
       overdueValue,
+      overdueSessionCount,
+      unpaidSessions,
+      unpaidSessionsTotal,
       addPatient: (patient) => {
-        setPatients((current) => [patient, ...current])
-        if (patient.status === "ativo" && patient.sessionTime) {
-          setEvents((current) =>
-            mergeEventStatuses(current, [
-              ...current,
-              ...buildCalendarEvents([patient]),
-            ])
-          )
-        }
+        setPatients((current) => {
+          const next = [patient, ...current]
+          setEvents((events) => rebuildRecurringEvents(next, events))
+          return next
+        })
       },
       updatePatient: (patient) => {
         setPatients((current) => {
           const next = current.map((item) =>
             item.id === patient.id ? patient : item
           )
-          setEvents((events) => {
-            const manual = events.filter((event) => event.patientId === "")
-            return mergeEventStatuses(events, [
-              ...manual,
-              ...buildCalendarEvents(next),
-            ])
-          })
+          setEvents((events) => rebuildRecurringEvents(next, events))
           return next
         })
+      },
+      setPatientPaymentOverdueManual: (patientId, manual) => {
+        setPatients((current) =>
+          current.map((patient) =>
+            patient.id === patientId
+              ? { ...patient, paymentOverdueManual: manual }
+              : patient
+          )
+        )
       },
       addSessionNote: (note) => {
         setSessionNotes((current) => [note, ...current])
@@ -193,11 +241,22 @@ export function ClinicDataProvider({
           )
         )
       },
-      addEvent: (event) =>
+      addEvent: (event) => {
+        const patient = findPatientById(patients, event.patientId)
+        const status = event.status ?? "agendada"
+        const amount =
+          event.amount ??
+          (patient ? parsePrice(patient.price) : undefined)
+
         setEvents((current) => [
           ...current,
-          { ...event, status: event.status ?? "agendada" },
-        ]),
+          {
+            ...event,
+            status,
+            amount,
+          },
+        ])
+      },
       moveEvent: (id, date, startMinutes) => {
         setEvents((current) =>
           current.map((event) => {
@@ -214,6 +273,18 @@ export function ClinicDataProvider({
               currentStatus,
               nextStatus
             )
+            const patient = findPatientById(patients, event.patientId)
+            const billing = resolveEventBilling(
+              event,
+              {
+                date,
+                start: minutesToTime(startMinutes),
+                end: minutesToTime(startMinutes + durationMin),
+                status: nextStatus,
+                rescheduledFrom,
+              },
+              patient
+            )
 
             return {
               ...event,
@@ -222,6 +293,7 @@ export function ClinicDataProvider({
               end: minutesToTime(startMinutes + durationMin),
               status: nextStatus,
               rescheduledFrom,
+              ...billing,
             }
           })
         )
@@ -230,6 +302,12 @@ export function ClinicDataProvider({
         setEvents((current) => {
           const previous = current.find((event) => event.id === updated.id)
           if (!previous) return current
+
+          const patient = findPatientById(
+            patients,
+            updated.patientId || previous.patientId
+          )
+          const billing = resolveEventBilling(previous, updated, patient)
 
           applySessionCountChange(
             setPatients,
@@ -242,6 +320,7 @@ export function ClinicDataProvider({
             event.id === updated.id
               ? {
                   ...updated,
+                  ...billing,
                   rescheduledFrom:
                     getEventStatus(updated) === "remarcada"
                       ? updated.rescheduledFrom ?? previous.rescheduledFrom
@@ -256,6 +335,9 @@ export function ClinicDataProvider({
           const previous = current.find((event) => event.id === id)
           if (!previous || previous.status === status) return current
 
+          const patient = findPatientById(patients, previous.patientId)
+          const billing = resolveEventBilling(previous, { status }, patient)
+
           applySessionCountChange(
             setPatients,
             previous.patientId,
@@ -264,10 +346,33 @@ export function ClinicDataProvider({
           )
 
           return current.map((event) =>
-            event.id === id ? { ...event, status } : event
+            event.id === id
+              ? {
+                  ...event,
+                  status,
+                  ...billing,
+                }
+              : event
           )
         })
       },
+      markEventPaid: (id, paid = true) =>
+        setEvents((current) =>
+          current.map((event) =>
+            event.id === id && isBillableSession(event)
+              ? { ...event, paid }
+              : event
+          )
+        ),
+      markAllEventsPaid: (ids) =>
+        setEvents((current) => {
+          const idSet = new Set(ids)
+          return current.map((event) =>
+            idSet.has(event.id) && isBillableSession(event)
+              ? { ...event, paid: true }
+              : event
+          )
+        }),
       markNotificationAsRead: (id) =>
         setNotifications((current) =>
           current.map((item) =>
@@ -294,6 +399,9 @@ export function ClinicDataProvider({
       weekRevenue,
       overduePatients,
       overdueValue,
+      overdueSessionCount,
+      unpaidSessions,
+      unpaidSessionsTotal,
     ]
   )
 

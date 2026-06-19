@@ -1,14 +1,3 @@
-import { useLayoutEffect, useState } from "react"
-import { motion, useReducedMotion } from "motion/react"
-
-import {
-  LEFT_RAIL_APP_WIDTH,
-  LEFT_RAIL_LOGIN_WIDTH,
-  leftRailTransition,
-  loginHeroEnterTransition,
-  loginHeroExitTransition,
-} from "@/lib/motion-layout"
-
 function LumeMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
@@ -27,87 +16,21 @@ function LumeMark({ className }: { className?: string }) {
   )
 }
 
-function useLeftRailWidths() {
-  const [widths, setWidths] = useState<{ login: number; app: number } | null>(
-    null
-  )
-
-  useLayoutEffect(() => {
-    function measure() {
-      const probe = document.createElement("div")
-      probe.style.cssText =
-        "position:absolute;visibility:hidden;width:var(--sidebar-width,16rem);pointer-events:none"
-      document.body.appendChild(probe)
-      const app = probe.getBoundingClientRect().width
-      probe.remove()
-
-      setWidths({
-        login: window.innerWidth * 0.5,
-        app,
-      })
-    }
-
-    measure()
-    window.addEventListener("resize", measure)
-    return () => window.removeEventListener("resize", measure)
-  }, [])
-
-  return widths
-}
-
 type ShellLeftRailProps = {
-  authenticated: boolean
-  loginExiting: boolean
   children?: React.ReactNode
 }
 
-export function ShellLeftRail({
-  authenticated,
-  loginExiting,
-  children,
-}: ShellLeftRailProps) {
-  const reducedMotion = useReducedMotion()
-  const widths = useLeftRailWidths()
-
-  const railWidth = (() => {
-    if (authenticated) return 0
-    if (loginExiting) {
-      return widths?.app ?? LEFT_RAIL_APP_WIDTH
-    }
-    return widths?.login ?? LEFT_RAIL_LOGIN_WIDTH
-  })()
-
-  const snapShut = authenticated || reducedMotion
-
+export function ShellLeftRail({ children }: ShellLeftRailProps) {
   return (
-    <motion.div
-      aria-hidden={authenticated}
-      className="relative hidden h-full min-h-0 shrink-0 overflow-hidden will-change-[width] lg:block"
-      initial={false}
-      animate={{ width: railWidth }}
-      transition={snapShut ? { duration: 0 } : leftRailTransition}
-    >
-      {!authenticated ? children : null}
-    </motion.div>
+    <div className="relative hidden h-full w-1/2 shrink-0 overflow-hidden lg:block">
+      {children}
+    </div>
   )
 }
 
-type LoginHeroSlotProps = {
-  exiting?: boolean
-}
-
-export function LoginHeroSlot({ exiting = false }: LoginHeroSlotProps) {
+export function LoginHeroSlot() {
   return (
-    <motion.div
-      className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center text-sidebar-foreground"
-      initial={{ opacity: 0, x: -24 }}
-      animate={
-        exiting
-          ? { opacity: 0, x: -28, filter: "blur(6px)" }
-          : { opacity: 1, x: 0, filter: "blur(0px)" }
-      }
-      transition={exiting ? loginHeroExitTransition : loginHeroEnterTransition}
-    >
+    <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center text-sidebar-foreground">
       <div className="flex flex-col items-center gap-6">
         <LumeMark className="size-28 shrink-0 drop-shadow-lg" />
         <span className="font-heading text-6xl font-semibold tracking-tight">
@@ -121,6 +44,6 @@ export function LoginHeroSlot({ exiting = false }: LoginHeroSlotProps) {
       <p className="absolute bottom-12 text-xs text-sidebar-foreground/60">
         © {new Date().getFullYear()} Lume · Cuidado psicológico com leveza
       </p>
-    </motion.div>
+    </div>
   )
 }

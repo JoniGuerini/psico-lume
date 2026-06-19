@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { CalendarPlus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { CalendarEvent } from "@/data/types"
+import type { CalendarEvent, Patient } from "@/data/types"
+import { parsePrice } from "@/data/patients"
 import {
   durationOptions,
   fromDateInput,
@@ -25,6 +26,7 @@ import {
   toDateInput,
   toMinutes,
 } from "@/lib/session-scheduling"
+import { formatAmountInput, parseAmountInput } from "@/lib/session-payment"
 import { cn } from "@/lib/utils"
 
 type LockedPatient = {
@@ -35,6 +37,7 @@ type LockedPatient = {
 type ScheduleSessionFormProps = {
   defaults: { date: Date; start: string; duration: number }
   patientNames?: string[]
+  patients?: Patient[]
   lockedPatient?: LockedPatient
   showHeader?: boolean
   submitLabel?: string
@@ -47,6 +50,7 @@ type ScheduleSessionFormProps = {
 export function ScheduleSessionForm({
   defaults,
   patientNames = [],
+  patients = [],
   lockedPatient,
   showHeader = true,
   submitLabel = "Salvar",
@@ -61,6 +65,20 @@ export function ScheduleSessionForm({
   const [date, setDate] = useState(toDateInput(defaults.date))
   const [start, setStart] = useState(defaults.start)
   const [duration, setDuration] = useState(String(defaults.duration))
+  const [amountInput, setAmountInput] = useState("")
+
+  const selectedPatient = useMemo(() => {
+    if (lockedPatient) {
+      return patients.find((item) => item.id === lockedPatient.id)
+    }
+    return patients.find((item) => item.name === patient)
+  }, [lockedPatient, patient, patients])
+
+  useEffect(() => {
+    if (selectedPatient) {
+      setAmountInput(formatAmountInput(parsePrice(selectedPatient.price)))
+    }
+  }, [selectedPatient])
 
   function handleSelectOpenChange(open: boolean) {
     onSelectOpenChange?.(open)
@@ -72,14 +90,17 @@ export function ScheduleSessionForm({
     if (!patientName || !start) return
 
     const startMin = toMinutes(start)
+    const amount = parseAmountInput(amountInput)
+
     onSubmit({
       id: crypto.randomUUID(),
-      patientId: lockedPatient?.id ?? "",
+      patientId: lockedPatient?.id ?? selectedPatient?.id ?? "",
       title: patientName,
       date: fromDateInput(date),
       start,
       end: minutesToTime(startMin + Number(duration)),
       status: "agendada",
+      amount: amount > 0 ? amount : undefined,
     })
   }
 
@@ -182,6 +203,29 @@ export function ScheduleSessionForm({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={`${idPrefix}-amount`} className="text-xs">
+              Valor da sessão
+            </Label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                R$
+              </span>
+              <Input
+                id={`${idPrefix}-amount`}
+                value={amountInput}
+                onChange={(event) => setAmountInput(event.target.value)}
+                className={cn(sessionFieldClass, "pl-9")}
+                inputMode="decimal"
+              />
+            </div>
+            {selectedPatient ? (
+              <p className="text-xs text-muted-foreground">
+                Padrão do paciente: R$ {selectedPatient.price}
+              </p>
+            ) : null}
           </div>
         </section>
 

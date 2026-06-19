@@ -3,6 +3,7 @@ import {
   Bell,
   Calendar,
   CalendarPlus,
+  CircleDollarSign,
   Home,
   Inbox,
   Mail,
@@ -115,6 +116,15 @@ const navigationItems: GlobalSearchItem[] = [
     value: "financeiro receita pagamentos inadimplência",
     icon: Wallet,
     action: { type: "navigate", page: "Financeiro" },
+  },
+  {
+    id: "nav-a-receber",
+    group: "Navegação",
+    title: "A receber",
+    subtitle: "Sessões realizadas sem pagamento",
+    value: "a receber sessões pendentes cobrança pagamento em aberto",
+    icon: CircleDollarSign,
+    action: { type: "navigate", page: "A receber" },
   },
   {
     id: "nav-notifications",

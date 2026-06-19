@@ -9,6 +9,7 @@ import { useClinicData } from "@/context/clinic-data-provider"
 import { eventsOfDay } from "@/data/calendar"
 import { getWeekdayCode } from "@/data/patients"
 import { getEventStatus } from "@/lib/session-status"
+import { cn } from "@/lib/utils"
 
 const SESSION_DURATION = 50
 
@@ -27,17 +28,25 @@ const brl = new Intl.NumberFormat("pt-BR", {
 
 type HomePageProps = {
   onViewAgenda?: () => void
+  onViewPatients?: () => void
+  onViewAgendaWeek?: () => void
+  onViewReceivables?: () => void
 }
 
-export function HomePage({ onViewAgenda }: HomePageProps) {
+export function HomePage({
+  onViewAgenda,
+  onViewPatients,
+  onViewAgendaWeek,
+  onViewReceivables,
+}: HomePageProps) {
   const {
     patients,
     events,
     activeCount,
     scheduledCount,
     weekRevenue,
-    overduePatients,
     overdueValue,
+    overdueSessionCount,
   } = useClinicData()
 
   const today = new Date()
@@ -67,16 +76,19 @@ export function HomePage({ onViewAgenda }: HomePageProps) {
     value: string
     hint: string
     tone?: "destructive"
+    onClick?: () => void
   }[] = [
     {
       label: "Total de pacientes",
       value: String(patients.length),
       hint: `${activeCount} em acompanhamento`,
+      onClick: onViewPatients,
     },
     {
       label: "Atendimentos da semana",
       value: String(scheduledCount),
       hint: "Sessões recorrentes",
+      onClick: onViewAgendaWeek,
     },
     {
       label: "Receita da semana",
@@ -86,8 +98,9 @@ export function HomePage({ onViewAgenda }: HomePageProps) {
     {
       label: "Pagamentos em atraso",
       value: brl.format(overdueValue),
-      hint: `${overduePatients.length} pagamentos`,
+      hint: `${overdueSessionCount} ${overdueSessionCount === 1 ? "sessão" : "sessões"}`,
       tone: "destructive",
+      onClick: onViewReceivables,
     },
   ]
 
@@ -116,7 +129,27 @@ export function HomePage({ onViewAgenda }: HomePageProps) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.label} className="gap-2 bg-card p-5">
+          <Card
+            key={stat.label}
+            className={cn(
+              "gap-2 bg-card p-5",
+              stat.onClick &&
+                "cursor-pointer transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            )}
+            role={stat.onClick ? "button" : undefined}
+            tabIndex={stat.onClick ? 0 : undefined}
+            onClick={stat.onClick}
+            onKeyDown={
+              stat.onClick
+                ? (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault()
+                      stat.onClick?.()
+                    }
+                  }
+                : undefined
+            }
+          >
             <span className="text-sm text-muted-foreground">{stat.label}</span>
             <span
               className={`font-heading text-2xl font-semibold tracking-tight ${

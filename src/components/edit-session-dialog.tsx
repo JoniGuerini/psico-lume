@@ -8,8 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { useClinicData } from "@/context/clinic-data-provider"
 import type { CalendarEvent, Patient } from "@/data/types"
-import { getEventStatus, formatRescheduledFromLabel, sessionStatusConfig } from "@/lib/session-status"
+import {
+  formatRescheduledFromLabel,
+  getEventStatus,
+  sessionStatusConfig,
+} from "@/lib/session-status"
 
 type EditSessionDialogProps = {
   open: boolean
@@ -28,6 +33,7 @@ export function EditSessionDialog({
   patients,
   onSave,
 }: EditSessionDialogProps) {
+  const { markEventPaid } = useClinicData()
   const [selectOpen, setSelectOpen] = useState(false)
 
   function handleOpenChange(next: boolean) {
@@ -74,6 +80,7 @@ export function EditSessionDialog({
             onOpenChange(false)
           }}
           onCancel={() => onOpenChange(false)}
+          onMarkPaid={markEventPaid}
           onSelectOpenChange={setSelectOpen}
         />
       </DialogContent>

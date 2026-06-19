@@ -14,6 +14,8 @@ import {
   getEventStatus,
   sessionStatusConfig,
 } from "@/lib/session-status"
+import { isPatientOverdue } from "@/lib/session-payment"
+import { sessionFrequencyLabel } from "@/lib/session-frequency"
 const WEEKS_PER_MONTH = 4.33
 
 export type ClinicExportData = {
@@ -43,7 +45,10 @@ function patientNameById(patients: Patient[], id: string) {
   return patients.find((patient) => patient.id === id)?.name ?? ""
 }
 
-function buildPatientsRows(patients: Patient[]): ExportRow[] {
+function buildPatientsRows(
+  patients: Patient[],
+  events: CalendarEvent[]
+): ExportRow[] {
   return patients.map((patient) => ({
     ID: patient.id,
     Nome: patient.name,
@@ -61,8 +66,8 @@ function buildPatientsRows(patients: Patient[]): ExportRow[] {
     "Próxima sessão": patient.nextSession ?? "",
     "Sessões realizadas": patient.sessions,
     "Paciente desde": patient.since,
-    Quinzenal: patient.biweekly ? "Sim" : "Não",
-    Inadimplente: patient.paymentOverdue ? "Sim" : "Não",
+    Frequência: sessionFrequencyLabel(patient.sessionFrequency),
+    Inadimplente: isPatientOverdue(patient, events) ? "Sim" : "Não",
     "Data nascimento": patient.birthDate ?? "",
     Gênero: patient.gender ?? "",
     CEP: patient.cep ?? "",
@@ -150,7 +155,10 @@ function buildRecordsRows(patients: Patient[], sessionNotes: SessionNote[]): Exp
     }))
 }
 
-function buildFinancePatientRows(patients: Patient[]): ExportRow[] {
+function buildFinancePatientRows(
+  patients: Patient[],
+  events: CalendarEvent[]
+): ExportRow[] {
   const scheduled = patients.filter(
     (patient) => patient.status === "ativo" && patient.sessionTime
   )
@@ -171,7 +179,7 @@ function buildFinancePatientRows(patients: Patient[]): ExportRow[] {
       "Sessões realizadas": patient.sessions,
       "Receita realizada (R$)": realizedRevenue,
       "Receita prevista/mês (R$)": monthlyForecast,
-      Inadimplente: patient.paymentOverdue ? "Sim" : "Não",
+      Inadimplente: isPatientOverdue(patient, events) ? "Sim" : "Não",
       _patientStatus: patient.status,
     }
   })
@@ -219,7 +227,9 @@ function buildSummaryRows(data: ClinicExportData): ExportRow[] {  const { patien
     (sum, patient) => sum + parsePrice(patient.price) * patient.sessions,
     0
   )
-  const overduePatients = patients.filter((patient) => patient.paymentOverdue)
+  const overduePatients = patients.filter((patient) =>
+    isPatientOverdue(patient, events)
+  )
   const overdueValue = overduePatients.reduce(
     (sum, patient) => sum + parsePrice(patient.price),
     0
@@ -245,7 +255,7 @@ function buildStyledSheetConfigs(data: ClinicExportData): StyledSheetConfig[] {
     { name: "Resumo", rows: buildSummaryRows(data) },
     {
       name: "Pacientes",
-      rows: buildPatientsRows(data.patients),
+      rows: buildPatientsRows(data.patients, data.events),
       overdueColumn: "Inadimplente",
       patientStatusColumn: "Status",
       patientStatusKey: "_patientStatus",
@@ -259,7 +269,7 @@ function buildStyledSheetConfigs(data: ClinicExportData): StyledSheetConfig[] {
     { name: "Prontuário", rows: buildRecordsRows(data.patients, data.sessionNotes) },
     {
       name: "Fin. Pacientes",
-      rows: buildFinancePatientRows(data.patients),
+      rows: buildFinancePatientRows(data.patients, data.events),
       overdueColumn: "Inadimplente",
       patientStatusColumn: "Status",
       patientStatusKey: "_patientStatus",

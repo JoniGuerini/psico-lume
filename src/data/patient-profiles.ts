@@ -24,7 +24,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "1": {
     birthDate: "14/08/1992",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "01310-100",
     street: "Av. Paulista",
     number: "1578",
@@ -44,7 +44,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "2": {
     birthDate: "22/05/1988",
     gender: "Masculino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "04547-130",
     street: "Rua Funchal",
     number: "418",
@@ -64,7 +64,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "3": {
     birthDate: "03/11/1990",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "22250-040",
     street: "Rua Visconde de Pirajá",
     number: "550",
@@ -84,7 +84,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "4": {
     birthDate: "17/02/1985",
     gender: "Masculino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "05407-002",
     street: "Rua Harmonia",
     number: "123",
@@ -102,7 +102,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "5": {
     birthDate: "29/07/1995",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "30130-138",
     street: "Av. Afonso Pena",
     number: "867",
@@ -122,7 +122,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "6": {
     birthDate: "11/12/2001",
     gender: "Masculino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "04038-001",
     street: "Rua Domingos de Morais",
     number: "2564",
@@ -140,7 +140,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "7": {
     birthDate: "06/04/1993",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "88015-300",
     street: "Rua Felipe Schmidt",
     number: "390",
@@ -160,7 +160,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "8": {
     birthDate: "25/09/1987",
     gender: "Masculino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "01414-001",
     street: "Alameda Santos",
     number: "700",
@@ -178,7 +178,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "9": {
     birthDate: "18/01/1994",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "60175-047",
     street: "Av. Beira Mar",
     number: "2120",
@@ -196,7 +196,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "10": {
     birthDate: "08/06/1989",
     gender: "Masculino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "05001-100",
     street: "Rua Monte Alegre",
     number: "984",
@@ -216,7 +216,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "11": {
     birthDate: "30/03/1991",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "04543-011",
     street: "Rua Gomes de Carvalho",
     number: "1629",
@@ -234,7 +234,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "12": {
     birthDate: "12/10/1996",
     gender: "Masculino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "22410-003",
     street: "Rua Barão da Torre",
     number: "296",
@@ -255,7 +255,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "13": {
     birthDate: "21/02/1986",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "05641-000",
     street: "Rua Cardeal Arcoverde",
     number: "1745",
@@ -275,7 +275,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "14": {
     birthDate: "04/12/1993",
     gender: "Masculino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "03310-000",
     street: "Rua Vergueiro",
     number: "3185",
@@ -295,7 +295,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "15": {
     birthDate: "16/05/1984",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "22290-240",
     street: "Rua Marquês de Abrantes",
     number: "88",
@@ -316,7 +316,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "16": {
     birthDate: "09/09/1992",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "30320-300",
     street: "Rua dos Inconfidentes",
     number: "1120",
@@ -336,7 +336,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "17": {
     birthDate: "27/01/2000",
     gender: "Masculino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "04711-130",
     street: "Av. das Nações Unidas",
     number: "12901",
@@ -356,7 +356,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "18": {
     birthDate: "13/07/1988",
     gender: "Masculino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "88020-300",
     street: "Rua Jerônimo Coelho",
     number: "255",
@@ -376,7 +376,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "19": {
     birthDate: "02/04/1997",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "05424-000",
     street: "Rua Teodoro Sampaio",
     number: "1440",
@@ -396,7 +396,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "20": {
     birthDate: "19/08/1991",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "22640-102",
     street: "Av. das Américas",
     number: "500",
@@ -417,7 +417,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "21": {
     birthDate: "23/11/1986",
     gender: "Masculino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "01302-000",
     street: "Rua Augusta",
     number: "2690",
@@ -437,7 +437,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "22": {
     birthDate: "07/03/1983",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "30140-071",
     street: "Rua da Bahia",
     number: "1148",
@@ -457,7 +457,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "23": {
     birthDate: "31/10/1994",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "60165-121",
     street: "Rua Prof. Dias da Rocha",
     number: "320",
@@ -477,7 +477,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "24": {
     birthDate: "15/06/1990",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "04578-000",
     street: "Av. Engenheiro Luís Carlos Berrini",
     number: "105",
@@ -490,12 +490,14 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
     contactRelation: "Marido",
     therapyStart: "20/06/2026",
     referral: "Comunidade expatriados",
-    schedules: [],
+    schedules: [
+      { weekday: "Segunda", time: "11:00", duration: "50", modality: "online" },
+    ],
   },
   "25": {
     birthDate: "28/02/1998",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "88037-000",
     street: "Rua Lauro Linhares",
     number: "684",
@@ -508,12 +510,14 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
     contactRelation: "Mãe",
     therapyStart: "11/05/2026",
     referral: "YouTube",
-    schedules: [],
+    schedules: [
+      { weekday: "Terça", time: "14:00", duration: "50", modality: "presencial" },
+    ],
   },
   "26": {
     birthDate: "10/01/1982",
     gender: "Masculino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "22280-020",
     street: "Rua Bolívar",
     number: "45",
@@ -531,7 +535,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "27": {
     birthDate: "05/05/1993",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "01452-002",
     street: "Alameda Campinas",
     number: "457",
@@ -549,7 +553,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "28": {
     birthDate: "20/12/1996",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "30190-131",
     street: "Av. do Contorno",
     number: "6061",
@@ -567,7 +571,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "29": {
     birthDate: "01/09/1980",
     gender: "Masculino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "88015-702",
     street: "Rua Felipe Schmidt",
     number: "869",
@@ -585,7 +589,7 @@ export const PATIENT_PROFILE_EXTRAS: Record<string, PatientProfileExtras> = {
   "30": {
     birthDate: "26/04/1987",
     gender: "Feminino",
-    patientType: "Adulto",
+    patientType: "Recorrente",
     cep: "05508-000",
     street: "Av. Corifeu de Azevedo Marques",
     number: "3097",

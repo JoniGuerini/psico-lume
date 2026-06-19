@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { motion } from "motion/react"
 import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -14,11 +13,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
-import {
-  LOGIN_EXIT_HANDOFF_MS,
-  loginFormEnterTransition,
-  loginFormExitTransition,
-} from "@/lib/motion-layout"
 
 function LumeMark({ className }: { className?: string }) {
   return (
@@ -40,32 +34,21 @@ function LumeMark({ className }: { className?: string }) {
 
 type LoginFormContentProps = {
   onLogin: () => void
-  onExitStart?: () => void
 }
 
-export function LoginFormContent({
-  onLogin,
-  onExitStart,
-}: LoginFormContentProps) {
+export function LoginFormContent({ onLogin }: LoginFormContentProps) {
   const [email, setEmail] = useState("jonathan.guerini@example.com")
   const [password, setPassword] = useState("demo1234")
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(true)
   const [loading, setLoading] = useState(false)
-  const [exiting, setExiting] = useState(false)
-
-  function finishLogin() {
-    setExiting(true)
-    onExitStart?.()
-    window.setTimeout(onLogin, LOGIN_EXIT_HANDOFF_MS)
-  }
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     setLoading(true)
     window.setTimeout(() => {
       setLoading(false)
-      finishLogin()
+      onLogin()
     }, 700)
   }
 
@@ -73,24 +56,13 @@ export function LoginFormContent({
     setLoading(true)
     window.setTimeout(() => {
       setLoading(false)
-      finishLogin()
+      onLogin()
     }, 400)
   }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto p-6 text-foreground sm:p-10">
-      <motion.div
-        className="flex w-full max-w-sm flex-col gap-8"
-        initial={{ opacity: 0, y: 10 }}
-        animate={
-          exiting
-            ? { opacity: 0, y: -10, scale: 0.98 }
-            : { opacity: 1, y: 0, scale: 1 }
-        }
-        transition={
-          exiting ? loginFormExitTransition : loginFormEnterTransition
-        }
-      >
+      <div className="flex w-full max-w-sm flex-col gap-8">
         <div className="flex flex-col items-center gap-3 text-center lg:hidden">
           <LumeMark className="size-12" />
           <span className="font-heading text-2xl font-semibold">Lume</span>
@@ -233,7 +205,7 @@ export function LoginFormContent({
             Criar conta
           </button>
         </p>
-      </motion.div>
+      </div>
     </div>
   )
 }

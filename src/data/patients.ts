@@ -1,4 +1,5 @@
-import type { Patient } from "@/data/types"
+import type { CalendarEvent, Patient } from "@/data/types"
+import { isPatientOverdue } from "@/lib/session-payment"
 import {
   PATIENT_PROFILE_EXTRAS,
   buildDefaultSchedule,
@@ -29,7 +30,65 @@ export function getWeekdayCode(date: Date) {
 }
 
 export function getWeekdayIndex(code: string) {
-  return WEEKDAY_TO_INDEX[code] ?? 0
+  const normalized = normalizeWeekdayCode(code)
+  return WEEKDAY_TO_INDEX[normalized] ?? 0
+}
+
+const WEEKDAY_LABEL_TO_CODE: Record<string, string> = {
+  Segunda: "Seg",
+  Terça: "Ter",
+  Quarta: "Qua",
+  Quinta: "Qui",
+  Sexta: "Sex",
+  Sábado: "Sáb",
+  Domingo: "Dom",
+  "Segunda-feira": "Seg",
+  "Terça-feira": "Ter",
+  "Quarta-feira": "Qua",
+  "Quinta-feira": "Qui",
+  "Sexta-feira": "Sex",
+}
+
+export function normalizeWeekdayCode(value: string) {
+  if (value in WEEKDAY_TO_INDEX) return value
+  return WEEKDAY_LABEL_TO_CODE[value] ?? value
+}
+
+export type PatientRecurrenceSlot = {
+  weekdayCode: string
+  start: string
+  duration: number
+}
+
+/** Horários recorrentes do paciente ativo (schedules ou sessionDay/sessionTime). */
+export function getPatientRecurrenceSlots(patient: Patient): PatientRecurrenceSlot[] {
+  if (patient.status !== "ativo") return []
+
+  if (patient.schedules?.length) {
+    return patient.schedules
+      .filter((schedule) => schedule.time)
+      .map((schedule) => ({
+        weekdayCode: normalizeWeekdayCode(schedule.weekday),
+        start: schedule.time,
+        duration: Number(schedule.duration) || patient.sessionDuration || 50,
+      }))
+  }
+
+  if (patient.sessionDay && patient.sessionTime) {
+    return [
+      {
+        weekdayCode: normalizeWeekdayCode(patient.sessionDay),
+        start: patient.sessionTime,
+        duration: patient.sessionDuration || 50,
+      },
+    ]
+  }
+
+  return []
+}
+
+export function isScheduledPatient(patient: Patient) {
+  return patient.status === "ativo" && getPatientRecurrenceSlots(patient).length > 0
 }
 
 export function parsePrice(price: string) {
@@ -47,9 +106,6 @@ export function addMinutes(time: string, minutes: number) {
   return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`
 }
 
-export function isScheduledPatient(patient: Patient) {
-  return patient.status === "ativo" && patient.sessionTime !== ""
-}
 
 export function formatNextSession(day: string, time: string) {
   return `${day} · ${time}`
@@ -97,8 +153,12 @@ export function formatRelativeTime(date: Date) {
 }
 
 function patient(
-  data: Omit<Patient, "nextSession" | "sessionDuration" | "schedules"> & {
+  data: Omit<
+    Patient,
+    "nextSession" | "sessionDuration" | "schedules" | "sessionFrequency"
+  > & {
     sessionDuration?: number
+    sessionFrequency?: Patient["sessionFrequency"]
   }
 ): Patient {
   const sessionDuration = data.sessionDuration ?? 50
@@ -122,6 +182,7 @@ function patient(
     ...data,
     ...profile,
     sessionDuration,
+    sessionFrequency: data.sessionFrequency ?? "semanal",
     nextSession,
     schedules,
   }
@@ -191,7 +252,6 @@ export const mockPatients: Patient[] = [
     sessionTime: "",
     sessions: 31,
     since: "Fev 2024",
-    paymentOverdue: true,
   }),
   patient({
     id: "5",
@@ -272,7 +332,6 @@ export const mockPatients: Patient[] = [
     sessionTime: "",
     sessions: 9,
     since: "Jul 2025",
-    paymentOverdue: true,
   }),
   patient({
     id: "10",
@@ -354,6 +413,7 @@ export const mockPatients: Patient[] = [
     sessionDuration: 60,
     sessions: 16,
     since: "Ago 2024",
+    sessionFrequency: "4x-mes",
   }),
   patient({
     id: "15",
@@ -370,7 +430,7 @@ export const mockPatients: Patient[] = [
     sessionTime: "09:00",
     sessions: 24,
     since: "Nov 2024",
-    biweekly: true,
+    sessionFrequency: "quinzenal",
   }),
   patient({
     id: "16",
@@ -483,6 +543,7 @@ export const mockPatients: Patient[] = [
     sessionTime: "08:30",
     sessions: 19,
     since: "Abr 2024",
+    sessionFrequency: "3x-mes",
   }),
   patient({
     id: "23",
@@ -511,8 +572,8 @@ export const mockPatients: Patient[] = [
     modality: "online",
     price: "160,00",
     status: "ativo",
-    sessionDay: "",
-    sessionTime: "",
+    sessionDay: "Seg",
+    sessionTime: "11:00",
     sessions: 1,
     since: "Jun 2026",
   }),
@@ -527,8 +588,8 @@ export const mockPatients: Patient[] = [
     modality: "hibrido",
     price: "185,00",
     status: "ativo",
-    sessionDay: "",
-    sessionTime: "",
+    sessionDay: "Ter",
+    sessionTime: "14:00",
     sessions: 2,
     since: "Mai 2026",
   }),
@@ -547,7 +608,6 @@ export const mockPatients: Patient[] = [
     sessionTime: "",
     sessions: 27,
     since: "Mar 2024",
-    paymentOverdue: true,
   }),
   patient({
     id: "27",
@@ -638,6 +698,6 @@ export function getTodaysAppointments(patients: Patient[], date = new Date()) {
     .sort((a, b) => a.sessionTime.localeCompare(b.sessionTime))
 }
 
-export function getOverduePatients(patients: Patient[]) {
-  return patients.filter((patient) => patient.paymentOverdue)
+export function getOverduePatients(patients: Patient[], events: CalendarEvent[] = []) {
+  return patients.filter((patient) => isPatientOverdue(patient, events))
 }

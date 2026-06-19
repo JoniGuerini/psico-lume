@@ -1,6 +1,6 @@
-import { useLayoutEffect, useState } from "react"
+import { useState } from "react"
 import { Search } from "lucide-react"
-import { MotionConfig, motion } from "motion/react"
+import { AnimatePresence, MotionConfig, motion } from "motion/react"
 
 import { AccountDialog } from "@/components/account-dialog"
 import { AppSidebar } from "@/components/app-sidebar"
@@ -21,17 +21,14 @@ import { LoginHeroSlot, ShellLeftRail } from "@/components/shell-left-rail"
 import { ClinicDataProvider } from "@/context/clinic-data-provider"
 import { PatientsPage } from "@/components/patients-page"
 import { RoadmapPage } from "@/components/roadmap-page"
+import { UnpaidSessionsPage } from "@/components/unpaid-sessions-page"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import type { GlobalSearchAction } from "@/lib/global-search"
 import {
   LUME_MAIN_SURFACE_CLASS,
-  LOGOUT_EXIT_HANDOFF_MS,
-  shellChromeEnterTransition,
-  shellChromeExitTransition,
-  shellChromeMainHidden,
-  shellChromeVisible,
+  authFadeTransition,
 } from "@/lib/motion-layout"
 import { cn } from "@/lib/utils"
 
@@ -41,13 +38,15 @@ const user = {
   avatar: "",
 }
 
-const fillViewportPages = new Set(["Inbox", "Agenda", "Pacientes", "Notifications"])
+const fillViewportPages = new Set([
+  "Inbox",
+  "Agenda",
+  "Pacientes",
+  "Notifications",
+])
 
 export function App() {
   const [authenticated, setAuthenticated] = useState(false)
-  const [loginExiting, setLoginExiting] = useState(false)
-  const [logoutExiting, setLogoutExiting] = useState(false)
-  const [appChromeEnter, setAppChromeEnter] = useState(false)
   const [activeItem, setActiveItem] = useState("Home")
   const [accountOpen, setAccountOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -59,19 +58,14 @@ export function App() {
   const [emailFocus, setEmailFocus] = useState<string | null>(null)
   const [openNewPatient, setOpenNewPatient] = useState(false)
   const [openNewSession, setOpenNewSession] = useState(false)
+  const [receivablesFilter, setReceivablesFilter] = useState<
+    "todas" | "atraso"
+  >("todas")
+  const [calendarView, setCalendarView] = useState<"mes" | "semana" | "dia">(
+    "mes"
+  )
 
   useGlobalSearchShortcut(() => setSearchOpen(true))
-
-  useLayoutEffect(() => {
-    if (!authenticated) {
-      setAppChromeEnter(false)
-      return
-    }
-
-    setAppChromeEnter(false)
-    const frame = requestAnimationFrame(() => setAppChromeEnter(true))
-    return () => cancelAnimationFrame(frame)
-  }, [authenticated])
 
   function handleNavigate(page: string) {
     setActiveItem(page)
@@ -80,6 +74,29 @@ export function App() {
     setEmailFocus(null)
     setOpenNewPatient(false)
     setOpenNewSession(false)
+    setReceivablesFilter("todas")
+    setCalendarView("mes")
+  }
+
+  function handleViewAgendaWeek() {
+    setPatientFocus(null)
+    setEventFocus(null)
+    setEmailFocus(null)
+    setOpenNewPatient(false)
+    setOpenNewSession(false)
+    setReceivablesFilter("todas")
+    setCalendarView("semana")
+    setActiveItem("Agenda")
+  }
+
+  function handleViewReceivables() {
+    setPatientFocus(null)
+    setEventFocus(null)
+    setEmailFocus(null)
+    setOpenNewPatient(false)
+    setOpenNewSession(false)
+    setReceivablesFilter("atraso")
+    setActiveItem("A receber")
   }
 
   function handleSearchSelect(action: GlobalSearchAction) {
@@ -138,20 +155,16 @@ export function App() {
 
   function handleLogin() {
     setAuthenticated(true)
-    setLoginExiting(false)
   }
 
   function handleLogout() {
-    setLogoutExiting(true)
-    window.setTimeout(() => {
-      setAuthenticated(false)
-      setLogoutExiting(false)
-      setLoginExiting(false)
-      setActiveItem("Home")
-      setPatientFocus(null)
-      setEventFocus(null)
-      setEmailFocus(null)
-    }, LOGOUT_EXIT_HANDOFF_MS)
+    setAuthenticated(false)
+    setActiveItem("Home")
+    setPatientFocus(null)
+    setEventFocus(null)
+    setEmailFocus(null)
+    setAccountOpen(false)
+    setSearchOpen(false)
   }
 
   return (
@@ -163,51 +176,45 @@ export function App() {
             showGlow={false}
             className="relative z-10 h-svh overflow-hidden !bg-transparent"
           >
-            <ShellLeftRail
-              authenticated={authenticated}
-              loginExiting={loginExiting}
-            >
-              <LoginHeroSlot exiting={loginExiting} />
-            </ShellLeftRail>
-
-            {authenticated ? (
-              <AppSidebar
-                chromeEnter={appChromeEnter}
-                chromeExiting={logoutExiting}
-                activeItem={activeItem}
-                onSelect={handleNavigate}
-                onOpenAccount={() => setAccountOpen(true)}
-                onLogout={handleLogout}
-                user={user}
-              />
-            ) : null}
-
-            <main
-              data-slot="sidebar-inset"
-              className={LUME_MAIN_SURFACE_CLASS}
-            >
+            <AnimatePresence mode="wait" initial={false}>
               {!authenticated ? (
-                <LoginFormContent
-                  onExitStart={() => setLoginExiting(true)}
-                  onLogin={handleLogin}
-                />
+                <motion.div
+                  key="login-shell"
+                  className="flex h-svh min-h-0 w-full overflow-hidden"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={authFadeTransition}
+                >
+                  <ShellLeftRail>
+                    <LoginHeroSlot />
+                  </ShellLeftRail>
+                  <main
+                    data-slot="sidebar-inset"
+                    className={LUME_MAIN_SURFACE_CLASS}
+                  >
+                    <LoginFormContent onLogin={handleLogin} />
+                  </main>
+                </motion.div>
               ) : (
-                <>
-                  <motion.div
-                    className="flex min-h-0 flex-1 flex-col overflow-hidden"
-                    initial={false}
-                    animate={
-                      logoutExiting
-                        ? shellChromeMainHidden
-                        : appChromeEnter
-                          ? shellChromeVisible
-                          : shellChromeMainHidden
-                    }
-                    transition={
-                      logoutExiting
-                        ? shellChromeExitTransition
-                        : shellChromeEnterTransition
-                    }
+                <motion.div
+                  key="app-shell"
+                  className="flex h-svh min-h-0 w-full overflow-hidden"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={authFadeTransition}
+                >
+                  <AppSidebar
+                    activeItem={activeItem}
+                    onSelect={handleNavigate}
+                    onOpenAccount={() => setAccountOpen(true)}
+                    onLogout={handleLogout}
+                    user={user}
+                  />
+                  <main
+                    data-slot="sidebar-inset"
+                    className={LUME_MAIN_SURFACE_CLASS}
                   >
                     <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
                       <SidebarTrigger className="-ml-1" />
@@ -247,6 +254,9 @@ export function App() {
                       {activeItem === "Home" ? (
                         <HomePage
                           onViewAgenda={() => handleNavigate("Agenda")}
+                          onViewPatients={() => handleNavigate("Pacientes")}
+                          onViewAgendaWeek={handleViewAgendaWeek}
+                          onViewReceivables={handleViewReceivables}
                         />
                       ) : null}
                       {activeItem === "Inbox" ? (
@@ -255,6 +265,7 @@ export function App() {
                       {activeItem === "Agenda" ? (
                         <CalendarPage
                           initialEventId={eventFocus}
+                          initialView={calendarView}
                           openNewSession={openNewSession}
                           onNewSessionOpenChange={setOpenNewSession}
                         />
@@ -268,12 +279,21 @@ export function App() {
                         />
                       ) : null}
                       {activeItem === "Financeiro" ? <FinancePage /> : null}
+                      {activeItem === "A receber" ? (
+                        <UnpaidSessionsPage
+                          initialFilter={receivablesFilter}
+                          onOpenPatient={(patientId) => {
+                            setPatientFocus({ id: patientId })
+                            setActiveItem("Pacientes")
+                          }}
+                        />
+                      ) : null}
                       {activeItem === "Roadmap" ? <RoadmapPage /> : null}
                       {activeItem === "Notifications" ? (
                         <NotificationsPage />
                       ) : null}
                     </main>
-                  </motion.div>
+                  </main>
 
                   <GlobalSearchDialog
                     open={searchOpen}
@@ -286,9 +306,9 @@ export function App() {
                     open={accountOpen}
                     onOpenChange={setAccountOpen}
                   />
-                </>
+                </motion.div>
               )}
-            </main>
+            </AnimatePresence>
           </SidebarProvider>
         </ClinicDataProvider>
       </div>

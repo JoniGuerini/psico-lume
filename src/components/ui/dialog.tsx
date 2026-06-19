@@ -2,6 +2,7 @@ import * as React from "react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
+import { preventDialogDismissIfNeeded, shouldPreventDialogOutsideDismiss } from "@/lib/dialog-outside-guard"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
@@ -49,6 +50,10 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  onPointerDownOutside,
+  onInteractOutside,
+  onFocusOutside,
+  onEscapeKeyDown,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
@@ -63,6 +68,31 @@ function DialogContent({
           className
         )}
         {...props}
+        onPointerDownOutside={(event) => {
+          preventDialogDismissIfNeeded(event)
+          if (!event.defaultPrevented) {
+            onPointerDownOutside?.(event)
+          }
+        }}
+        onInteractOutside={(event) => {
+          preventDialogDismissIfNeeded(event)
+          if (!event.defaultPrevented) {
+            onInteractOutside?.(event)
+          }
+        }}
+        onFocusOutside={(event) => {
+          preventDialogDismissIfNeeded(event)
+          if (!event.defaultPrevented) {
+            onFocusOutside?.(event)
+          }
+        }}
+        onEscapeKeyDown={(event) => {
+          if (shouldPreventDialogOutsideDismiss({ target: null })) {
+            event.preventDefault()
+            return
+          }
+          onEscapeKeyDown?.(event)
+        }}
       >
         {children}
         {showCloseButton && (

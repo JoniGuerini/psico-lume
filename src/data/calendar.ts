@@ -1,26 +1,63 @@
 import {
   addDays,
   addMinutes,
+  getPatientRecurrenceSlots,
   getWeekdayIndex,
   isSameDay,
+  parsePrice,
 } from "@/data/patients"
 import type { CalendarEvent, Patient } from "@/data/types"
 import {
   DEFAULT_SESSION_STATUS,
   seedPastSessionStatus,
 } from "@/lib/session-status"
+import { seedAbsenceWithNotice, seedSessionPaid } from "@/lib/session-payment"
+import { shouldIncludeRecurringDate } from "@/lib/session-frequency"
 
-function getIsoWeek(date: Date) {
-  const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-  const day = copy.getDay() || 7
-  copy.setDate(copy.getDate() + 4 - day)
-  const yearStart = new Date(copy.getFullYear(), 0, 1)
-  return Math.ceil(((copy.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7)
+/** Janela da agenda: ~3 meses passados e 12 meses à frente. */
+export const CALENDAR_PAST_DAYS = 90
+export const CALENDAR_FUTURE_DAYS = 365
+
+function recurringEventId(patientId: string, date: Date, start: string) {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, "0")
+  const d = String(date.getDate()).padStart(2, "0")
+  return `rec-${patientId}-${y}-${m}-${d}-${start}`
 }
 
-function shouldIncludeBiweekly(patient: Patient, date: Date, anchor: Date) {
-  if (!patient.biweekly) return true
-  return getIsoWeek(date) % 2 === getIsoWeek(anchor) % 2
+function buildEventForSlot(
+  patient: Patient,
+  eventDate: Date,
+  start: string,
+  duration: number,
+  todayStart: Date
+): CalendarEvent {
+  const end = addMinutes(start, duration)
+  const status =
+    eventDate < todayStart
+      ? seedPastSessionStatus(patient.id, eventDate)
+      : DEFAULT_SESSION_STATUS
+
+  const absenceWithNotice =
+    status === "faltou"
+      ? seedAbsenceWithNotice(patient.id, eventDate)
+      : undefined
+  const billable =
+    status === "realizada" ||
+    (status === "faltou" && absenceWithNotice !== true)
+
+  return {
+    id: recurringEventId(patient.id, eventDate, start),
+    patientId: patient.id,
+    title: patient.name,
+    date: eventDate,
+    start,
+    end,
+    status,
+    amount: billable ? parsePrice(patient.price) : undefined,
+    absenceWithNotice,
+    paid: billable ? seedSessionPaid(patient.id, eventDate) : undefined,
+  }
 }
 
 export function buildCalendarEvents(
@@ -28,10 +65,9 @@ export function buildCalendarEvents(
   anchor = new Date()
 ): CalendarEvent[] {
   const events: CalendarEvent[] = []
-  let id = 1
 
-  const rangeStart = addDays(anchor, -14)
-  const rangeEnd = addDays(anchor, 35)
+  const rangeStart = addDays(anchor, -CALENDAR_PAST_DAYS)
+  const rangeEnd = addDays(anchor, CALENDAR_FUTURE_DAYS)
   const todayStart = new Date(
     anchor.getFullYear(),
     anchor.getMonth(),
@@ -39,41 +75,44 @@ export function buildCalendarEvents(
   )
 
   for (const patient of patients) {
-    if (patient.status !== "ativo" || !patient.sessionTime || !patient.sessionDay) {
-      continue
-    }
+    const slots = getPatientRecurrenceSlots(patient)
+    if (slots.length === 0) continue
 
-    const targetDay = getWeekdayIndex(patient.sessionDay)
+    for (const slot of slots) {
+      const targetDay = getWeekdayIndex(slot.weekdayCode)
 
-    for (
-      let cursor = new Date(rangeStart);
-      cursor <= rangeEnd;
-      cursor = addDays(cursor, 1)
-    ) {
-      if (cursor.getDay() !== targetDay) continue
-      if (!shouldIncludeBiweekly(patient, cursor, anchor)) continue
+      for (
+        let cursor = new Date(rangeStart);
+        cursor <= rangeEnd;
+        cursor = addDays(cursor, 1)
+      ) {
+        if (cursor.getDay() !== targetDay) continue
+        if (
+          !shouldIncludeRecurringDate(
+            patient.sessionFrequency,
+            cursor,
+            anchor
+          )
+        ) {
+          continue
+        }
 
-      const start = patient.sessionTime
-      const end = addMinutes(start, patient.sessionDuration)
-      const eventDate = new Date(
-        cursor.getFullYear(),
-        cursor.getMonth(),
-        cursor.getDate()
-      )
-      const status =
-        eventDate < todayStart
-          ? seedPastSessionStatus(patient.id, eventDate)
-          : DEFAULT_SESSION_STATUS
+        const eventDate = new Date(
+          cursor.getFullYear(),
+          cursor.getMonth(),
+          cursor.getDate()
+        )
 
-      events.push({
-        id: String(id++),
-        patientId: patient.id,
-        title: patient.name,
-        date: eventDate,
-        start,
-        end,
-        status,
-      })
+        events.push(
+          buildEventForSlot(
+            patient,
+            eventDate,
+            slot.start,
+            slot.duration,
+            todayStart
+          )
+        )
+      }
     }
   }
 

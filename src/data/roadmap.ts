@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react"
 import {
   Calendar,
+  CircleDollarSign,
   ClipboardList,
   Database,
   LayoutDashboard,
@@ -29,7 +30,7 @@ export const ROADMAP_META = {
   versionLabel: "v1.0 — Produto mock completo",
   subtitle:
     "Fechar a experiência clínica end-to-end com dados mockados. Backend e persistência entram só depois.",
-  progress: 98,
+  progress: 96,
 }
 
 export const roadmapItems: RoadmapItem[] = [
@@ -194,14 +195,34 @@ export const roadmapItems: RoadmapItem[] = [
     tags: ["Gestão", "Entregue"],
   },
   {
+    id: "unpaid-sessions",
+    title: "Sessões a receber",
+    description:
+      "Página consolidada de sessões realizadas não pagas, filtros, marcar como paga, navegação na Home e pagamento por sessão no evento.",
+    icon: CircleDollarSign,
+    status: "done",
+    phase: "v1.0",
+    tags: ["Financeiro", "Entregue"],
+  },
+  {
+    id: "login-transition",
+    title: "Transição login → app",
+    description:
+      "Motion com morph do painel creme, trilho animado e entrada sincronizada da sidebar e do conteúdo principal.",
+    icon: LayoutDashboard,
+    status: "done",
+    phase: "v1.0",
+    tags: ["UX", "Entregue"],
+  },
+  {
     id: "finance-agenda",
     title: "Agenda ↔ Financeiro",
     description:
-      "Sessão confirmada gera cobrança; inadimplência reflete no dashboard e no perfil.",
+      "Cobrança por status (realizada / faltou sem aviso), valor por sessão, atraso após o mês, inadimplência automática com override no perfil, Financeiro e Home com dados reais.",
     icon: Wallet,
-    status: "next",
+    status: "done",
     phase: "v1.0",
-    tags: ["Financeiro"],
+    tags: ["Financeiro", "Agenda", "Entregue"],
   },
   {
     id: "global-search",

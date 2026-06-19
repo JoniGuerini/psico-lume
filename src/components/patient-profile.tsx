@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   CalendarDays,
   CalendarPlus,
+  CheckCircle2,
   ClipboardList,
   Clock,
   CreditCard,
@@ -27,12 +28,31 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useClinicData } from "@/context/clinic-data-provider"
 import { getRecordsForPatient } from "@/data/clinical-records"
-import { getInitials, parsePrice } from "@/data/patients"
-import type { Patient } from "@/data/types"
+import { getInitials } from "@/data/patients"
+import type { CalendarEvent, Patient } from "@/data/types"
+import { getPatientBillableSummary } from "@/lib/finance-metrics"
+import {
+  getSessionAmount,
+  isPatientOverdue,
+  isSessionPaymentOverdue,
+} from "@/lib/session-payment"
+import { sessionFrequencyLabel } from "@/lib/session-frequency"
 import { cn } from "@/lib/utils"
+
+const brl = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+})
 
 type PatientProfileTab = "overview" | "sessions" | "records"
 
@@ -92,7 +112,15 @@ export function PatientProfile({
   onBack,
   initialTab = "overview",
 }: PatientProfileProps) {
-  const { sessionNotes, updatePatient, addEvent, events } = useClinicData()
+  const {
+    sessionNotes,
+    updatePatient,
+    addEvent,
+    events,
+    patients,
+    markEventPaid,
+    setPatientPaymentOverdueManual,
+  } = useClinicData()
   const [tab, setTab] = useState(initialTab)
   const [editOpen, setEditOpen] = useState(false)
   const [scheduleOpen, setScheduleOpen] = useState(false)
@@ -105,9 +133,6 @@ export function PatientProfile({
     [events, patient.id]
   )
   const status = statusConfig[patient.status]
-  const totalEstimated = patient.price
-    ? parsePrice(patient.price) * patient.sessions
-  : 0
 
   const address = [
     patient.street && patient.number
@@ -222,7 +247,9 @@ export function PatientProfile({
         <PatientOverview
           patient={patient}
           address={address}
-          totalEstimated={totalEstimated}
+          events={events}
+          onMarkPaid={markEventPaid}
+          onSetPaymentOverdueManual={setPatientPaymentOverdueManual}
         />
       ) : tab === "sessions" ? (
         <PatientSessionsTab patient={patient} />
@@ -241,6 +268,7 @@ export function PatientProfile({
         open={scheduleOpen}
         onOpenChange={setScheduleOpen}
         patient={patient}
+        patients={patients}
         onSchedule={addEvent}
       />
     </div>
@@ -250,12 +278,31 @@ export function PatientProfile({
 function PatientOverview({
   patient,
   address,
-  totalEstimated,
+  events,
+  onMarkPaid,
+  onSetPaymentOverdueManual,
 }: {
   patient: Patient
   address: string
-  totalEstimated: number
+  events: CalendarEvent[]
+  onMarkPaid: (id: string, paid?: boolean) => void
+  onSetPaymentOverdueManual: (patientId: string, manual: boolean | null) => void
 }) {
+  const billing = useMemo(
+    () => getPatientBillableSummary(patient.id, events, patient),
+    [patient, events]
+  )
+  const overdue = useMemo(
+    () => isPatientOverdue(patient, events),
+    [patient, events]
+  )
+  const manualValue =
+    patient.paymentOverdueManual === true
+      ? "overdue"
+      : patient.paymentOverdueManual === false
+        ? "clear"
+        : "auto"
+
   return (
     <div className="grid gap-4 lg:grid-cols-2">
         <Section title="Dados pessoais" icon={User}>
@@ -315,6 +362,10 @@ function PatientOverview({
 
         <Section title="Horários" icon={Clock} className="lg:col-span-2">
           <div className="grid gap-x-6 gap-y-4 sm:grid-cols-3">
+            <Field
+              label="Frequência"
+              value={sessionFrequencyLabel(patient.sessionFrequency)}
+            />
             <Field label="Dia da sessão" value={patient.sessionDay} />
             <Field label="Horário" value={patient.sessionTime} />
             <Field label="Próxima sessão" value={patient.nextSession} />
@@ -364,21 +415,91 @@ function PatientOverview({
               value={patient.price ? `R$ ${patient.price}` : undefined}
             />
             <Field
-              label="Sessões realizadas"
-              value={String(patient.sessions)}
+              label="Recebido"
+              value={brl.format(billing.paidTotal)}
             />
             <Field
-              label="Total estimado"
-              value={
-                patient.price
-                  ? totalEstimated.toLocaleString("pt-BR", {
-                      style: "currency",
-                      currency: "BRL",
-                    })
-                  : undefined
-              }
+              label="A receber"
+              value={brl.format(billing.unpaidTotal)}
             />
           </div>
+
+          <div className="flex flex-col gap-2 pt-2">
+            <span className="text-xs font-medium text-muted-foreground">
+              Status de inadimplência
+            </span>
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge
+                variant="outline"
+                className={cn(
+                  "border-border bg-background/40",
+                  overdue && "border-destructive/40 text-destructive"
+                )}
+              >
+                {overdue ? "Inadimplente" : "Em dia"}
+              </Badge>
+              <Select
+                value={manualValue}
+                onValueChange={(value) => {
+                  const manual =
+                    value === "overdue"
+                      ? true
+                      : value === "clear"
+                        ? false
+                        : null
+                  onSetPaymentOverdueManual(patient.id, manual)
+                }}
+              >
+                <SelectTrigger className="h-8 w-full max-w-xs border-border bg-background/40 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Automático (por sessões)</SelectItem>
+                  <SelectItem value="overdue">Marcar inadimplente</SelectItem>
+                  <SelectItem value="clear">Marcar em dia</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {billing.unpaidSessions.length > 0 ? (
+            <div className="flex flex-col gap-2 pt-4">
+              <span className="text-xs font-medium text-muted-foreground">
+                Sessões pendentes
+              </span>
+              <div className="flex flex-col gap-2">
+                {billing.unpaidSessions.map((session) => {
+                  const amount = getSessionAmount(session, patient)
+                  const sessionOverdue = isSessionPaymentOverdue(session)
+                  return (
+                    <div
+                      key={session.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-background/40 px-4 py-3"
+                    >
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <span className="text-sm font-medium">
+                          {session.date.toLocaleDateString("pt-BR")}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {brl.format(amount)}
+                          {sessionOverdue ? " · em atraso" : ""}
+                        </span>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onMarkPaid(session.id, true)}
+                      >
+                        <CheckCircle2 className="size-3.5" />
+                        Marcar paga
+                      </Button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ) : null}
         </Section>
       </div>
   )

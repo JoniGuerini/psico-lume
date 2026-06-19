@@ -47,7 +47,7 @@ export function NavUser({ user, onOpenAccount, onLogout }: NavUserProps) {
             <SidebarMenuButton
               size="lg"
               tooltip={user.name}
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:[&>div]:hidden group-data-[collapsible=icon]:[&>svg:last-child]:hidden"
             >
               <Avatar className="size-8 rounded-lg after:rounded-lg">
                 <AvatarImage

@@ -20,7 +20,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useClinicData } from "@/context/clinic-data-provider"
 import { eventsOfDay } from "@/data/calendar"
 import { addDays, isSameDay } from "@/data/patients"
-import type { CalendarEvent } from "@/data/types"
+import type { CalendarEvent, Patient } from "@/data/types"
 import { minutesToTime, toMinutes } from "@/lib/session-scheduling"
 import { getEventStatus, sessionStatusConfig } from "@/lib/session-status"
 import { cn } from "@/lib/utils"
@@ -82,6 +82,7 @@ type TimeGridProps = {
   days: Date[]
   events: CalendarEvent[]
   patientNames: string[]
+  patients: Patient[]
   onSelectDay: (date: Date) => void
   onCreate: (event: CalendarEvent) => void
   onMoveEvent: (id: string, date: Date, startMinutes: number) => void
@@ -92,6 +93,7 @@ function TimeGrid({
   days,
   events,
   patientNames,
+  patients,
   onSelectDay,
   onCreate,
   onMoveEvent,
@@ -420,6 +422,7 @@ function TimeGrid({
           <ScheduleSessionForm
             key={`${draft.dayIndex}-${draft.startMin}`}
             patientNames={patientNames}
+            patients={patients}
             defaults={{
               date: days[draft.dayIndex],
               start: minutesToTime(draft.startMin),
@@ -441,6 +444,7 @@ function TimeGrid({
 type NewSessionPopoverProps = {
   selectedDate: Date
   patientNames: string[]
+  patients: Patient[]
   onCreate: (event: CalendarEvent) => void
   align?: "start" | "center" | "end"
   open?: boolean
@@ -451,6 +455,7 @@ type NewSessionPopoverProps = {
 function NewSessionPopover({
   selectedDate,
   patientNames,
+  patients,
   onCreate,
   align = "end",
   open: controlledOpen,
@@ -489,6 +494,7 @@ function NewSessionPopover({
         {open ? (
           <ScheduleSessionForm
             patientNames={patientNames}
+            patients={patients}
             defaults={{ date: selectedDate, start: "09:00", duration: 50 }}
             onSubmit={(event) => {
               onCreate(event)
@@ -505,10 +511,12 @@ function NewSessionPopover({
 
 export function CalendarPage({
   initialEventId = null,
+  initialView = "mes",
   openNewSession = false,
   onNewSessionOpenChange,
 }: {
   initialEventId?: string | null
+  initialView?: "mes" | "semana" | "dia"
   openNewSession?: boolean
   onNewSessionOpenChange?: (open: boolean) => void
 } = {}) {
@@ -520,13 +528,17 @@ export function CalendarPage({
         .map((patient) => patient.name),
     [patients]
   )
-  const [view, setView] = useState("mes")
+  const [view, setView] = useState(initialView)
   const [currentMonth, setCurrentMonth] = useState(
     new Date(baseYear, baseMonth, 1)
   )
   const [selectedDate, setSelectedDate] = useState(today)
   const [editingEventId, setEditingEventId] = useState<string | null>(null)
   const [createSessionOpen, setCreateSessionOpen] = useState(false)
+
+  useEffect(() => {
+    setView(initialView)
+  }, [initialView])
 
   useEffect(() => {
     if (openNewSession) {
@@ -680,7 +692,12 @@ export function CalendarPage({
           <h2 className="shrink-0 text-lg font-semibold">{title}</h2>
           <SessionStatusLegend inline />
           <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <Tabs value={view} onValueChange={setView}>
+            <Tabs
+              value={view}
+              onValueChange={(value) =>
+                setView(value as "mes" | "semana" | "dia")
+              }
+            >
               <TabsList className="border border-border bg-background/40">
                 <TabsTrigger value="mes">Mês</TabsTrigger>
                 <TabsTrigger value="semana">Semana</TabsTrigger>
@@ -690,6 +707,7 @@ export function CalendarPage({
             <NewSessionPopover
               selectedDate={selectedDate}
               patientNames={patientNames}
+              patients={patients}
               onCreate={handleCreate}
               align="end"
               open={createSessionOpen}
@@ -766,6 +784,7 @@ export function CalendarPage({
               days={weekDays}
               events={events}
               patientNames={patientNames}
+              patients={patients}
               onSelectDay={setSelectedDate}
               onCreate={handleCreate}
               onMoveEvent={handleMoveEvent}
@@ -778,6 +797,7 @@ export function CalendarPage({
               days={[selectedDate]}
               events={events}
               patientNames={patientNames}
+              patients={patients}
               onSelectDay={setSelectedDate}
               onCreate={handleCreate}
               onMoveEvent={handleMoveEvent}
@@ -834,6 +854,7 @@ export function CalendarPage({
             <NewSessionPopover
               selectedDate={selectedDate}
               patientNames={patientNames}
+              patients={patients}
               onCreate={handleCreate}
               align="center"
             >

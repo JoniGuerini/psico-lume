@@ -15,6 +15,7 @@ type ScheduleSessionDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   patient: Patient
+  patients?: Patient[]
   onSchedule: (event: CalendarEvent) => void
 }
 
@@ -22,6 +23,7 @@ export function ScheduleSessionDialog({
   open,
   onOpenChange,
   patient,
+  patients = [],
   onSchedule,
 }: ScheduleSessionDialogProps) {
   const [selectOpen, setSelectOpen] = useState(false)
@@ -59,6 +61,7 @@ export function ScheduleSessionDialog({
           idPrefix="profile-session"
           showHeader={false}
           lockedPatient={{ id: patient.id, name: patient.name }}
+          patients={patients.length > 0 ? patients : [patient]}
           defaults={defaults}
           submitLabel="Agendar sessão"
           onSubmit={(event) => {

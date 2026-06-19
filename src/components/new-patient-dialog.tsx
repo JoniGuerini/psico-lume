@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react"
-import { Plus, Save, Trash2, UserPlus } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { Loader2, Plus, Save, Trash2, UserPlus } from "lucide-react"
 
 import type {
   Patient,
   PatientModality,
   PatientSchedule,
   PatientStatus,
+  SessionFrequency,
 } from "@/data/types"
 import { Button } from "@/components/ui/button"
 import {
@@ -27,8 +28,19 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  DEFAULT_SESSION_FREQUENCY,
+  sessionFrequencyOptions,
+} from "@/lib/session-frequency"
 import { cn } from "@/lib/utils"
 import { formatNextSession } from "@/data/patients"
+import { resetSelectDismissGuard, shouldPreventDialogOutsideDismiss } from "@/lib/dialog-outside-guard"
+import {
+  fetchAddressByCep,
+  formatCep,
+  isCompleteCep,
+  normalizeCep,
+} from "@/lib/viacep"
 
 type NewPatientDialogProps = {
   open: boolean
@@ -110,6 +122,7 @@ const emptyForm = {
   complaint: "",
   approach: "",
   notes: "",
+  sessionFrequency: DEFAULT_SESSION_FREQUENCY as SessionFrequency,
 }
 
 function emptySchedule(): PatientSchedule {
@@ -188,6 +201,7 @@ function patientToForm(patient: Patient) {
     complaint: patient.complaint === "—" ? "" : patient.complaint,
     approach: patient.approach === "—" ? "" : patient.approach,
     notes: "",
+    sessionFrequency: patient.sessionFrequency ?? DEFAULT_SESSION_FREQUENCY,
   }
 }
 
@@ -253,8 +267,8 @@ function buildPatientPayload(
     nextSession,
     sessions: base?.sessions ?? 0,
     since: base?.since ?? currentMonthLabel(),
-    paymentOverdue: base?.paymentOverdue,
-    biweekly: base?.biweekly,
+    sessionFrequency: form.sessionFrequency,
+    paymentOverdueManual: base?.paymentOverdueManual,
     birthDate: inputToBrDate(form.birthDate) || undefined,
     gender: gender || undefined,
     cep: form.cep.trim() || undefined,
@@ -332,9 +346,22 @@ export function NewPatientDialog({
   const isEditing = patient != null
   const [form, setForm] = useState(emptyForm)
   const [schedules, setSchedules] = useState<PatientSchedule[]>([])
-  const [selectOpen, setSelectOpen] = useState(false)
+  const [cepLookup, setCepLookup] = useState<{
+    status: "idle" | "loading" | "error"
+    message?: string
+  }>({ status: "idle" })
+  const cepLookupRequestRef = useRef(0)
+  const lastFetchedCepRef = useRef("")
 
   const canSubmit = form.name.trim() !== ""
+
+  useEffect(() => {
+    if (!open) {
+      resetSelectDismissGuard()
+      setCepLookup({ status: "idle" })
+      lastFetchedCepRef.current = ""
+    }
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -347,12 +374,10 @@ export function NewPatientDialog({
     setSchedules([])
   }, [open, patient])
 
-  function handleSelectOpenChange(next: boolean) {
-    if (next) {
-      setSelectOpen(true)
-      return
-    }
-    window.setTimeout(() => setSelectOpen(false), 100)
+  function handleOpenChange(next: boolean) {
+    if (!next && shouldPreventDialogOutsideDismiss({ target: null })) return
+    if (!next) resetForm()
+    onOpenChange(next)
   }
 
   function update<K extends keyof typeof form>(
@@ -360,6 +385,54 @@ export function NewPatientDialog({
     value: (typeof form)[K]
   ) {
     setForm((current) => ({ ...current, [key]: value }))
+  }
+
+  async function lookupCep(cep: string) {
+    const normalized = normalizeCep(cep)
+    if (normalized.length !== 8) return
+    if (lastFetchedCepRef.current === normalized) return
+
+    const requestId = ++cepLookupRequestRef.current
+    setCepLookup({ status: "loading" })
+
+    try {
+      const address = await fetchAddressByCep(cep)
+      if (requestId !== cepLookupRequestRef.current) return
+
+      lastFetchedCepRef.current = normalized
+      setForm((current) => ({
+        ...current,
+        cep: address.cep,
+        street: address.street || current.street,
+        neighborhood: address.neighborhood || current.neighborhood,
+        city: address.city || current.city,
+        state: address.state || current.state,
+        complement: current.complement || address.complement || "",
+      }))
+      setCepLookup({ status: "idle" })
+      document.getElementById("patient-number")?.focus()
+    } catch (error) {
+      if (requestId !== cepLookupRequestRef.current) return
+      setCepLookup({
+        status: "error",
+        message:
+          error instanceof Error ? error.message : "CEP não encontrado",
+      })
+    }
+  }
+
+  function handleCepChange(raw: string) {
+    const formatted = formatCep(raw)
+    if (normalizeCep(formatted) !== normalizeCep(form.cep)) {
+      lastFetchedCepRef.current = ""
+    }
+    update("cep", formatted)
+    if (cepLookup.status === "error") {
+      setCepLookup({ status: "idle" })
+    }
+    if (isCompleteCep(formatted)) {
+      void lookupCep(formatted)
+    }
   }
 
   function addSchedule() {
@@ -385,12 +458,6 @@ export function NewPatientDialog({
     setSchedules([])
   }
 
-  function handleOpenChange(next: boolean) {
-    if (!next && selectOpen) return
-    if (!next) resetForm()
-    onOpenChange(next)
-  }
-
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     if (!canSubmit) return
@@ -411,15 +478,6 @@ export function NewPatientDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className="!flex max-h-[92vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-[#FAF6EC] p-0 sm:max-w-[72rem]"
-        onPointerDownOutside={(event) => {
-          if (selectOpen) event.preventDefault()
-        }}
-        onInteractOutside={(event) => {
-          if (selectOpen) event.preventDefault()
-        }}
-        onEscapeKeyDown={(event) => {
-          if (selectOpen) event.preventDefault()
-        }}
       >
         <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
           <DialogTitle className="text-lg">
@@ -494,7 +552,6 @@ export function NewPatientDialog({
                       <Select
                         value={form.gender}
                         onValueChange={(value) => update("gender", value)}
-                        onOpenChange={handleSelectOpenChange}
                       >
                         <SelectTrigger
                           id="patient-gender"
@@ -541,15 +598,40 @@ export function NewPatientDialog({
                       htmlFor="patient-cep"
                       className="col-span-4 sm:col-span-3"
                     >
-                      <Input
-                        id="patient-cep"
-                        value={form.cep}
-                        onChange={(event) => update("cep", event.target.value)}
-                        placeholder="00000-000"
-                        inputMode="numeric"
-                        maxLength={9}
-                        className={fieldClass}
-                      />
+                      <div className="relative">
+                        <Input
+                          id="patient-cep"
+                          value={form.cep}
+                          onChange={(event) =>
+                            handleCepChange(event.target.value)
+                          }
+                          onBlur={() => {
+                            if (isCompleteCep(form.cep)) {
+                              void lookupCep(form.cep)
+                            }
+                          }}
+                          placeholder="00000-000"
+                          inputMode="numeric"
+                          maxLength={9}
+                          aria-busy={cepLookup.status === "loading"}
+                          aria-invalid={cepLookup.status === "error"}
+                          className={cn(
+                            fieldClass,
+                            cepLookup.status === "loading" && "pr-9"
+                          )}
+                        />
+                        {cepLookup.status === "loading" ? (
+                          <Loader2
+                            aria-hidden
+                            className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 animate-spin text-muted-foreground"
+                          />
+                        ) : null}
+                      </div>
+                      {cepLookup.status === "error" ? (
+                        <p className="text-xs text-destructive">
+                          {cepLookup.message ?? "CEP não encontrado"}
+                        </p>
+                      ) : null}
                     </Field>
                     <Field
                       label="Rua / Logradouro"
@@ -767,7 +849,6 @@ export function NewPatientDialog({
                       <Select
                         value={form.patientType}
                         onValueChange={(value) => update("patientType", value)}
-                        onOpenChange={handleSelectOpenChange}
                       >
                         <SelectTrigger
                           id="patient-type"
@@ -794,7 +875,6 @@ export function NewPatientDialog({
                         onValueChange={(value) =>
                           update("status", value as PatientStatus)
                         }
-                        onOpenChange={handleSelectOpenChange}
                       >
                         <SelectTrigger
                           id="patient-status"
@@ -858,7 +938,6 @@ export function NewPatientDialog({
                         onValueChange={(value) =>
                           update("modality", value as PatientModality)
                         }
-                        onOpenChange={handleSelectOpenChange}
                       >
                         <SelectTrigger
                           id="patient-modality"
@@ -883,7 +962,6 @@ export function NewPatientDialog({
                       <Select
                         value={form.referral}
                         onValueChange={(value) => update("referral", value)}
-                        onOpenChange={handleSelectOpenChange}
                       >
                         <SelectTrigger
                           id="patient-referral"
@@ -925,10 +1003,37 @@ export function NewPatientDialog({
               </div>
 
               <FormSection title="Horários recorrentes">
+                <Field
+                  label="Frequência do atendimento"
+                  htmlFor="patient-session-frequency"
+                  className="max-w-md"
+                >
+                  <Select
+                    value={form.sessionFrequency}
+                    onValueChange={(value) =>
+                      update("sessionFrequency", value as SessionFrequency)
+                    }
+                  >
+                    <SelectTrigger
+                      id="patient-session-frequency"
+                      className={cn("w-full", fieldClass)}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sessionFrequencyOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label} · {option.description}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+
                 {schedules.length === 0 ? (
                   <p className="rounded-xl border border-dashed border-border bg-background/40 px-4 py-5 text-sm text-muted-foreground">
-                    Nenhum horário cadastrado. Adicione um atendimento semanal
-                    recorrente.
+                    Nenhum horário cadastrado. Adicione o dia e horário do
+                    atendimento recorrente.
                   </p>
                 ) : (
                   <div className="flex flex-col gap-2">
@@ -943,7 +1048,6 @@ export function NewPatientDialog({
                             onValueChange={(value) =>
                               updateSchedule(index, "weekday", value)
                             }
-                            onOpenChange={handleSelectOpenChange}
                           >
                             <SelectTrigger className={cn("w-full", fieldClass)}>
                               <SelectValue />
@@ -973,7 +1077,6 @@ export function NewPatientDialog({
                             onValueChange={(value) =>
                               updateSchedule(index, "duration", value)
                             }
-                            onOpenChange={handleSelectOpenChange}
                           >
                             <SelectTrigger className={cn("w-full", fieldClass)}>
                               <SelectValue />
@@ -1000,7 +1103,6 @@ export function NewPatientDialog({
                                 value as PatientModality
                               )
                             }
-                            onOpenChange={handleSelectOpenChange}
                           >
                             <SelectTrigger className={cn("w-full", fieldClass)}>
                               <SelectValue placeholder="Selecione…" />

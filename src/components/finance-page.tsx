@@ -33,12 +33,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useClinicData } from "@/context/clinic-data-provider"
-import {
-  getOverduePatients,
-  getScheduledPatients,
-  parsePrice,
-} from "@/data/patients"
+import { getScheduledPatients, parsePrice } from "@/data/patients"
 import type { PatientModality } from "@/data/types"
+import {
+  getMonthlyFinanceSummary,
+  getMonthlyRevenueHistory,
+  getRevenueByApproach,
+  getRevenueByModality,
+  getTopPatientsByRevenue,
+} from "@/lib/finance-metrics"
 import { cn } from "@/lib/utils"
 
 const WEEKS_PER_MONTH = 4.33
@@ -55,19 +58,11 @@ const brlCompact = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 1,
 })
 
-function capitalize(value: string) {
-  return value.charAt(0).toUpperCase() + value.slice(1)
-}
-
 const modalityColor: Record<PatientModality, string> = {
   presencial: "var(--chart-1)",
   online: "var(--chart-2)",
   hibrido: "var(--chart-3)",
 }
-
-const monthMultipliers = [
-  0.71, 0.79, 0.74, 0.84, 0.8, 0.89, 0.93, 0.88, 0.97, 1.03, 0.96, 1.0,
-]
 
 const revenueConfig = {
   receita: { label: "Receita", color: "var(--chart-1)" },
@@ -85,10 +80,15 @@ const modalityConfig = {
 } satisfies ChartConfig
 
 export function FinancePage() {
-  const { patients } = useClinicData()
+  const { patients, events } = useClinicData()
   const [range, setRange] = useState("12")
 
   const scheduled = useMemo(() => getScheduledPatients(patients), [patients])
+
+  const monthlySummary = useMemo(
+    () => getMonthlyFinanceSummary(events, patients),
+    [events, patients]
+  )
 
   const weeklyRevenue = useMemo(
     () =>
@@ -96,37 +96,16 @@ export function FinancePage() {
     [scheduled]
   )
 
-  const monthlyRevenue = Math.round(weeklyRevenue * WEEKS_PER_MONTH)
-  const avgTicket = scheduled.length
-    ? Math.round(weeklyRevenue / scheduled.length)
-    : 0
-  const monthlySessions = Math.round(scheduled.length * WEEKS_PER_MONTH)
+  const avgTicket = monthlySummary.billableCount
+    ? Math.round(monthlySummary.total / monthlySummary.billableCount)
+    : scheduled.length
+      ? Math.round(weeklyRevenue / scheduled.length)
+      : 0
 
-  const received = Math.round(monthlyRevenue * 0.82)
-  const pending = monthlyRevenue - received
-
-  const overdue = useMemo(
-    () =>
-      getOverduePatients(patients).reduce(
-        (sum, patient) => sum + parsePrice(patient.price),
-        0
-      ),
-    [patients]
+  const history = useMemo(
+    () => getMonthlyRevenueHistory(events, patients),
+    [events, patients]
   )
-
-  const history = useMemo(() => {
-    const now = new Date()
-    return monthMultipliers.map((multiplier, index) => {
-      const date = new Date(now.getFullYear(), now.getMonth() - (11 - index), 1)
-      const label = date
-        .toLocaleDateString("pt-BR", { month: "short" })
-        .replace(".", "")
-      return {
-        month: capitalize(label),
-        receita: Math.round(monthlyRevenue * multiplier),
-      }
-    })
-  }, [monthlyRevenue])
 
   const historySlice = useMemo(
     () => history.slice(-Number(range)),
@@ -142,52 +121,28 @@ export function FinancePage() {
   }, [history])
 
   const modalityData = useMemo(() => {
-    const totals: Record<PatientModality, number> = {
-      presencial: 0,
-      online: 0,
-      hibrido: 0,
-    }
-    for (const patient of scheduled) {
-      totals[patient.modality] += parsePrice(patient.price)
-    }
-    return (Object.keys(totals) as PatientModality[])
-      .map((key) => ({
-        key,
-        label: modalityLabel[key],
-        value: Math.round(totals[key] * WEEKS_PER_MONTH),
-      }))
-      .filter((item) => item.value > 0)
-  }, [scheduled])
+    return getRevenueByModality(events, patients).map((item) => ({
+      key: item.modality as PatientModality,
+      label: modalityLabel[item.modality as PatientModality],
+      value: item.value,
+    }))
+  }, [events, patients])
 
   const modalityTotal = modalityData.reduce((sum, item) => sum + item.value, 0)
 
-  const approachData = useMemo(() => {
-    const totals = new Map<string, number>()
-    for (const patient of scheduled) {
-      totals.set(
-        patient.approach,
-        (totals.get(patient.approach) ?? 0) + parsePrice(patient.price)
-      )
-    }
-    return Array.from(totals.entries())
-      .map(([approach, weekly]) => ({
-        approach,
-        receita: Math.round(weekly * WEEKS_PER_MONTH),
-      }))
-      .sort((a, b) => b.receita - a.receita)
-  }, [scheduled])
+  const approachData = useMemo(
+    () => getRevenueByApproach(events, patients),
+    [events, patients]
+  )
 
   const topPatients = useMemo(
-    () =>
-      [...scheduled]
-        .map((patient) => ({
-          patient,
-          total: parsePrice(patient.price) * patient.sessions,
-        }))
-        .sort((a, b) => b.total - a.total)
-        .slice(0, 6),
-    [scheduled]
+    () => getTopPatientsByRevenue(events, patients),
+    [events, patients]
   )
+
+  const receivedPct = monthlySummary.total
+    ? Math.round((monthlySummary.received / monthlySummary.total) * 100)
+    : 0
 
   const kpis: {
     label: string
@@ -198,25 +153,28 @@ export function FinancePage() {
   }[] = [
     {
       label: "Receita do mês",
-      value: brl.format(monthlyRevenue),
-      hint: "Prevista para o mês",
+      value: brl.format(monthlySummary.total),
+      hint: `${monthlySummary.billableCount} sessões cobráveis`,
       delta: deltaPct,
     },
     {
       label: "Recebido",
-      value: brl.format(received),
-      hint: `${Math.round((received / monthlyRevenue) * 100)}% do previsto`,
+      value: brl.format(monthlySummary.received),
+      hint: `${receivedPct}% do faturado`,
     },
     {
       label: "A receber",
-      value: brl.format(pending),
-      hint: overdue > 0 ? `${brl.format(overdue)} em atraso` : "Em dia",
-      tone: overdue > 0 ? "destructive" : undefined,
+      value: brl.format(monthlySummary.pending),
+      hint:
+        monthlySummary.overdue > 0
+          ? `${brl.format(monthlySummary.overdue)} em atraso`
+          : "Em dia",
+      tone: monthlySummary.overdue > 0 ? "destructive" : undefined,
     },
     {
       label: "Ticket médio",
       value: brl.format(avgTicket),
-      hint: `${monthlySessions} sessões no mês`,
+      hint: `${Math.round(scheduled.length * WEEKS_PER_MONTH)} sessões previstas`,
     },
   ]
 
@@ -287,7 +245,7 @@ export function FinancePage() {
           </div>
           <Badge variant="outline" className="border-border bg-background/40">
             <Wallet className="size-3.5" />
-            {brl.format(monthlyRevenue)} este mês
+            {brl.format(monthlySummary.total)} este mês
           </Badge>
         </div>
         <ChartContainer
