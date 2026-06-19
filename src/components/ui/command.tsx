@@ -1,8 +1,9 @@
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
-import { SearchIcon } from "lucide-react"
+import { SearchIcon, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -60,8 +61,30 @@ function CommandDialog({
 
 function CommandInput({
   className,
+  value,
+  onValueChange,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
+  const inputRef = React.useRef<HTMLInputElement>(null)
+  const [internalValue, setInternalValue] = React.useState("")
+  const isControlled = value !== undefined
+  const currentValue = isControlled ? String(value) : internalValue
+  const showClear = currentValue.length > 0
+
+  function handleValueChange(nextValue: string) {
+    if (!isControlled) {
+      setInternalValue(nextValue)
+    }
+    onValueChange?.(nextValue)
+  }
+
+  function handleClear(event: React.MouseEvent<HTMLButtonElement>) {
+    event.preventDefault()
+    event.stopPropagation()
+    handleValueChange("")
+    inputRef.current?.focus()
+  }
+
   return (
     <div
       className="flex h-11 items-center gap-3 px-4"
@@ -69,13 +92,29 @@ function CommandInput({
     >
       <SearchIcon className="size-4 shrink-0 text-muted-foreground" />
       <CommandPrimitive.Input
+        ref={inputRef}
         data-slot="command-input"
+        value={currentValue}
+        onValueChange={handleValueChange}
         className={cn(
           "flex h-full w-full flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
         {...props}
       />
+      {showClear ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-xs"
+          className="shrink-0 text-muted-foreground hover:bg-primary/12 hover:text-primary"
+          onClick={handleClear}
+          aria-label="Limpar busca"
+          tabIndex={-1}
+        >
+          <X />
+        </Button>
+      ) : null}
     </div>
   )
 }

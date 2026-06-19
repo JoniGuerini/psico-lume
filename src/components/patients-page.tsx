@@ -4,7 +4,6 @@ import {
   Eye,
   FileText,
   MoreHorizontal,
-  Search,
   UserPlus,
 } from "lucide-react"
 
@@ -15,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { SearchInput } from "@/components/ui/search-input"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +23,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -181,15 +180,13 @@ export function PatientsPage({
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Buscar por nome, e-mail, CPF ou queixa..."
-              className="border-border bg-background/40 pl-9 hover:bg-accent/50"
-            />
-          </div>
+          <SearchInput
+            containerClassName="flex-1"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Buscar por nome, e-mail, CPF ou queixa..."
+            className="border-border bg-background/40 hover:bg-accent/50"
+          />
           <Select
             value={status}
             onValueChange={(value) =>

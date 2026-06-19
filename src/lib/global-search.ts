@@ -20,7 +20,12 @@ import type {
   Notification,
   Patient,
 } from "@/data/types"
+import { addDays } from "@/data/patients"
 import { sessionStatusConfig } from "@/lib/session-status"
+
+const SEARCH_EVENT_PAST_DAYS = 21
+const SEARCH_EVENT_FUTURE_DAYS = 90
+const SEARCH_EVENT_LIMIT = 80
 
 export type QuickActionId = "new-patient" | "new-session"
 
@@ -182,8 +187,20 @@ function buildEventItems(
   patients: Patient[]
 ): GlobalSearchItem[] {
   const patientById = new Map(patients.map((patient) => [patient.id, patient]))
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const rangeStart = addDays(today, -SEARCH_EVENT_PAST_DAYS)
+  const rangeEnd = addDays(today, SEARCH_EVENT_FUTURE_DAYS)
 
-  return events.map((event) => {
+  return events
+    .filter((event) => {
+      const date = new Date(event.date)
+      date.setHours(0, 0, 0, 0)
+      return date >= rangeStart && date <= rangeEnd
+    })
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .slice(0, SEARCH_EVENT_LIMIT)
+    .map((event) => {
     const patient = patientById.get(event.patientId)
     const status = event.status ?? "agendada"
     const statusLabel = sessionStatusConfig[status].label
@@ -216,7 +233,7 @@ function buildEmailItems(emails: InboxEmail[]): GlobalSearchItem[] {
     group: "E-mails",
     title: email.subject,
     subtitle: `${email.name} · ${email.preview}`,
-    value: [email.name, email.email, email.subject, email.preview, email.body.join(" ")]
+    value: [email.name, email.email, email.subject, email.preview]
       .join(" ")
       .toLowerCase(),
     icon: Mail,

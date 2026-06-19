@@ -3,7 +3,6 @@ import {
   Archive,
   Forward,
   Reply,
-  Search,
   Star,
   Trash2,
 } from "lucide-react"
@@ -12,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { SearchInput } from "@/components/ui/search-input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -81,15 +80,12 @@ export function InboxPage({
               </TabsList>
             </Tabs>
           </div>
-          <div className="relative">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Buscar e-mails..."
-              className="border-border bg-background/40 pl-9 hover:bg-accent/50"
-            />
-          </div>
+          <SearchInput
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Buscar e-mails..."
+            className="border-border bg-background/40 hover:bg-accent/50"
+          />
         </div>
         <Separator />
         <ScrollArea className="h-0 min-h-0 flex-1">
