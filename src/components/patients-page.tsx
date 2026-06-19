@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   CalendarPlus,
   Eye,
@@ -78,15 +78,28 @@ function PatientCols() {
   )
 }
 
-export function PatientsPage() {
+export function PatientsPage({
+  initialPatientId = null,
+  initialProfileTab = "overview",
+}: {
+  initialPatientId?: string | null
+  initialProfileTab?: "overview" | "sessions" | "records"
+} = {}) {
   const { patients, activeCount, addPatient } = useClinicData()
   const [query, setQuery] = useState("")
   const [status, setStatus] = useState<PatientStatus | "todos">("todos")
   const [newPatientOpen, setNewPatientOpen] = useState(false)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(initialPatientId)
   const [profileTab, setProfileTab] = useState<
     "overview" | "sessions" | "records"
-  >("overview")
+  >(initialProfileTab)
+
+  useEffect(() => {
+    if (initialPatientId) {
+      setSelectedId(initialPatientId)
+      setProfileTab(initialProfileTab)
+    }
+  }, [initialPatientId, initialProfileTab])
 
   function openProfile(
     patientId: string,

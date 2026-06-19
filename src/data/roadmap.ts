@@ -29,7 +29,7 @@ export const ROADMAP_META = {
   versionLabel: "v1.0 — Produto mock completo",
   subtitle:
     "Fechar a experiência clínica end-to-end com dados mockados. Backend e persistência entram só depois.",
-  progress: 95,
+  progress: 97,
 }
 
 export const roadmapItems: RoadmapItem[] = [
@@ -209,9 +209,9 @@ export const roadmapItems: RoadmapItem[] = [
     description:
       "Atalho Cmd+K para encontrar pacientes, sessões, e-mails e notificações.",
     icon: Search,
-    status: "next",
+    status: "done",
     phase: "v1.0",
-    tags: ["UX"],
+    tags: ["UX", "Entregue"],
   },
   {
     id: "reports",

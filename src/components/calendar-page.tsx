@@ -490,7 +490,11 @@ function NewSessionPopover({
   )
 }
 
-export function CalendarPage() {
+export function CalendarPage({
+  initialEventId = null,
+}: {
+  initialEventId?: string | null
+} = {}) {
   const { patients, events, addEvent, moveEvent, updateEvent } = useClinicData()
   const patientNames = useMemo(
     () =>
@@ -510,6 +514,17 @@ export function CalendarPage() {
     () => events.find((event) => event.id === editingEventId) ?? null,
     [events, editingEventId]
   )
+
+  useEffect(() => {
+    if (!initialEventId) return
+
+    const event = events.find((item) => item.id === initialEventId)
+    if (!event) return
+
+    setSelectedDate(event.date)
+    setCurrentMonth(new Date(event.date.getFullYear(), event.date.getMonth(), 1))
+    setEditingEventId(event.id)
+  }, [initialEventId, events])
 
   function handleSelectEvent(event: CalendarEvent) {
     setEditingEventId(event.id)
