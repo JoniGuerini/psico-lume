@@ -45,17 +45,14 @@ export function getEventStatus(event: CalendarEvent): SessionStatus {
   return event.status ?? DEFAULT_SESSION_STATUS
 }
 
-/** Ao arrastar no grid: faltou/cancelada voltam para agendada; agendada vira remarcada. */
+/** Ao arrastar no grid: qualquer status vira remarcada, exceto realizada. */
 export function resolveStatusAfterMove(
   currentStatus: SessionStatus
 ): SessionStatus {
-  if (currentStatus === "faltou" || currentStatus === "cancelada") {
-    return "agendada"
+  if (currentStatus === "realizada") {
+    return currentStatus
   }
-  if (currentStatus === "agendada") {
-    return "remarcada"
-  }
-  return currentStatus
+  return "remarcada"
 }
 
 export function captureRescheduledFrom(event: CalendarEvent): RescheduledFrom {
@@ -75,16 +72,13 @@ export function resolveRescheduledFromAfterMove(
   currentStatus: SessionStatus,
   nextStatus: SessionStatus
 ): RescheduledFrom | undefined {
-  if (nextStatus === "remarcada" && currentStatus === "agendada") {
-    return captureRescheduledFrom(event)
+  if (nextStatus !== "remarcada" || currentStatus === "realizada") {
+    return event.rescheduledFrom
   }
-  if (
-    nextStatus === "agendada" &&
-    (currentStatus === "faltou" || currentStatus === "cancelada")
-  ) {
-    return undefined
+  if (event.rescheduledFrom) {
+    return event.rescheduledFrom
   }
-  return event.rescheduledFrom
+  return captureRescheduledFrom(event)
 }
 
 export function formatRescheduledFromLabel(from: RescheduledFrom) {

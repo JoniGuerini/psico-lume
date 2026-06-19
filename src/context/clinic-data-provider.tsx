@@ -202,17 +202,19 @@ export function ClinicDataProvider({
         setEvents((current) =>
           current.map((event) => {
             if (event.id !== id) return event
+
             const durationMin = Math.max(
               toMinutes(event.end) - toMinutes(event.start),
               30
             )
-            const currentStatus = event.status ?? "agendada"
+            const currentStatus = getEventStatus(event)
             const nextStatus = resolveStatusAfterMove(currentStatus)
             const rescheduledFrom = resolveRescheduledFromAfterMove(
               event,
               currentStatus,
               nextStatus
             )
+
             return {
               ...event,
               date,

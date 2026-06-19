@@ -1,53 +1,62 @@
 import {
+  AlertCircle,
   CalendarClock,
-  CalendarX,
+  ClipboardList,
   CreditCard,
-  MessageSquare,
-  UserPlus,
+  Inbox,
+  Mail,
+  UserRound,
 } from "lucide-react"
 
-import {
-  findPatient,
-  getTodaysAppointments,
-  minutesAgo,
-  mockPatients,
-} from "@/data/patients"
+import { findPatient, minutesAgo, mockPatients } from "@/data/patients"
 import type { Notification, Patient } from "@/data/types"
 
-export function buildNotifications(patients: Patient[] = mockPatients): Notification[] {
-  const todaySessions = getTodaysAppointments(patients)
-  const firstToday = todaySessions[0]
+function formatShortDate(date: Date) {
+  return date.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "short",
+  })
+}
+
+function sessionDayLabel(daysAgo: number) {
+  const date = new Date()
+  date.setDate(date.getDate() - daysAgo)
+  return formatShortDate(date)
+}
+
+export function buildNotifications(
+  patients: Patient[] = mockPatients
+): Notification[] {
+  const gustavo = findPatient(patients, "10")
   const camila = findPatient(patients, "3")
   const rafael = findPatient(patients, "2")
-  const fernanda = findPatient(patients, "11")
-  const beatriz = findPatient(patients, "9")
   const thiago = findPatient(patients, "4")
-  const pedro = findPatient(patients, "6")
-  const karina = findPatient(patients, "20")
-  const tatiana = findPatient(patients, "28")
+  const beatriz = findPatient(patients, "9")
+  const fernanda = findPatient(patients, "11")
 
   const notifications: Notification[] = []
 
-  if (firstToday) {
+  if (gustavo) {
     notifications.push({
       id: "1",
-      icon: CalendarClock,
+      icon: AlertCircle,
       category: "sessao",
-      title: `${firstToday.name} confirmou a sessão`,
-      description: `Sessão de hoje às ${firstToday.sessionTime} confirmada.`,
-      date: minutesAgo(5),
+      title: `Status pendente — ${gustavo.name}`,
+      description: `A sessão de ${sessionDayLabel(2)} às ${gustavo.sessionTime} passou e ainda está como Agendada.`,
+      date: minutesAgo(18),
       read: false,
     })
   }
 
-  if (fernanda) {
+  if (camila) {
     notifications.push({
       id: "2",
-      icon: UserPlus,
-      category: "paciente",
-      title: "Novo paciente na lista de espera",
-      description: `${fernanda.name} entrou na sua lista de espera.`,
-      date: minutesAgo(64),
+      icon: AlertCircle,
+      category: "sessao",
+      title: `Status pendente — ${camila.name}`,
+      description: `A sessão de ${sessionDayLabel(1)} às ${camila.sessionTime} passou sem comparecimento registrado.`,
+      date: minutesAgo(95),
       read: false,
     })
   }
@@ -55,102 +64,109 @@ export function buildNotifications(patients: Patient[] = mockPatients): Notifica
   if (rafael) {
     notifications.push({
       id: "3",
-      icon: CreditCard,
-      category: "financeiro",
-      title: "Pagamento recebido",
-      description: `${rafael.name} pagou R$ ${rafael.price} referente à sessão.`,
-      date: minutesAgo(182),
-      read: false,
-    })
-  }
-
-  if (camila) {
-    notifications.push({
-      id: "4",
-      icon: MessageSquare,
-      category: "mensagem",
-      title: `Mensagem de ${camila.name}`,
-      description: "“Consigo remarcar a sessão de quinta para 15h?”",
-      date: minutesAgo(300),
-      read: false,
-    })
-  }
-
-  const afternoonSession = todaySessions.find((session) =>
-    session.sessionTime >= "14:00"
-  )
-
-  if (afternoonSession) {
-    notifications.push({
-      id: "5",
       icon: CalendarClock,
       category: "sessao",
-      title: "Lembrete de sessão",
-      description: `Sessão com ${afternoonSession.name} hoje às ${afternoonSession.sessionTime}.`,
-      date: minutesAgo(60 * 22),
-      read: true,
+      title: `Atendimento hoje — ${rafael.name}`,
+      description: `Sessão às ${rafael.sessionTime}. Marque o status após o atendimento.`,
+      date: minutesAgo(210),
+      read: false,
+    })
+  }
+
+  if (thiago) {
+    notifications.push({
+      id: "4",
+      icon: CreditCard,
+      category: "financeiro",
+      title: `Inadimplência — ${thiago.name}`,
+      description:
+        "Pagamento em aberto no cadastro. Atualize o financeiro após o contato com o paciente.",
+      date: minutesAgo(60 * 4),
+      read: false,
     })
   }
 
   if (beatriz) {
     notifications.push({
-      id: "6",
-      icon: CreditCard,
-      category: "financeiro",
-      title: "Pagamento em atraso",
-      description: `O pagamento de ${beatriz.name} está atrasado há 3 dias.`,
+      id: "5",
+      icon: ClipboardList,
+      category: "sessao",
+      title: `Evolução pendente — ${beatriz.name}`,
+      description:
+        "Sessão marcada como realizada ontem, mas ainda sem registro no prontuário.",
       date: minutesAgo(60 * 26),
+      read: true,
+    })
+  }
+
+  notifications.push({
+    id: "6",
+    icon: AlertCircle,
+    category: "sessao",
+    title: "3 sessões da semana sem fechamento",
+    description:
+      "Atualize o status de comparecimento na agenda para manter o histórico em dia.",
+    date: minutesAgo(60 * 28),
+    read: true,
+  })
+
+  if (fernanda) {
+    notifications.push({
+      id: "7",
+      icon: UserRound,
+      category: "paciente",
+      title: `Lista de espera — ${fernanda.name}`,
+      description:
+        "Paciente aguardando vaga há 2 semanas. Considere agendar a entrevista inicial.",
+      date: minutesAgo(60 * 40),
       read: true,
     })
   }
 
   if (thiago) {
     notifications.push({
-      id: "7",
-      icon: CalendarX,
-      category: "sessao",
-      title: `${thiago.name} cancelou a sessão`,
-      description: "A sessão de segunda às 10:00 foi cancelada.",
-      date: minutesAgo(60 * 49),
-      read: true,
-    })
-  }
-
-  if (pedro) {
-    notifications.push({
       id: "8",
-      icon: UserPlus,
+      icon: UserRound,
       category: "paciente",
-      title: "Primeira avaliação agendada",
-      description: `${pedro.name} agendou a avaliação inicial para segunda.`,
-      date: minutesAgo(60 * 96),
+      title: `Paciente em pausa — ${thiago.name}`,
+      description:
+        "Em pausa no cadastro. Avalie retorno, encerramento ou manutenção do status.",
+      date: minutesAgo(60 * 52),
       read: true,
     })
   }
 
-  if (karina) {
-    notifications.push({
-      id: "9",
-      icon: MessageSquare,
-      category: "mensagem",
-      title: `Mensagem de ${karina.name}`,
-      description: "“Preciso reagendar a sessão da próxima semana.”",
-      date: minutesAgo(60 * 30),
-      read: false,
-    })
-  }
+  notifications.push({
+    id: "9",
+    icon: CreditCard,
+    category: "financeiro",
+    title: "Conciliação da semana",
+    description:
+      "Há sessões realizadas esta semana que ainda não refletem no resumo financeiro.",
+    date: minutesAgo(60 * 68),
+    read: true,
+  })
 
-  if (tatiana) {
-    notifications.push({
-      id: "10",
-      icon: UserPlus,
-      category: "paciente",
-      title: "Interesse na lista de espera",
-      description: `${tatiana.name} solicitou vaga para terças à tarde.`,
-      date: minutesAgo(60 * 72),
-      read: true,
-    })
-  }
+  notifications.push({
+    id: "10",
+    icon: Inbox,
+    category: "mensagem",
+    title: "Inbox — 2 e-mails não lidos",
+    description: "Dois e-mails aguardando leitura na caixa de entrada.",
+    date: minutesAgo(60 * 80),
+    read: true,
+  })
+
+  notifications.push({
+    id: "11",
+    icon: Mail,
+    category: "sistema",
+    title: "Resumo semanal disponível",
+    description:
+      "Panorama de atendimentos, pendências de status e alertas financeiros da semana.",
+    date: minutesAgo(60 * 96),
+    read: true,
+  })
 
   return notifications
 }

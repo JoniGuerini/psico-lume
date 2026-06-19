@@ -7,7 +7,6 @@ import {
   Laptop,
   LogOut,
   Palette,
-  Phone,
   ShieldCheck,
   Smartphone,
   User,
@@ -28,7 +27,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
-import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 
@@ -53,7 +51,7 @@ const sections: Section[] = [
   {
     id: "perfil",
     label: "Perfil",
-    description: "Suas informações pessoais e foto.",
+    description: "Nome, e-mail e foto no workspace.",
     icon: User,
   },
   {
@@ -93,7 +91,7 @@ const activeSessions = [
   },
   {
     id: "2",
-    device: "iPhone 15 · App Lume",
+    device: "iPhone 15 · Safari",
     location: "São Paulo, BR",
     current: false,
     icon: Smartphone,
@@ -163,11 +161,6 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
 
   const [name, setName] = useState(user.name)
   const [email, setEmail] = useState(user.email)
-  const [phone, setPhone] = useState("(11) 98765-4321")
-  const [crp, setCrp] = useState("06/123456")
-  const [bio, setBio] = useState(
-    "Psicólogo clínico com abordagem em Terapia Cognitivo-Comportamental."
-  )
 
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -175,12 +168,13 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
   const [twoFactor, setTwoFactor] = useState(true)
 
   const [notifications, setNotifications] = useState({
-    sessionConfirm: true,
-    newPatient: true,
-    paymentReminder: true,
-    cancellation: true,
+    pendingSessionStatus: true,
+    sessionReminder: true,
+    pendingEvolution: true,
+    overduePayment: true,
+    waitingListReview: true,
     weeklySummary: false,
-    marketing: false,
+    productUpdates: false,
   })
 
   const [accent, setAccent] = useState("mint")
@@ -259,7 +253,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
               <div className="flex flex-col gap-6">
                 <SectionHeading
                   title="Perfil"
-                  description="Atualize sua foto e informações de contato."
+                  description="Dados da sua conta — visíveis só para você no Lume."
                 />
 
                 <div className="flex flex-col gap-5 rounded-3xl bg-sidebar p-6 text-sidebar-foreground sm:flex-row sm:items-center">
@@ -290,23 +284,13 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                       <Camera className="size-4" />
                     </button>
                   </div>
-                  <div className="flex min-w-0 flex-1 flex-col gap-2">
-                    <div className="flex flex-col gap-0.5">
-                      <h4 className="font-heading text-xl font-semibold text-[#FAF6EC]">
-                        {name}
-                      </h4>
-                      <p className="truncate text-sm text-sidebar-foreground/70">
-                        {email}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Badge className="border-white/15 bg-white/10 text-sidebar-foreground">
-                        Psicólogo
-                      </Badge>
-                      <Badge className="border-white/15 bg-white/10 text-sidebar-foreground">
-                        CRP {crp}
-                      </Badge>
-                    </div>
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <h4 className="font-heading text-xl font-semibold text-[#FAF6EC]">
+                      {name}
+                    </h4>
+                    <p className="truncate text-sm text-sidebar-foreground/70">
+                      {email}
+                    </p>
                   </div>
                 </div>
 
@@ -322,7 +306,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                       />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="account-email">E-mail</Label>
+                      <Label htmlFor="account-email">E-mail de login</Label>
                       <Input
                         id="account-email"
                         type="email"
@@ -331,39 +315,6 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                         placeholder="voce@example.com"
                       />
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <Label htmlFor="account-phone">Telefone</Label>
-                      <div className="relative">
-                        <Phone className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                          id="account-phone"
-                          value={phone}
-                          onChange={(event) => setPhone(event.target.value)}
-                          placeholder="(00) 00000-0000"
-                          className="pl-9"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Label htmlFor="account-crp">Registro (CRP)</Label>
-                      <Input
-                        id="account-crp"
-                        value={crp}
-                        onChange={(event) => setCrp(event.target.value)}
-                        placeholder="00/000000"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor="account-bio">Bio</Label>
-                    <Textarea
-                      id="account-bio"
-                      value={bio}
-                      onChange={(event) => setBio(event.target.value)}
-                      rows={3}
-                      className="resize-none"
-                      placeholder="Conte um pouco sobre sua atuação."
-                    />
                   </div>
                   <div className="flex justify-end gap-2 border-t border-border pt-5">
                     <Button variant="ghost">Cancelar</Button>
@@ -510,31 +461,39 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                 <Panel className="gap-0">
                   <div className="flex items-center gap-2 pb-2 text-sm font-medium text-muted-foreground">
                     <Bell className="size-4" />
-                    Atendimentos
+                    Clínico e agenda
                   </div>
                   <div className="divide-y divide-border">
                     <ToggleRow
-                      title="Confirmações de sessão"
-                      description="Avise quando um paciente confirmar a sessão."
-                      checked={notifications.sessionConfirm}
+                      title="Status de sessão pendente"
+                      description="Quando uma sessão passou e ainda não foi marcada na agenda."
+                      checked={notifications.pendingSessionStatus}
                       onCheckedChange={(value) =>
-                        setNotification("sessionConfirm", value)
+                        setNotification("pendingSessionStatus", value)
                       }
                     />
                     <ToggleRow
-                      title="Cancelamentos e remarcações"
-                      description="Receba um aviso quando uma sessão mudar."
-                      checked={notifications.cancellation}
+                      title="Lembretes do dia"
+                      description="Atendimentos de hoje para você registrar após a sessão."
+                      checked={notifications.sessionReminder}
                       onCheckedChange={(value) =>
-                        setNotification("cancellation", value)
+                        setNotification("sessionReminder", value)
                       }
                     />
                     <ToggleRow
-                      title="Novos pacientes"
-                      description="Quando um novo paciente for cadastrado."
-                      checked={notifications.newPatient}
+                      title="Evolução clínica pendente"
+                      description="Sessão realizada sem registro no prontuário."
+                      checked={notifications.pendingEvolution}
                       onCheckedChange={(value) =>
-                        setNotification("newPatient", value)
+                        setNotification("pendingEvolution", value)
+                      }
+                    />
+                    <ToggleRow
+                      title="Lista de espera e pausas"
+                      description="Pacientes que precisam de revisão no cadastro."
+                      checked={notifications.waitingListReview}
+                      onCheckedChange={(value) =>
+                        setNotification("waitingListReview", value)
                       }
                     />
                   </div>
@@ -547,16 +506,16 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                   </div>
                   <div className="divide-y divide-border">
                     <ToggleRow
-                      title="Lembretes de pagamento"
-                      description="Pagamentos pendentes ou em atraso."
-                      checked={notifications.paymentReminder}
+                      title="Inadimplência e conciliação"
+                      description="Pagamentos em aberto e sessões ainda não refletidas no financeiro."
+                      checked={notifications.overduePayment}
                       onCheckedChange={(value) =>
-                        setNotification("paymentReminder", value)
+                        setNotification("overduePayment", value)
                       }
                     />
                     <ToggleRow
-                      title="Resumo semanal por e-mail"
-                      description="Um panorama da sua semana toda segunda."
+                      title="Resumo semanal"
+                      description="Panorama da semana com pendências de agenda e financeiro."
                       checked={notifications.weeklySummary}
                       onCheckedChange={(value) =>
                         setNotification("weeklySummary", value)
@@ -565,9 +524,9 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                     <ToggleRow
                       title="Novidades do Lume"
                       description="Dicas e novidades de produto (ocasional)."
-                      checked={notifications.marketing}
+                      checked={notifications.productUpdates}
                       onCheckedChange={(value) =>
-                        setNotification("marketing", value)
+                        setNotification("productUpdates", value)
                       }
                     />
                   </div>

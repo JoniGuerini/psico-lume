@@ -149,11 +149,13 @@ export function PatientsPage({
 
   if (selectedPatient) {
     return (
-      <PatientProfile
-        patient={selectedPatient}
-        initialTab={profileTab}
-        onBack={() => setSelectedId(null)}
-      />
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+        <PatientProfile
+          patient={selectedPatient}
+          initialTab={profileTab}
+          onBack={() => setSelectedId(null)}
+        />
+      </div>
     )
   }
 

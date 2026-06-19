@@ -21,7 +21,7 @@ const filters: { value: Filter; label: string }[] = [
   { value: "nao-lidas", label: "Não lidas" },
   { value: "sessao", label: "Sessões" },
   { value: "paciente", label: "Pacientes" },
-  { value: "mensagem", label: "Mensagens" },
+  { value: "mensagem", label: "Inbox" },
   { value: "financeiro", label: "Pagamentos" },
 ]
 
