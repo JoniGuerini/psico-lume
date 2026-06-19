@@ -1,9 +1,11 @@
 import type { LucideIcon } from "lucide-react"
 import {
+  BarChart3,
   Bell,
   Calendar,
   CalendarPlus,
   CircleDollarSign,
+  FileSpreadsheet,
   Home,
   Inbox,
   Mail,
@@ -139,6 +141,24 @@ const navigationItems: GlobalSearchItem[] = [
     value: "notificações alertas avisos",
     icon: Bell,
     action: { type: "navigate", page: "Notifications" },
+  },
+  {
+    id: "nav-relatorios",
+    group: "Navegação",
+    title: "Relatórios",
+    subtitle: "Comparecimento e receita por modalidade",
+    value: "relatórios comparecimento presença modalidade taxa",
+    icon: BarChart3,
+    action: { type: "navigate", page: "Relatórios" },
+  },
+  {
+    id: "nav-dados",
+    group: "Navegação",
+    title: "Dados",
+    subtitle: "Visão em planilha dos dados da clínica",
+    value: "dados planilha tabela export xlsx sheet",
+    icon: FileSpreadsheet,
+    action: { type: "navigate", page: "Dados" },
   },
   {
     id: "nav-roadmap",

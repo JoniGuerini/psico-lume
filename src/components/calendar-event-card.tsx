@@ -3,7 +3,7 @@ import { Clock } from "lucide-react"
 import type { CalendarEvent } from "@/data/types"
 import {
   formatRescheduledFromLabel,
-  getEventStatus,
+  resolveEventStatus,
   sessionStatusConfig,
 } from "@/lib/session-status"
 import { cn } from "@/lib/utils"
@@ -19,7 +19,7 @@ export function CalendarEventListItem({
   onClick,
   className,
 }: CalendarEventListItemProps) {
-  const status = getEventStatus(event)
+  const status = resolveEventStatus(event)
   const statusStyle = sessionStatusConfig[status].block
 
   return (
@@ -29,7 +29,6 @@ export function CalendarEventListItem({
       className={cn(
         "flex w-full flex-col gap-2 rounded-2xl border p-3 text-left shadow-sm transition-shadow hover:shadow-md",
         statusStyle,
-        status === "realizada" && "opacity-90",
         className
       )}
     >
@@ -38,7 +37,7 @@ export function CalendarEventListItem({
           className={cn(
             "truncate text-sm font-medium",
             (status === "faltou" || status === "cancelada") &&
-              "line-through opacity-70"
+              "text-muted-foreground line-through"
           )}
         >
           {event.title}

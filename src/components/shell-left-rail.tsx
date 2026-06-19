@@ -42,7 +42,7 @@ export function LoginHeroSlot() {
       </div>
 
       <p className="absolute bottom-12 text-xs text-sidebar-foreground/60">
-        © {new Date().getFullYear()} Lume · Cuidado psicológico com leveza
+        © {new Date().getFullYear()} Lume
       </p>
     </div>
   )

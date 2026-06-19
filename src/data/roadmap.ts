@@ -30,7 +30,7 @@ export const ROADMAP_META = {
   versionLabel: "v1.0 — Produto mock completo",
   subtitle:
     "Fechar a experiência clínica end-to-end com dados mockados. Backend e persistência entram só depois.",
-  progress: 96,
+  progress: 100,
 }
 
 export const roadmapItems: RoadmapItem[] = [
@@ -68,7 +68,7 @@ export const roadmapItems: RoadmapItem[] = [
     id: "patients",
     title: "Pacientes + perfil completo",
     description:
-      "Lista com filtros, perfil detalhado, cadastro em modal creme com cards brancos e 30 perfis preenchidos.",
+      "Lista com filtros, perfil detalhado, cadastro com CEP automático (ViaCEP), modal estável com Select e 30 perfis preenchidos.",
     icon: Users,
     status: "done",
     phase: "Telas core",
@@ -78,7 +78,7 @@ export const roadmapItems: RoadmapItem[] = [
     id: "calendar",
     title: "Agenda semanal",
     description:
-      "Grid com drag-and-drop, criação de atendimento e modal alinhado à identidade do novo paciente.",
+      "Grid com drag-and-drop, legenda de status, criação de atendimento e modal alinhado à identidade do novo paciente.",
     icon: Calendar,
     status: "done",
     phase: "Telas core",
@@ -188,7 +188,7 @@ export const roadmapItems: RoadmapItem[] = [
     id: "export",
     title: "Exportação de dados",
     description:
-      "XLSX estilizado com 7 abas (pacientes, agenda, prontuário, financeiro). Botão no header global.",
+      "XLSX estilizado com 9 abas (pacientes, agenda, prontuário, financeiro por sessão e relatórios). Botão no header global.",
     icon: ClipboardList,
     status: "done",
     phase: "v1.0",
@@ -208,7 +208,7 @@ export const roadmapItems: RoadmapItem[] = [
     id: "login-transition",
     title: "Transição login → app",
     description:
-      "Motion com morph do painel creme, trilho animado e entrada sincronizada da sidebar e do conteúdo principal.",
+      "Crossfade com AnimatePresence — entrada e saída suaves por opacidade, sem morph de layout.",
     icon: LayoutDashboard,
     status: "done",
     phase: "v1.0",
@@ -228,11 +228,41 @@ export const roadmapItems: RoadmapItem[] = [
     id: "global-search",
     title: "Busca global",
     description:
-      "Pill no header, Cmd+K, modal largo creme/card branco, busca unificada e ações rápidas (novo paciente, atendimento).",
+      "Pill no header, Cmd+K, modal creme com índice otimizado, destaque do item selecionado, botão X para limpar e ações rápidas.",
     icon: Search,
     status: "done",
     phase: "v1.0",
     tags: ["UX", "Entregue"],
+  },
+  {
+    id: "recurring-calendar",
+    title: "Agenda recorrente",
+    description:
+      "Sessões geradas automaticamente a partir do horário do paciente — 1x, 2x, 3x ou 4x por mês, janela de 90 dias passados e 365 futuros.",
+    icon: Calendar,
+    status: "done",
+    phase: "v1.0",
+    tags: ["Agenda", "Entregue"],
+  },
+  {
+    id: "search-input-clear",
+    title: "Limpar busca nos campos",
+    description:
+      "SearchInput reutilizável com X no fim e hover azul Luma — Pacientes, Inbox e busca global.",
+    icon: Search,
+    status: "done",
+    phase: "v1.0",
+    tags: ["UX", "Entregue"],
+  },
+  {
+    id: "calendar-card-consistency",
+    title: "Consistência visual da agenda",
+    description:
+      "Cards com mesma intensidade por status — deduplicação de horários (presencial+online), fundos opacos equivalentes e sync de status em sessões passadas.",
+    icon: Calendar,
+    status: "done",
+    phase: "v1.0",
+    tags: ["Agenda", "UI", "Entregue"],
   },
   {
     id: "custom-scrollbar",
@@ -248,11 +278,11 @@ export const roadmapItems: RoadmapItem[] = [
     id: "reports",
     title: "Relatórios na UI",
     description:
-      "Taxa de comparecimento e receita por modalidade direto no app (export XLSX já cobre dados brutos).",
+      "Taxa de comparecimento, evolução mensal, desfecho das sessões e receita por modalidade — página dedicada com filtros por mês.",
     icon: ClipboardList,
-    status: "planned",
+    status: "done",
     phase: "v1.0",
-    tags: ["Gestão"],
+    tags: ["Gestão", "Entregue"],
   },
   {
     id: "supabase",

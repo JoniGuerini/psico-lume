@@ -22,7 +22,7 @@ import { eventsOfDay } from "@/data/calendar"
 import { addDays, isSameDay } from "@/data/patients"
 import type { CalendarEvent, Patient } from "@/data/types"
 import { minutesToTime, toMinutes } from "@/lib/session-scheduling"
-import { getEventStatus, sessionStatusConfig } from "@/lib/session-status"
+import { resolveEventStatus, sessionStatusConfig } from "@/lib/session-status"
 import { cn } from "@/lib/utils"
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
@@ -338,7 +338,7 @@ function TimeGrid({
                         PX_PER_MIN,
                       22
                     )
-                    const eventStatus = getEventStatus(calendarEvent)
+                    const eventStatus = resolveEventStatus(calendarEvent)
                     const statusStyle = sessionStatusConfig[eventStatus].block
                     return (
                       <div
@@ -353,11 +353,7 @@ function TimeGrid({
                           statusStyle,
                           calendarEvent.dragging
                             ? "z-20 cursor-grabbing opacity-90 ring-2 ring-primary"
-                            : "cursor-pointer hover:shadow-md",
-                          eventStatus === "realizada" && "opacity-80",
-                          (eventStatus === "faltou" ||
-                            eventStatus === "cancelada") &&
-                            "opacity-90"
+                            : "cursor-pointer hover:shadow-md"
                         )}
                       >
                         <p
@@ -365,7 +361,7 @@ function TimeGrid({
                             "truncate text-xs font-medium",
                             (eventStatus === "faltou" ||
                               eventStatus === "cancelada") &&
-                              "line-through opacity-70"
+                              "text-muted-foreground line-through"
                           )}
                         >
                           {calendarEvent.title}

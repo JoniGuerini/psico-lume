@@ -1,4 +1,15 @@
-import { Calendar, CircleDollarSign, Home, Inbox, Map, Users, Wallet } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import {
+  BarChart3,
+  Calendar,
+  CircleDollarSign,
+  FileSpreadsheet,
+  Home,
+  Inbox,
+  Map,
+  Users,
+  Wallet,
+} from "lucide-react"
 
 import { NavUser } from "@/components/nav-user"
 import {
@@ -7,20 +18,54 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const items = [
-  { title: "Home", url: "#", icon: Home },
-  { title: "Inbox", url: "#", icon: Inbox },
-  { title: "Agenda", url: "#", icon: Calendar },
-  { title: "Pacientes", url: "#", icon: Users },
-  { title: "A receber", url: "#", icon: CircleDollarSign },
-  { title: "Financeiro", url: "#", icon: Wallet },
-  { title: "Roadmap", url: "#", icon: Map },
+type NavItem = {
+  title: string
+  url: string
+  icon: LucideIcon
+}
+
+type NavGroup = {
+  label: string
+  items: NavItem[]
+}
+
+const navGroups: NavGroup[] = [
+  {
+    label: "Início",
+    items: [
+      { title: "Home", url: "#", icon: Home },
+      { title: "Inbox", url: "#", icon: Inbox },
+    ],
+  },
+  {
+    label: "Atendimento",
+    items: [
+      { title: "Agenda", url: "#", icon: Calendar },
+      { title: "Pacientes", url: "#", icon: Users },
+    ],
+  },
+  {
+    label: "Financeiro",
+    items: [
+      { title: "A receber", url: "#", icon: CircleDollarSign },
+      { title: "Financeiro", url: "#", icon: Wallet },
+      { title: "Relatórios", url: "#", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Gestão",
+    items: [
+      { title: "Dados", url: "#", icon: FileSpreadsheet },
+      { title: "Roadmap", url: "#", icon: Map },
+    ],
+  },
 ]
 
 type AppSidebarProps = {
@@ -33,6 +78,33 @@ type AppSidebarProps = {
     email: string
     avatar: string
   }
+}
+
+function SidebarNavItem({
+  item,
+  isActive,
+  onSelect,
+}: {
+  item: NavItem
+  isActive: boolean
+  onSelect: (title: string) => void
+}) {
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive}>
+        <a
+          href={item.url}
+          onClick={(event) => {
+            event.preventDefault()
+            onSelect(item.title)
+          }}
+        >
+          <item.icon />
+          <span>{item.title}</span>
+        </a>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  )
 }
 
 export function AppSidebar({
@@ -79,34 +151,27 @@ export function AppSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu className="gap-1.5">
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    tooltip={item.title}
+        {navGroups.map((group) => (
+          <SidebarGroup key={group.label}>
+            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu className="gap-1">
+                {group.items.map((item) => (
+                  <SidebarNavItem
+                    key={item.title}
+                    item={item}
                     isActive={activeItem === item.title}
-                  >
-                    <a
-                      href={item.url}
-                      onClick={(event) => {
-                        event.preventDefault()
-                        onSelect(item.title)
-                      }}
-                    >
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                    onSelect={onSelect}
+                  />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
+
       <SidebarFooter>
         <NavUser
           user={user}

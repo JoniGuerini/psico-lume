@@ -25,6 +25,7 @@ import {
   mergeEventStatuses,
   resolveRescheduledFromAfterMove,
   resolveStatusAfterMove,
+  syncStaleEventStatuses,
 } from "@/lib/session-status"
 import {
   buildUnpaidSessionRows,
@@ -92,10 +93,13 @@ function rebuildRecurringEvents(
   currentEvents: CalendarEvent[]
 ) {
   const manual = currentEvents.filter((event) => event.patientId === "")
-  return mergeEventStatuses(currentEvents, [
-    ...manual,
-    ...buildCalendarEvents(patients),
-  ])
+  return syncStaleEventStatuses(
+    mergeEventStatuses(currentEvents, [
+      ...manual,
+      ...buildCalendarEvents(patients),
+    ]),
+    patients
+  )
 }
 
 function applySessionCountChange(
@@ -141,7 +145,7 @@ export function ClinicDataProvider({
     buildClinicalRecords(mockPatients)
   )
   const [events, setEvents] = useState<CalendarEvent[]>(() =>
-    buildCalendarEvents(mockPatients)
+    syncStaleEventStatuses(buildCalendarEvents(mockPatients), mockPatients)
   )
   const [notifications, setNotifications] = useState<Notification[]>(() =>
     buildNotifications(mockPatients)

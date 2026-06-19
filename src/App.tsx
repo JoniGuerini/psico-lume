@@ -15,11 +15,13 @@ import { InboxPage } from "@/components/inbox-page"
 import { LoginFormContent } from "@/components/login-page"
 import { LumeNavyGlow } from "@/components/lume-navy-glow"
 import { ClinicExportButton } from "@/components/clinic-export-button"
+import { ClinicSheetsPage } from "@/components/clinic-sheets-page"
 import { NotificationsBell } from "@/components/notifications-bell"
 import { NotificationsPage } from "@/components/notifications-page"
 import { LoginHeroSlot, ShellLeftRail } from "@/components/shell-left-rail"
 import { ClinicDataProvider } from "@/context/clinic-data-provider"
 import { PatientsPage } from "@/components/patients-page"
+import { ReportsPage } from "@/components/reports-page"
 import { RoadmapPage } from "@/components/roadmap-page"
 import { UnpaidSessionsPage } from "@/components/unpaid-sessions-page"
 import { Button } from "@/components/ui/button"
@@ -43,6 +45,7 @@ const fillViewportPages = new Set([
   "Agenda",
   "Pacientes",
   "Notifications",
+  "Dados",
 ])
 
 export function App() {
@@ -237,7 +240,9 @@ export function App() {
                         >
                           <Search />
                         </Button>
-                        <ClinicExportButton />
+                        <ClinicExportButton
+                          onViewSheets={() => handleNavigate("Dados")}
+                        />
                         <NotificationsBell
                           onViewAll={() => handleNavigate("Notifications")}
                         />
@@ -279,6 +284,8 @@ export function App() {
                         />
                       ) : null}
                       {activeItem === "Financeiro" ? <FinancePage /> : null}
+                      {activeItem === "Relatórios" ? <ReportsPage /> : null}
+                      {activeItem === "Dados" ? <ClinicSheetsPage /> : null}
                       {activeItem === "A receber" ? (
                         <UnpaidSessionsPage
                           initialFilter={receivablesFilter}

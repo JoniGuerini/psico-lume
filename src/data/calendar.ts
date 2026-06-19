@@ -65,6 +65,7 @@ export function buildCalendarEvents(
   anchor = new Date()
 ): CalendarEvent[] {
   const events: CalendarEvent[] = []
+  const seenIds = new Set<string>()
 
   const rangeStart = addDays(anchor, -CALENDAR_PAST_DAYS)
   const rangeEnd = addDays(anchor, CALENDAR_FUTURE_DAYS)
@@ -103,15 +104,17 @@ export function buildCalendarEvents(
           cursor.getDate()
         )
 
-        events.push(
-          buildEventForSlot(
-            patient,
-            eventDate,
-            slot.start,
-            slot.duration,
-            todayStart
-          )
+        const event = buildEventForSlot(
+          patient,
+          eventDate,
+          slot.start,
+          slot.duration,
+          todayStart
         )
+
+        if (seenIds.has(event.id)) continue
+        seenIds.add(event.id)
+        events.push(event)
       }
     }
   }
@@ -127,6 +130,31 @@ export function eventsOfDay(events: CalendarEvent[], date: Date) {
   return events
     .filter((event) => isSameDay(event.date, date))
     .sort((a, b) => a.start.localeCompare(b.start))
+}
+
+/** Janela do histórico no perfil: passado completo + 1 mês à frente. */
+export const PATIENT_SESSIONS_FUTURE_DAYS = 30
+
+export function getEventsForPatientProfile(
+  events: CalendarEvent[],
+  patientId: string,
+  anchor = new Date()
+) {
+  const todayStart = new Date(
+    anchor.getFullYear(),
+    anchor.getMonth(),
+    anchor.getDate()
+  )
+  const futureLimit = addDays(todayStart, PATIENT_SESSIONS_FUTURE_DAYS)
+
+  return getEventsForPatient(events, patientId).filter((event) => {
+    const eventDay = new Date(
+      event.date.getFullYear(),
+      event.date.getMonth(),
+      event.date.getDate()
+    )
+    return eventDay <= futureLimit
+  })
 }
 
 export function getEventsForPatient(

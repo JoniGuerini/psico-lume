@@ -1,6 +1,6 @@
 import type { SessionFrequency } from "@/data/types"
 
-export const DEFAULT_SESSION_FREQUENCY: SessionFrequency = "semanal"
+export const DEFAULT_SESSION_FREQUENCY: SessionFrequency = "4x-mes"
 
 export const sessionFrequencyOptions: {
   value: SessionFrequency
@@ -8,34 +8,50 @@ export const sessionFrequencyOptions: {
   description: string
 }[] = [
   {
-    value: "semanal",
-    label: "Semanal",
-    description: "1 sessão por semana",
+    value: "1x-mes",
+    label: "1x ao mês",
+    description: "1 sessão por mês",
   },
   {
-    value: "quinzenal",
-    label: "Quinzenal",
-    description: "A cada 2 semanas",
+    value: "2x-mes",
+    label: "2x ao mês",
+    description: "Quinzenal — a cada 2 semanas",
   },
   {
     value: "3x-mes",
     label: "3x ao mês",
-    description: "Até 3 sessões no mês",
+    description: "3 sessões por mês",
   },
   {
     value: "4x-mes",
     label: "4x ao mês",
-    description: "Até 4 sessões no mês",
+    description: "Semanal — toda semana",
   },
 ]
 
+/** Valores legados antes da unificação por sessões/mês. */
+const LEGACY_FREQUENCY_MAP: Record<string, SessionFrequency> = {
+  semanal: "4x-mes",
+  quinzenal: "2x-mes",
+}
+
+export function normalizeSessionFrequency(
+  frequency: SessionFrequency | string | undefined
+): SessionFrequency {
+  if (!frequency) return DEFAULT_SESSION_FREQUENCY
+  if (frequency in LEGACY_FREQUENCY_MAP) {
+    return LEGACY_FREQUENCY_MAP[frequency]
+  }
+  return frequency as SessionFrequency
+}
+
 export function sessionFrequencyLabel(
-  frequency: SessionFrequency | undefined
+  frequency: SessionFrequency | string | undefined
 ): string {
+  const normalized = normalizeSessionFrequency(frequency)
   return (
-    sessionFrequencyOptions.find(
-      (option) => option.value === (frequency ?? DEFAULT_SESSION_FREQUENCY)
-    )?.label ?? "Semanal"
+    sessionFrequencyOptions.find((option) => option.value === normalized)
+      ?.label ?? "4x ao mês"
   )
 }
 
@@ -59,22 +75,20 @@ function getWeekdayOccurrenceInMonth(date: Date) {
 }
 
 export function shouldIncludeRecurringDate(
-  frequency: SessionFrequency | undefined,
+  frequency: SessionFrequency | string | undefined,
   date: Date,
   anchor = new Date()
 ): boolean {
-  const freq = frequency ?? DEFAULT_SESSION_FREQUENCY
+  const freq = normalizeSessionFrequency(frequency)
 
   switch (freq) {
-    case "semanal":
-      return true
-    case "quinzenal":
+    case "1x-mes":
+      return getWeekdayOccurrenceInMonth(date) === 1
+    case "2x-mes":
       return getIsoWeek(date) % 2 === getIsoWeek(anchor) % 2
     case "3x-mes":
       return getWeekdayOccurrenceInMonth(date) <= 3
     case "4x-mes":
-      return getWeekdayOccurrenceInMonth(date) <= 4
-    default:
       return true
   }
 }

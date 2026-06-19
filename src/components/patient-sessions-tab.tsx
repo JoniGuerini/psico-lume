@@ -9,7 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { useClinicData } from "@/context/clinic-data-provider"
-import { getEventsForPatient } from "@/data/calendar"
+import { getEventsForPatientProfile } from "@/data/calendar"
 import type { CalendarEvent, Patient, RescheduledFrom } from "@/data/types"
 import {
   getEventStatus,
@@ -190,7 +190,7 @@ export function PatientSessionsTab({ patient }: PatientSessionsTabProps) {
   const { events } = useClinicData()
 
   const sessions = useMemo(
-    () => getEventsForPatient(events, patient.id),
+    () => getEventsForPatientProfile(events, patient.id),
     [events, patient.id]
   )
 
@@ -234,15 +234,14 @@ export function PatientSessionsTab({ patient }: PatientSessionsTabProps) {
               Histórico de sessões
             </h3>
             <p className="text-sm text-sidebar-foreground/75">
-              Agenda completa de {patient.name} — passadas, futuras e status de
-              comparecimento.
+              Sessões passadas e agendadas até 1 mês à frente de {patient.name}.
             </p>
           </div>
         </div>
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Total na agenda" value={String(stats.total)} />
+        <Stat label="Total no período" value={String(stats.total)} />
         <Stat label="Realizadas" value={String(stats.realizadas)} />
         <Stat label="Próximas" value={String(stats.proximas)} />
         <Stat label="Faltas / canceladas" value={String(stats.faltas)} />
@@ -251,7 +250,7 @@ export function PatientSessionsTab({ patient }: PatientSessionsTabProps) {
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
           <h4 className="font-heading text-base font-semibold">
-            Todas as sessões
+            Sessões recentes e próximas
           </h4>
           <span className="text-sm text-muted-foreground">
             {sessions.length}{" "}

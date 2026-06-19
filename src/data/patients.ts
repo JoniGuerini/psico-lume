@@ -64,18 +64,18 @@ export type PatientRecurrenceSlot = {
 export function getPatientRecurrenceSlots(patient: Patient): PatientRecurrenceSlot[] {
   if (patient.status !== "ativo") return []
 
+  let slots: PatientRecurrenceSlot[] = []
+
   if (patient.schedules?.length) {
-    return patient.schedules
+    slots = patient.schedules
       .filter((schedule) => schedule.time)
       .map((schedule) => ({
         weekdayCode: normalizeWeekdayCode(schedule.weekday),
         start: schedule.time,
         duration: Number(schedule.duration) || patient.sessionDuration || 50,
       }))
-  }
-
-  if (patient.sessionDay && patient.sessionTime) {
-    return [
+  } else if (patient.sessionDay && patient.sessionTime) {
+    slots = [
       {
         weekdayCode: normalizeWeekdayCode(patient.sessionDay),
         start: patient.sessionTime,
@@ -84,7 +84,13 @@ export function getPatientRecurrenceSlots(patient: Patient): PatientRecurrenceSl
     ]
   }
 
-  return []
+  const seen = new Set<string>()
+  return slots.filter((slot) => {
+    const key = `${slot.weekdayCode}|${slot.start}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
 }
 
 export function isScheduledPatient(patient: Patient) {
@@ -182,7 +188,7 @@ function patient(
     ...data,
     ...profile,
     sessionDuration,
-    sessionFrequency: data.sessionFrequency ?? "semanal",
+    sessionFrequency: data.sessionFrequency ?? "4x-mes",
     nextSession,
     schedules,
   }
@@ -430,7 +436,7 @@ export const mockPatients: Patient[] = [
     sessionTime: "09:00",
     sessions: 24,
     since: "Nov 2024",
-    sessionFrequency: "quinzenal",
+    sessionFrequency: "2x-mes",
   }),
   patient({
     id: "16",
