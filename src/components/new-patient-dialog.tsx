@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { formatNextSession } from "@/data/patients"
 
@@ -409,7 +410,7 @@ export function NewPatientDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="!flex max-h-[92vh] min-h-0 w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-[#FAF6EC] p-0 sm:max-w-[72rem]"
+        className="!flex max-h-[92vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-[#FAF6EC] p-0 sm:max-w-[72rem]"
         onPointerDownOutside={(event) => {
           if (selectOpen) event.preventDefault()
         }}
@@ -433,9 +434,9 @@ export function NewPatientDialog({
 
         <form
           onSubmit={handleSubmit}
-          className="flex min-h-0 flex-1 flex-col overflow-hidden"
+          className="flex min-h-0 flex-col overflow-hidden"
         >
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+          <ScrollArea className="h-[calc(92vh-10rem)] shrink-0">
             <div className="flex flex-col gap-4 p-6">
               <div className="grid gap-4 lg:grid-cols-2">
                 <FormSection title="Dados pessoais">
@@ -1053,7 +1054,7 @@ export function NewPatientDialog({
                 />
               </FormSection>
             </div>
-          </div>
+          </ScrollArea>
 
           <DialogFooter className="shrink-0 border-t border-border bg-card/60 px-6 py-4">
             <Button

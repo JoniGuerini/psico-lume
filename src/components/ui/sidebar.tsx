@@ -17,6 +17,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Tooltip,
   TooltipContent,
@@ -369,15 +370,20 @@ function SidebarSeparator({
 
 function SidebarContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      data-slot="sidebar-content"
-      data-sidebar="content"
+    <ScrollArea
+      variant="sidebar"
       className={cn(
-        "no-scrollbar flex min-h-0 flex-1 flex-col gap-2 overflow-auto [--radius:var(--radius-xl)] group-data-[collapsible=icon]:overflow-hidden",
+        "min-h-0 flex-1 [--radius:var(--radius-xl)] group-data-[collapsible=icon]:overflow-hidden",
         className
       )}
-      {...props}
-    />
+    >
+      <div
+        data-slot="sidebar-content"
+        data-sidebar="content"
+        className="flex min-h-0 flex-col gap-2 p-2"
+        {...props}
+      />
+    </ScrollArea>
   )
 }
 

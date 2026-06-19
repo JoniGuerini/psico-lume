@@ -26,12 +26,15 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import type { GlobalSearchAction } from "@/lib/global-search"
+import { cn } from "@/lib/utils"
 
 const user = {
   name: "Jonathan Guerini",
   email: "jonathan.guerini@example.com",
   avatar: "",
 }
+
+const fillViewportPages = new Set(["Inbox", "Agenda", "Pacientes", "Notifications"])
 
 export function App() {
   const [authenticated, setAuthenticated] = useState(false)
@@ -44,6 +47,8 @@ export function App() {
   } | null>(null)
   const [eventFocus, setEventFocus] = useState<string | null>(null)
   const [emailFocus, setEmailFocus] = useState<string | null>(null)
+  const [openNewPatient, setOpenNewPatient] = useState(false)
+  const [openNewSession, setOpenNewSession] = useState(false)
 
   useGlobalSearchShortcut(() => setSearchOpen(true))
 
@@ -52,6 +57,8 @@ export function App() {
     setPatientFocus(null)
     setEventFocus(null)
     setEmailFocus(null)
+    setOpenNewPatient(false)
+    setOpenNewSession(false)
   }
 
   function handleSearchSelect(action: GlobalSearchAction) {
@@ -63,25 +70,47 @@ export function App() {
         setPatientFocus({ id: action.patientId, tab: action.tab })
         setEventFocus(null)
         setEmailFocus(null)
+        setOpenNewPatient(false)
+        setOpenNewSession(false)
         setActiveItem("Pacientes")
         break
       case "event":
         setEventFocus(action.eventId)
         setPatientFocus(null)
         setEmailFocus(null)
+        setOpenNewPatient(false)
+        setOpenNewSession(false)
         setActiveItem("Agenda")
         break
       case "email":
         setEmailFocus(action.emailId)
         setPatientFocus(null)
         setEventFocus(null)
+        setOpenNewPatient(false)
+        setOpenNewSession(false)
         setActiveItem("Inbox")
         break
       case "notification":
         setPatientFocus(null)
         setEventFocus(null)
         setEmailFocus(null)
+        setOpenNewPatient(false)
+        setOpenNewSession(false)
         setActiveItem("Notifications")
+        break
+      case "quick":
+        setPatientFocus(null)
+        setEventFocus(null)
+        setEmailFocus(null)
+        if (action.id === "new-patient") {
+          setOpenNewSession(false)
+          setOpenNewPatient(true)
+          setActiveItem("Pacientes")
+        } else if (action.id === "new-session") {
+          setOpenNewPatient(false)
+          setOpenNewSession(true)
+          setActiveItem("Agenda")
+        }
         break
     }
   }
@@ -108,7 +137,7 @@ export function App() {
           onLogout={handleLogout}
           user={user}
         />
-        <SidebarInset className="overflow-hidden">
+        <SidebarInset className="flex min-h-0 flex-col overflow-hidden">
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator
@@ -121,15 +150,12 @@ export function App() {
             <div className="ml-auto flex items-center gap-1">
               <Button
                 variant="outline"
-                size="sm"
-                className="hidden border-border bg-card shadow-sm hover:bg-accent/50 sm:flex"
+                size="icon"
+                className="rounded-full border-border bg-card shadow-sm hover:bg-accent/50"
                 onClick={() => setSearchOpen(true)}
+                aria-label="Busca global"
               >
                 <Search />
-                <span className="text-muted-foreground">Buscar...</span>
-                <kbd className="pointer-events-none hidden rounded-md border border-border bg-background/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground lg:inline-block">
-                  {navigator.platform.includes("Mac") ? "⌘" : "Ctrl+"}K
-                </kbd>
               </Button>
               <ClinicExportButton />
               <NotificationsBell
@@ -137,7 +163,14 @@ export function App() {
               />
             </div>
           </header>
-          <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4">
+          <main
+            className={cn(
+              "flex min-h-0 flex-1 flex-col gap-4 p-4",
+              fillViewportPages.has(activeItem)
+                ? "overflow-hidden"
+                : "overflow-y-auto overscroll-contain"
+            )}
+          >
             {activeItem === "Home" ? (
               <HomePage onViewAgenda={() => handleNavigate("Agenda")} />
             ) : null}
@@ -145,12 +178,18 @@ export function App() {
               <InboxPage initialEmailId={emailFocus} />
             ) : null}
             {activeItem === "Agenda" ? (
-              <CalendarPage initialEventId={eventFocus} />
+              <CalendarPage
+                initialEventId={eventFocus}
+                openNewSession={openNewSession}
+                onNewSessionOpenChange={setOpenNewSession}
+              />
             ) : null}
             {activeItem === "Pacientes" ? (
               <PatientsPage
                 initialPatientId={patientFocus?.id ?? null}
                 initialProfileTab={patientFocus?.tab ?? "overview"}
+                openNewPatient={openNewPatient}
+                onNewPatientOpenChange={setOpenNewPatient}
               />
             ) : null}
             {activeItem === "Financeiro" ? <FinancePage /> : null}

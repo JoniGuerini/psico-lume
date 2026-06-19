@@ -29,7 +29,7 @@ export const ROADMAP_META = {
   versionLabel: "v1.0 — Produto mock completo",
   subtitle:
     "Fechar a experiência clínica end-to-end com dados mockados. Backend e persistência entram só depois.",
-  progress: 97,
+  progress: 98,
 }
 
 export const roadmapItems: RoadmapItem[] = [
@@ -207,11 +207,21 @@ export const roadmapItems: RoadmapItem[] = [
     id: "global-search",
     title: "Busca global",
     description:
-      "Atalho Cmd+K para encontrar pacientes, sessões, e-mails e notificações.",
+      "Pill no header, Cmd+K, modal largo creme/card branco, busca unificada e ações rápidas (novo paciente, atendimento).",
     icon: Search,
     status: "done",
     phase: "v1.0",
     tags: ["UX", "Entregue"],
+  },
+  {
+    id: "custom-scrollbar",
+    title: "Scrollbar customizada",
+    description:
+      "ScrollArea próprio (Radix), barra nativa do SO oculta e thumb Luma sem setas — inbox, modais e listas.",
+    icon: LayoutDashboard,
+    status: "done",
+    phase: "v1.0",
+    tags: ["UI", "Entregue"],
   },
   {
     id: "reports",

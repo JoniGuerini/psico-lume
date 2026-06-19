@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 
 type AccountDialogProps = {
@@ -252,7 +253,8 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
         </aside>
 
         <div className="m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl bg-card text-card-foreground shadow-md md:ml-0">
-          <div className="min-h-0 flex-1 overflow-y-auto p-6">
+          <ScrollArea className="h-0 min-h-0 flex-1">
+            <div className="p-6">
             {section === "perfil" ? (
               <div className="flex flex-col gap-6">
                 <SectionHeading
@@ -670,7 +672,8 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                 </Panel>
               </div>
             ) : null}
-          </div>
+            </div>
+          </ScrollArea>
         </div>
       </DialogContent>
     </Dialog>

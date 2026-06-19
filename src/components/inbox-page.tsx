@@ -64,8 +64,8 @@ export function InboxPage({
   }
 
   return (
-    <div className="flex h-full min-h-0 gap-4">
-      <Card className="flex min-h-0 w-full max-w-sm shrink-0 flex-col gap-0 p-0">
+    <div className="flex min-h-0 flex-1 gap-4">
+      <Card className="flex min-h-0 w-full max-w-sm shrink-0 flex-col gap-0 overflow-hidden p-0">
         <div className="flex flex-col gap-4 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -92,7 +92,7 @@ export function InboxPage({
           </div>
         </div>
         <Separator />
-        <ScrollArea className="min-h-0 flex-1">
+        <ScrollArea className="h-0 min-h-0 flex-1">
           <div className="flex flex-col gap-2 p-3">
             {filtered.length === 0 ? (
               <p className="p-4 text-center text-sm text-muted-foreground">
@@ -150,7 +150,7 @@ export function InboxPage({
         </ScrollArea>
       </Card>
 
-      <Card className="flex min-h-0 flex-1 flex-col gap-0 p-0">
+      <Card className="flex min-h-0 min-w-0 flex-1 flex-col gap-0 overflow-hidden p-0">
         <div className="flex items-center gap-2 p-4">
           <Button
             variant="ghost"
@@ -213,7 +213,7 @@ export function InboxPage({
           </span>
         </div>
         <Separator />
-        <ScrollArea className="min-h-0 flex-1">
+        <ScrollArea className="h-0 min-h-0 flex-1">
           <div className="flex flex-col gap-4 p-6">
             <h1 className="text-xl font-semibold tracking-tight">
               {selected.subject}

@@ -72,7 +72,7 @@ export function NotificationsPage() {
   }, [filtered])
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col gap-4">
+    <div className="flex min-h-0 flex-1 w-full flex-col gap-4">
       <Card className="flex flex-col gap-4 p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-1">

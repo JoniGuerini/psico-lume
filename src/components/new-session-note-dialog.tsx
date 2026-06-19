@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { modalityLabel } from "@/components/patients-page"
 import type { Patient, PatientModality, SessionNote } from "@/data/types"
 import { cn } from "@/lib/utils"
@@ -123,7 +124,7 @@ export function NewSessionNoteDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="!flex max-h-[92vh] min-h-0 w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-[#FAF6EC] p-0 sm:max-w-lg"
+        className="!flex max-h-[92vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-[#FAF6EC] p-0 sm:max-w-lg"
         onPointerDownOutside={(event) => {
           if (selectOpen) event.preventDefault()
         }}
@@ -144,9 +145,10 @@ export function NewSessionNoteDialog({
 
         <form
           onSubmit={handleSubmit}
-          className="flex min-h-0 flex-1 flex-col overflow-hidden"
+          className="flex min-h-0 flex-col overflow-hidden"
         >
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6">
+          <ScrollArea className="h-[calc(92vh-10rem)] shrink-0">
+            <div className="flex flex-col gap-4 p-6">
             <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-2">
@@ -268,6 +270,7 @@ export function NewSessionNoteDialog({
               </div>
             </section>
           </div>
+          </ScrollArea>
 
           <DialogFooter className="shrink-0 border-t border-border px-6 py-4">
             <Button

@@ -2,11 +2,13 @@ import type { LucideIcon } from "lucide-react"
 import {
   Bell,
   Calendar,
+  CalendarPlus,
   Home,
   Inbox,
   Mail,
   Map as MapIcon,
   User,
+  UserPlus,
   Users,
   Wallet,
 } from "lucide-react"
@@ -19,6 +21,8 @@ import type {
 } from "@/data/types"
 import { sessionStatusConfig } from "@/lib/session-status"
 
+export type QuickActionId = "new-patient" | "new-session"
+
 export type GlobalSearchAction =
   | { type: "navigate"; page: string }
   | {
@@ -29,6 +33,32 @@ export type GlobalSearchAction =
   | { type: "event"; eventId: string }
   | { type: "email"; emailId: string }
   | { type: "notification"; notificationId: string }
+  | { type: "quick"; id: QuickActionId }
+
+export type GlobalSearchQuickAction = {
+  id: QuickActionId
+  title: string
+  subtitle: string
+  icon: LucideIcon
+  action: GlobalSearchAction
+}
+
+export const globalSearchQuickActions: GlobalSearchQuickAction[] = [
+  {
+    id: "new-patient",
+    title: "Novo paciente",
+    subtitle: "Cadastrar na clínica",
+    icon: UserPlus,
+    action: { type: "quick", id: "new-patient" },
+  },
+  {
+    id: "new-session",
+    title: "Novo atendimento",
+    subtitle: "Agendar sessão",
+    icon: CalendarPlus,
+    action: { type: "quick", id: "new-session" },
+  },
+]
 
 export type GlobalSearchItem = {
   id: string

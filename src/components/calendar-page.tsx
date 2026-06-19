@@ -281,7 +281,7 @@ function TimeGrid({
         </div>
       </div>
 
-      <ScrollArea className="min-h-0 flex-1">
+      <ScrollArea className="h-0 min-h-0 flex-1">
         <div
           ref={scrollRef}
           className={cn("flex pr-3", dragId && "cursor-grabbing select-none")}
@@ -443,6 +443,8 @@ type NewSessionPopoverProps = {
   patientNames: string[]
   onCreate: (event: CalendarEvent) => void
   align?: "start" | "center" | "end"
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   children: React.ReactNode
 }
 
@@ -451,10 +453,21 @@ function NewSessionPopover({
   patientNames,
   onCreate,
   align = "end",
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
   children,
 }: NewSessionPopoverProps) {
-  const [open, setOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
   const [selectOpen, setSelectOpen] = useState(false)
+  const open = controlledOpen ?? internalOpen
+
+  function setOpen(next: boolean) {
+    if (controlledOnOpenChange) {
+      controlledOnOpenChange(next)
+    } else {
+      setInternalOpen(next)
+    }
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -492,8 +505,12 @@ function NewSessionPopover({
 
 export function CalendarPage({
   initialEventId = null,
+  openNewSession = false,
+  onNewSessionOpenChange,
 }: {
   initialEventId?: string | null
+  openNewSession?: boolean
+  onNewSessionOpenChange?: (open: boolean) => void
 } = {}) {
   const { patients, events, addEvent, moveEvent, updateEvent } = useClinicData()
   const patientNames = useMemo(
@@ -509,6 +526,19 @@ export function CalendarPage({
   )
   const [selectedDate, setSelectedDate] = useState(today)
   const [editingEventId, setEditingEventId] = useState<string | null>(null)
+  const [createSessionOpen, setCreateSessionOpen] = useState(false)
+
+  useEffect(() => {
+    if (openNewSession) {
+      setCreateSessionOpen(true)
+      onNewSessionOpenChange?.(false)
+    }
+  }, [openNewSession, onNewSessionOpenChange])
+
+  function handleCreateSessionOpenChange(open: boolean) {
+    setCreateSessionOpen(open)
+    if (!open) onNewSessionOpenChange?.(false)
+  }
 
   const editingEvent = useMemo(
     () => events.find((event) => event.id === editingEventId) ?? null,
@@ -616,7 +646,7 @@ export function CalendarPage({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <Card className="flex flex-row flex-wrap items-center gap-3 p-3">
         <div className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full border border-border bg-background/40 p-1">
           <Button
@@ -662,6 +692,8 @@ export function CalendarPage({
               patientNames={patientNames}
               onCreate={handleCreate}
               align="end"
+              open={createSessionOpen}
+              onOpenChange={handleCreateSessionOpenChange}
             >
               <Button size="sm">
                 <CalendarPlus />
@@ -780,7 +812,7 @@ export function CalendarPage({
             </div>
           </div>
           <Separator />
-          <ScrollArea className="min-h-0 flex-1">
+          <ScrollArea className="h-0 min-h-0 flex-1">
             <div className="flex flex-col gap-3 p-4">
               {selectedEvents.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">

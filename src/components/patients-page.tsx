@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -81,9 +82,13 @@ function PatientCols() {
 export function PatientsPage({
   initialPatientId = null,
   initialProfileTab = "overview",
+  openNewPatient = false,
+  onNewPatientOpenChange,
 }: {
   initialPatientId?: string | null
   initialProfileTab?: "overview" | "sessions" | "records"
+  openNewPatient?: boolean
+  onNewPatientOpenChange?: (open: boolean) => void
 } = {}) {
   const { patients, activeCount, addPatient } = useClinicData()
   const [query, setQuery] = useState("")
@@ -100,6 +105,18 @@ export function PatientsPage({
       setProfileTab(initialProfileTab)
     }
   }, [initialPatientId, initialProfileTab])
+
+  useEffect(() => {
+    if (openNewPatient) {
+      setNewPatientOpen(true)
+      onNewPatientOpenChange?.(false)
+    }
+  }, [openNewPatient, onNewPatientOpenChange])
+
+  function handleNewPatientOpenChange(open: boolean) {
+    setNewPatientOpen(open)
+    if (!open) onNewPatientOpenChange?.(false)
+  }
 
   function openProfile(
     patientId: string,
@@ -141,7 +158,7 @@ export function PatientsPage({
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col gap-4">
+    <div className="flex min-h-0 flex-1 w-full flex-col gap-4">
       <Card className="flex flex-col gap-4 p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
@@ -214,8 +231,9 @@ export function PatientsPage({
           </Table>
         </div>
 
-        <Card className="min-h-0 w-full flex-1 overflow-hidden p-0 [&>[data-slot=table-container]]:h-full [&>[data-slot=table-container]]:overflow-auto">
-          <Table className="table-fixed">
+        <Card className="min-h-0 w-full flex-1 overflow-hidden p-0">
+          <ScrollArea className="h-full">
+            <Table className="table-fixed">
             <PatientCols />
             <TableBody>
               {filtered.length === 0 ? (
@@ -328,12 +346,14 @@ export function PatientsPage({
               )}
             </TableBody>
           </Table>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
         </Card>
       </div>
 
       <NewPatientDialog
         open={newPatientOpen}
-        onOpenChange={setNewPatientOpen}
+        onOpenChange={handleNewPatientOpenChange}
         onCreate={handleCreate}
       />
     </div>
