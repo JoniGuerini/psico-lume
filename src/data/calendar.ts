@@ -90,6 +90,19 @@ export function eventsOfDay(events: CalendarEvent[], date: Date) {
     .sort((a, b) => a.start.localeCompare(b.start))
 }
 
+export function getEventsForPatient(
+  events: CalendarEvent[],
+  patientId: string
+) {
+  return events
+    .filter((event) => event.patientId === patientId)
+    .sort((a, b) => {
+      const dayDiff = b.date.getTime() - a.date.getTime()
+      if (dayDiff !== 0) return dayDiff
+      return b.start.localeCompare(a.start)
+    })
+}
+
 export function countEventsByDay(events: CalendarEvent[], date: Date) {
   return eventsOfDay(events, date).length
 }

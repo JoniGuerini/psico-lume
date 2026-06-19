@@ -29,7 +29,7 @@ export const ROADMAP_META = {
   versionLabel: "v1.0 — Produto mock completo",
   subtitle:
     "Fechar a experiência clínica end-to-end com dados mockados. Backend e persistência entram só depois.",
-  progress: 90,
+  progress: 95,
 }
 
 export const roadmapItems: RoadmapItem[] = [
@@ -174,6 +174,26 @@ export const roadmapItems: RoadmapItem[] = [
     tags: ["Agenda", "Clínico", "Entregue"],
   },
   {
+    id: "session-history",
+    title: "Histórico de sessões no perfil",
+    description:
+      "Aba dedicada no perfil com timeline de atendimentos, remarcações conectadas e faixa lateral por status.",
+    icon: Calendar,
+    status: "done",
+    phase: "v1.0",
+    tags: ["Agenda", "Pacientes", "Entregue"],
+  },
+  {
+    id: "export",
+    title: "Exportação de dados",
+    description:
+      "XLSX estilizado com 7 abas (pacientes, agenda, prontuário, financeiro). Botão no header global.",
+    icon: ClipboardList,
+    status: "done",
+    phase: "v1.0",
+    tags: ["Gestão", "Entregue"],
+  },
+  {
     id: "finance-agenda",
     title: "Agenda ↔ Financeiro",
     description:
@@ -189,15 +209,15 @@ export const roadmapItems: RoadmapItem[] = [
     description:
       "Atalho Cmd+K para encontrar pacientes, sessões, e-mails e notificações.",
     icon: Search,
-    status: "planned",
+    status: "next",
     phase: "v1.0",
     tags: ["UX"],
   },
   {
     id: "reports",
-    title: "Relatórios e exportação",
+    title: "Relatórios na UI",
     description:
-      "Taxa de comparecimento, receita por modalidade e export CSV/PDF simples.",
+      "Taxa de comparecimento e receita por modalidade direto no app (export XLSX já cobre dados brutos).",
     icon: ClipboardList,
     status: "planned",
     phase: "v1.0",

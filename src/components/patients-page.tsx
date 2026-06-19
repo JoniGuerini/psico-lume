@@ -84,9 +84,14 @@ export function PatientsPage() {
   const [status, setStatus] = useState<PatientStatus | "todos">("todos")
   const [newPatientOpen, setNewPatientOpen] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [profileTab, setProfileTab] = useState<"overview" | "records">("overview")
+  const [profileTab, setProfileTab] = useState<
+    "overview" | "sessions" | "records"
+  >("overview")
 
-  function openProfile(patientId: string, tab: "overview" | "records" = "overview") {
+  function openProfile(
+    patientId: string,
+    tab: "overview" | "sessions" | "records" = "overview"
+  ) {
     setProfileTab(tab)
     setSelectedId(patientId)
   }

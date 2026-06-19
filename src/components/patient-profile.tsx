@@ -16,6 +16,7 @@ import type { LucideIcon } from "lucide-react"
 
 import { NewPatientDialog } from "@/components/new-patient-dialog"
 import { PatientRecordsTab } from "@/components/patient-records-tab"
+import { PatientSessionsTab } from "@/components/patient-sessions-tab"
 import { ScheduleSessionDialog } from "@/components/schedule-session-dialog"
 import {
   modalityLabel,
@@ -33,10 +34,12 @@ import { getInitials, parsePrice } from "@/data/patients"
 import type { Patient } from "@/data/types"
 import { cn } from "@/lib/utils"
 
+type PatientProfileTab = "overview" | "sessions" | "records"
+
 type PatientProfileProps = {
   patient: Patient
   onBack: () => void
-  initialTab?: "overview" | "records"
+  initialTab?: PatientProfileTab
 }
 
 function Field({ label, value }: { label: string; value?: string | null }) {
@@ -89,13 +92,17 @@ export function PatientProfile({
   onBack,
   initialTab = "overview",
 }: PatientProfileProps) {
-  const { sessionNotes, updatePatient, addEvent } = useClinicData()
+  const { sessionNotes, updatePatient, addEvent, events } = useClinicData()
   const [tab, setTab] = useState(initialTab)
   const [editOpen, setEditOpen] = useState(false)
   const [scheduleOpen, setScheduleOpen] = useState(false)
   const noteCount = useMemo(
     () => getRecordsForPatient(sessionNotes, patient.id).length,
     [sessionNotes, patient.id]
+  )
+  const sessionCount = useMemo(
+    () => events.filter((event) => event.patientId === patient.id).length,
+    [events, patient.id]
   )
   const status = statusConfig[patient.status]
   const totalEstimated = patient.price
@@ -196,10 +203,14 @@ export function PatientProfile({
       <Card className="p-4">
         <Tabs
           value={tab}
-          onValueChange={(value) => setTab(value as "overview" | "records")}
+          onValueChange={(value) => setTab(value as PatientProfileTab)}
         >
           <TabsList className="border border-border bg-background/40">
             <TabsTrigger value="overview">Visão geral</TabsTrigger>
+            <TabsTrigger value="sessions">
+              Histórico de sessões
+              {sessionCount > 0 ? ` (${sessionCount})` : ""}
+            </TabsTrigger>
             <TabsTrigger value="records">
               Prontuário{noteCount > 0 ? ` (${noteCount})` : ""}
             </TabsTrigger>
@@ -213,6 +224,8 @@ export function PatientProfile({
           address={address}
           totalEstimated={totalEstimated}
         />
+      ) : tab === "sessions" ? (
+        <PatientSessionsTab patient={patient} />
       ) : (
         <PatientRecordsTab patient={patient} />
       )}

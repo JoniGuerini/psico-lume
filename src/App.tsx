@@ -7,6 +7,7 @@ import { FinancePage } from "@/components/finance-page"
 import { HomePage } from "@/components/home-page"
 import { InboxPage } from "@/components/inbox-page"
 import { LoginPage } from "@/components/login-page"
+import { ClinicExportButton } from "@/components/clinic-export-button"
 import { NotificationsBell } from "@/components/notifications-bell"
 import { NotificationsPage } from "@/components/notifications-page"
 import { ClinicDataProvider } from "@/context/clinic-data-provider"
@@ -60,6 +61,7 @@ export function App() {
               {activeItem === "Notifications" ? "Notificações" : activeItem}
             </h1>
             <div className="ml-auto flex items-center gap-1">
+              <ClinicExportButton />
               <NotificationsBell
                 onViewAll={() => setActiveItem("Notifications")}
               />
