@@ -16,121 +16,19 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useClinicData } from "@/context/clinic-data-provider"
+import { getInitials } from "@/data/patients"
 import { cn } from "@/lib/utils"
-
-type Email = {
-  id: string
-  name: string
-  email: string
-  subject: string
-  preview: string
-  body: string[]
-  date: string
-  time: string
-  read: boolean
-  labels: string[]
-}
-
-const emails: Email[] = [
-  {
-    id: "1",
-    name: "Mariana Lopes",
-    email: "mariana.lopes@example.com",
-    subject: "Resumo da reunião de produto",
-    preview:
-      "Seguem os principais pontos que discutimos hoje sobre o roadmap do próximo trimestre.",
-    body: [
-      "Oi! Seguem os principais pontos que discutimos hoje sobre o roadmap do próximo trimestre.",
-      "Decidimos priorizar a nova experiência de onboarding e adiar a refatoração do billing para o Q3.",
-      "Pode revisar o documento e deixar seus comentários até sexta?",
-      "Abraços,\nMariana",
-    ],
-    date: "Hoje",
-    time: "09:24",
-    read: false,
-    labels: ["Trabalho", "Importante"],
-  },
-  {
-    id: "2",
-    name: "GitHub",
-    email: "noreply@github.com",
-    subject: "[acme/dashboard] PR #482 aprovado",
-    preview:
-      "Seu pull request 'feat: floating sidebar + dark mode' foi aprovado por 2 revisores.",
-    body: [
-      "Seu pull request 'feat: floating sidebar + dark mode' foi aprovado por 2 revisores.",
-      "Ele já pode ser mergeado na branch main.",
-    ],
-    date: "Hoje",
-    time: "08:02",
-    read: false,
-    labels: ["Dev"],
-  },
-  {
-    id: "3",
-    name: "Rafael Souza",
-    email: "rafael@example.com",
-    subject: "Mockups da tela de conta",
-    preview:
-      "Subi a nova versão no Figma com o modal de conta em tela cheia. O que achou?",
-    body: [
-      "Fala! Subi a nova versão no Figma com o modal de conta em tela cheia.",
-      "Caprichei no espaçamento dos cards e no contraste. O que achou?",
-    ],
-    date: "Ontem",
-    time: "18:47",
-    read: true,
-    labels: ["Design"],
-  },
-  {
-    id: "4",
-    name: "Financeiro Acme",
-    email: "financeiro@example.com",
-    subject: "Sua fatura de junho está disponível",
-    preview:
-      "A fatura referente ao mês de junho já pode ser visualizada no portal.",
-    body: [
-      "Olá, a fatura referente ao mês de junho já pode ser visualizada no portal.",
-      "O vencimento é dia 28. Qualquer dúvida, estamos à disposição.",
-    ],
-    date: "Ontem",
-    time: "11:15",
-    read: true,
-    labels: ["Financeiro"],
-  },
-  {
-    id: "5",
-    name: "Camila Nunes",
-    email: "camila.nunes@example.com",
-    subject: "Almoço de equipe na sexta?",
-    preview: "Pensei em chamar o time pra um almoço na sexta pra comemorar o lançamento.",
-    body: [
-      "Oi pessoal! Pensei em chamar o time pra um almoço na sexta pra comemorar o lançamento.",
-      "Topam? Me avisem pra eu reservar a mesa.",
-    ],
-    date: "2 dias",
-    time: "16:30",
-    read: true,
-    labels: ["Social"],
-  },
-]
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase()
-}
+import type { InboxEmail } from "@/data/types"
 
 export function InboxPage() {
-  const [selectedId, setSelectedId] = useState(emails[0].id)
+  const { emails } = useClinicData()
+  const [selectedId, setSelectedId] = useState(emails[0]?.id ?? "")
   const [tab, setTab] = useState("todos")
   const [query, setQuery] = useState("")
 
   const filtered = useMemo(() => {
-    return emails.filter((email) => {
+    return emails.filter((email: InboxEmail) => {
       const matchesTab = tab === "todos" || !email.read
       const matchesQuery =
         query.trim() === "" ||
@@ -139,11 +37,19 @@ export function InboxPage() {
           .includes(query.toLowerCase())
       return matchesTab && matchesQuery
     })
-  }, [tab, query])
+  }, [emails, tab, query])
 
+  const unreadCount = emails.filter((email) => !email.read).length
   const selected =
     emails.find((email) => email.id === selectedId) ?? emails[0]
-  const unreadCount = emails.filter((email) => !email.read).length
+
+  if (!selected) {
+    return (
+      <Card className="flex h-full items-center justify-center p-8">
+        <p className="text-sm text-muted-foreground">Nenhum e-mail disponível.</p>
+      </Card>
+    )
+  }
 
   return (
     <div className="flex h-full min-h-0 gap-4">
@@ -152,10 +58,12 @@ export function InboxPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-semibold">Inbox</h2>
-              <Badge variant="secondary">{unreadCount} não lidos</Badge>
+              <Badge variant="outline" className="border-border bg-background/40">
+                {unreadCount} não lidos
+              </Badge>
             </div>
             <Tabs value={tab} onValueChange={setTab}>
-              <TabsList>
+              <TabsList className="border border-border bg-background/40">
                 <TabsTrigger value="todos">Todos</TabsTrigger>
                 <TabsTrigger value="nao-lidos">Não lidos</TabsTrigger>
               </TabsList>
@@ -167,7 +75,7 @@ export function InboxPage() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Buscar e-mails..."
-              className="pl-9"
+              className="border-border bg-background/40 pl-9 hover:bg-accent/50"
             />
           </div>
         </div>
@@ -215,7 +123,11 @@ export function InboxPage() {
                 </span>
                 <div className="mt-1 flex flex-wrap gap-1">
                   {email.labels.map((label) => (
-                    <Badge key={label} variant="outline">
+                    <Badge
+                      key={label}
+                      variant="outline"
+                      className="border-border bg-background/40"
+                    >
                       {label}
                     </Badge>
                   ))}
@@ -228,21 +140,44 @@ export function InboxPage() {
 
       <Card className="flex min-h-0 flex-1 flex-col gap-0 p-0">
         <div className="flex items-center gap-2 p-4">
-          <Button variant="ghost" size="icon" aria-label="Arquivar">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:bg-accent/50"
+            aria-label="Arquivar"
+          >
             <Archive />
           </Button>
-          <Button variant="ghost" size="icon" aria-label="Excluir">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:bg-accent/50"
+            aria-label="Excluir"
+          >
             <Trash2 />
           </Button>
-          <Button variant="ghost" size="icon" aria-label="Favoritar">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:bg-accent/50"
+            aria-label="Favoritar"
+          >
             <Star />
           </Button>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-border bg-background/40 hover:bg-accent/50"
+            >
               <Reply />
               Responder
             </Button>
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-border bg-background/40 hover:bg-accent/50"
+            >
               <Forward />
               Encaminhar
             </Button>
@@ -251,7 +186,7 @@ export function InboxPage() {
         <Separator />
         <div className="flex items-center gap-3 p-4">
           <Avatar className="size-10 rounded-xl after:rounded-xl">
-            <AvatarFallback className="rounded-xl">
+            <AvatarFallback className="rounded-xl bg-background/40 text-xs text-foreground">
               {getInitials(selected.name)}
             </AvatarFallback>
           </Avatar>
@@ -273,7 +208,11 @@ export function InboxPage() {
             </h1>
             <div className="flex flex-wrap gap-1">
               {selected.labels.map((label) => (
-                <Badge key={label} variant="secondary">
+                <Badge
+                  key={label}
+                  variant="outline"
+                  className="border-border bg-background/40"
+                >
                   {label}
                 </Badge>
               ))}

@@ -17,7 +17,6 @@ import type { LucideIcon } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -146,15 +145,27 @@ function SectionHeading({
   )
 }
 
+function Panel({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-5 rounded-3xl border border-border bg-background/40 p-6",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
 export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) {
   const [section, setSection] = useState("perfil")
 
   const [name, setName] = useState(user.name)
   const [email, setEmail] = useState(user.email)
-  const [phone, setPhone] = useState("(11) 99812-4471")
+  const [phone, setPhone] = useState("(11) 98765-4321")
   const [crp, setCrp] = useState("06/123456")
   const [bio, setBio] = useState(
-    "Psicóloga clínica com abordagem em Terapia Cognitivo-Comportamental."
+    "Psicólogo clínico com abordagem em Terapia Cognitivo-Comportamental."
   )
 
   const [currentPassword, setCurrentPassword] = useState("")
@@ -207,16 +218,17 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[85vh] max-h-[calc(100%-2rem)] w-[92vw] flex-col gap-0 overflow-hidden bg-[#FAF6EC] p-0 sm:max-w-5xl">
-        <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
-          <DialogTitle className="font-heading text-xl">Conta</DialogTitle>
-          <DialogDescription>
-            Gerencie suas informações, segurança e preferências.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-          <nav className="flex shrink-0 gap-1 overflow-x-auto border-b border-border p-3 md:w-60 md:flex-col md:overflow-x-visible md:overflow-y-auto md:border-r md:border-b-0">
+      <DialogContent className="flex h-[85vh] max-h-[calc(100%-2rem)] w-[92vw] flex-col gap-0 overflow-hidden bg-sidebar p-0 text-sidebar-foreground sm:max-w-5xl md:flex-row">
+        <aside className="flex shrink-0 flex-col gap-1 p-3 md:w-64 md:p-4">
+          <DialogHeader className="gap-1 px-2 pt-1 pb-3 text-left sm:text-left">
+            <DialogTitle className="font-heading text-xl text-sidebar-foreground">
+              Conta
+            </DialogTitle>
+            <DialogDescription className="text-sidebar-foreground/70">
+              Gerencie suas informações e preferências.
+            </DialogDescription>
+          </DialogHeader>
+          <nav className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
             {sections.map((item) => {
               const isActive = section === item.id
               return (
@@ -227,20 +239,19 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                   className={cn(
                     "flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors md:w-full",
                     isActive
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                   )}
                 >
                   <item.icon className="size-4 shrink-0" />
-                  <span className="hidden flex-col md:flex">
-                    <span>{item.label}</span>
-                  </span>
-                  <span className="md:hidden">{item.label}</span>
+                  {item.label}
                 </button>
               )
             })}
           </nav>
+        </aside>
 
+        <div className="m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl bg-card text-card-foreground shadow-md md:ml-0">
           <div className="min-h-0 flex-1 overflow-y-auto p-6">
             {section === "perfil" ? (
               <div className="flex flex-col gap-6">
@@ -249,7 +260,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                   description="Atualize sua foto e informações de contato."
                 />
 
-                <Card className="flex flex-col gap-5 border-transparent bg-[#1B3A5C] p-6 text-sidebar-foreground sm:flex-row sm:items-center">
+                <div className="flex flex-col gap-5 rounded-3xl bg-sidebar p-6 text-sidebar-foreground sm:flex-row sm:items-center">
                   <div className="relative shrink-0">
                     <Avatar className="size-20 rounded-2xl ring-2 ring-white/15 after:rounded-2xl">
                       <AvatarImage
@@ -288,16 +299,16 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Badge className="border-white/15 bg-white/10 text-sidebar-foreground">
-                        Psicóloga
+                        Psicólogo
                       </Badge>
                       <Badge className="border-white/15 bg-white/10 text-sidebar-foreground">
                         CRP {crp}
                       </Badge>
                     </div>
                   </div>
-                </Card>
+                </div>
 
-                <Card className="flex flex-col gap-5 p-6">
+                <Panel>
                   <div className="grid gap-5 sm:grid-cols-2">
                     <div className="flex flex-col gap-2">
                       <Label htmlFor="account-name">Nome completo</Label>
@@ -356,7 +367,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                     <Button variant="ghost">Cancelar</Button>
                     <Button>Salvar alterações</Button>
                   </div>
-                </Card>
+                </Panel>
               </div>
             ) : null}
 
@@ -367,7 +378,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                   description="Mantenha sua conta protegida."
                 />
 
-                <Card className="flex flex-col gap-5 p-6">
+                <Panel>
                   <div className="flex flex-col gap-1">
                     <h4 className="font-heading text-base font-semibold">
                       Alterar senha
@@ -422,9 +433,9 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                   <div className="flex justify-end border-t border-border pt-5">
                     <Button>Atualizar senha</Button>
                   </div>
-                </Card>
+                </Panel>
 
-                <Card className="flex items-center justify-between gap-4 p-6">
+                <Panel className="flex-row items-center justify-between gap-4">
                   <div className="flex min-w-0 flex-col gap-0.5">
                     <h4 className="font-heading text-base font-semibold">
                       Autenticação em duas etapas
@@ -434,9 +445,9 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                     </p>
                   </div>
                   <Switch checked={twoFactor} onCheckedChange={setTwoFactor} />
-                </Card>
+                </Panel>
 
-                <Card className="flex flex-col gap-2 p-6">
+                <Panel className="gap-2">
                   <div className="flex flex-col gap-1 pb-2">
                     <h4 className="font-heading text-base font-semibold">
                       Dispositivos conectados
@@ -449,7 +460,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                     <div key={item.id} className="flex flex-col">
                       {index > 0 ? <Separator /> : null}
                       <div className="flex items-center gap-3 py-3">
-                        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-background/40">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-card">
                           <item.icon className="size-4" />
                         </div>
                         <div className="flex min-w-0 flex-1 flex-col">
@@ -460,7 +471,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                             {item.current ? (
                               <Badge
                                 variant="outline"
-                                className="border-border bg-background/40 text-xs"
+                                className="border-border bg-card text-xs"
                               >
                                 Este dispositivo
                               </Badge>
@@ -483,7 +494,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                       </div>
                     </div>
                   ))}
-                </Card>
+                </Panel>
               </div>
             ) : null}
 
@@ -494,7 +505,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                   description="Escolha sobre o que você quer ser avisado."
                 />
 
-                <Card className="flex flex-col p-6">
+                <Panel className="gap-0">
                   <div className="flex items-center gap-2 pb-2 text-sm font-medium text-muted-foreground">
                     <Bell className="size-4" />
                     Atendimentos
@@ -525,9 +536,9 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                       }
                     />
                   </div>
-                </Card>
+                </Panel>
 
-                <Card className="flex flex-col p-6">
+                <Panel className="gap-0">
                   <div className="flex items-center gap-2 pb-2 text-sm font-medium text-muted-foreground">
                     <CreditCard className="size-4" />
                     Financeiro e resumos
@@ -558,7 +569,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                       }
                     />
                   </div>
-                </Card>
+                </Panel>
               </div>
             ) : null}
 
@@ -569,7 +580,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                   description="Personalize o visual do seu workspace."
                 />
 
-                <Card className="flex flex-col gap-4 p-6">
+                <Panel className="gap-4">
                   <div className="flex flex-col gap-1">
                     <h4 className="font-heading text-base font-semibold">
                       Cor de destaque
@@ -606,9 +617,9 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                       )
                     })}
                   </div>
-                </Card>
+                </Panel>
 
-                <Card className="flex flex-col gap-4 p-6">
+                <Panel className="gap-4">
                   <div className="flex flex-col gap-1">
                     <h4 className="font-heading text-base font-semibold">
                       Densidade
@@ -656,7 +667,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                       )
                     })}
                   </div>
-                </Card>
+                </Panel>
               </div>
             ) : null}
           </div>

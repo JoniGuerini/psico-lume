@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 
@@ -73,52 +72,56 @@ export function NotificationsPage() {
   }, [filtered])
 
   return (
-    <div className="flex h-full min-h-0 w-full">
-      <Card className="flex min-h-0 w-full flex-col gap-0 p-0">
-        <div className="flex flex-col gap-4 p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold">Notificações</h2>
-                {unreadCount > 0 ? (
-                  <Badge variant="secondary">{unreadCount} não lidas</Badge>
-                ) : null}
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Acompanhe menções, mensagens e atualizações da sua conta.
-              </p>
+    <div className="flex h-full min-h-0 w-full flex-col gap-4">
+      <Card className="flex flex-col gap-4 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold">Notificações</h2>
+              {unreadCount > 0 ? (
+                <Badge
+                  variant="outline"
+                  className="border-border bg-background/40"
+                >
+                  {unreadCount} não lidas
+                </Badge>
+              ) : null}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={markAllAsRead}
-              disabled={unreadCount === 0}
-            >
-              <CheckCheck />
-              Marcar todas como lidas
-            </Button>
+            <p className="text-sm text-muted-foreground">
+              Acompanhe menções, mensagens e atualizações da sua conta.
+            </p>
           </div>
-
-          <Tabs
-            value={filter}
-            onValueChange={(value) => setFilter(value as Filter)}
+          <Button
+            variant="outline"
+            size="sm"
+            className="shrink-0 border-border bg-background/40 hover:bg-accent/50"
+            onClick={markAllAsRead}
+            disabled={unreadCount === 0}
           >
-            <TabsList className="flex-wrap">
-              {filters.map((item) => (
-                <TabsTrigger key={item.value} value={item.value}>
-                  {item.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+            <CheckCheck />
+            Marcar todas como lidas
+          </Button>
         </div>
 
-        <Separator />
+        <Tabs
+          value={filter}
+          onValueChange={(value) => setFilter(value as Filter)}
+        >
+          <TabsList className="flex-wrap border border-border bg-background/40">
+            {filters.map((item) => (
+              <TabsTrigger key={item.value} value={item.value}>
+                {item.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      </Card>
 
-        <ScrollArea className="min-h-0 flex-1">
+      <Card className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden p-0">
+        <ScrollArea className="min-h-0 flex-1 overflow-hidden rounded-4xl">
           {grouped.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 px-6 py-20 text-center">
-              <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+              <div className="flex size-12 items-center justify-center rounded-full border border-border bg-background/40 text-muted-foreground">
                 <BellOff className="size-5" />
               </div>
               <div className="flex flex-col gap-1">
@@ -130,12 +133,17 @@ export function NotificationsPage() {
             </div>
           ) : (
             <div className="flex flex-col">
-              {grouped.map((group) => (
+              {grouped.map((group, groupIndex) => (
                 <div key={group.label} className="flex flex-col">
-                  <div className="sticky top-0 z-10 bg-card/95 px-4 py-2 text-xs font-medium tracking-wide text-muted-foreground uppercase backdrop-blur">
+                  <div
+                    className={cn(
+                      "sticky top-0 z-10 bg-card px-4 py-2 text-xs font-medium tracking-wide text-muted-foreground uppercase",
+                      groupIndex === 0 && "rounded-t-4xl"
+                    )}
+                  >
                     {group.label}
                   </div>
-                  <div className="flex flex-col divide-y">
+                  <div className="flex flex-col divide-y divide-border">
                     {group.items.map((item) => (
                       <div
                         key={item.id}
@@ -144,7 +152,7 @@ export function NotificationsPage() {
                           !item.read && "bg-accent/30"
                         )}
                       >
-                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-background/40 text-foreground">
                           <item.icon className="size-4" />
                         </div>
                         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -168,7 +176,7 @@ export function NotificationsPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="size-8"
+                              className="size-8 hover:bg-accent/50"
                               aria-label="Marcar como lida"
                               onClick={() => markAsRead(item.id)}
                             >
@@ -178,7 +186,7 @@ export function NotificationsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-8 text-muted-foreground hover:text-foreground"
+                            className="size-8 text-muted-foreground hover:bg-accent/50 hover:text-foreground"
                             aria-label="Remover notificação"
                             onClick={() => remove(item.id)}
                           >

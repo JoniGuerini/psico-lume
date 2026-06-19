@@ -3,13 +3,15 @@ import { useState } from "react"
 import { AccountDialog } from "@/components/account-dialog"
 import { AppSidebar } from "@/components/app-sidebar"
 import { CalendarPage } from "@/components/calendar-page"
+import { FinancePage } from "@/components/finance-page"
 import { HomePage } from "@/components/home-page"
 import { InboxPage } from "@/components/inbox-page"
 import { LoginPage } from "@/components/login-page"
 import { NotificationsBell } from "@/components/notifications-bell"
 import { NotificationsPage } from "@/components/notifications-page"
-import { NotificationsProvider } from "@/components/notifications-provider"
+import { ClinicDataProvider } from "@/context/clinic-data-provider"
 import { PatientsPage } from "@/components/patients-page"
+import { RoadmapPage } from "@/components/roadmap-page"
 import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
@@ -38,7 +40,7 @@ export function App() {
   }
 
   return (
-    <NotificationsProvider>
+    <ClinicDataProvider>
       <SidebarProvider className="h-svh overflow-hidden">
         <AppSidebar
           activeItem={activeItem}
@@ -70,6 +72,8 @@ export function App() {
             {activeItem === "Inbox" ? <InboxPage /> : null}
             {activeItem === "Agenda" ? <CalendarPage /> : null}
             {activeItem === "Pacientes" ? <PatientsPage /> : null}
+            {activeItem === "Financeiro" ? <FinancePage /> : null}
+            {activeItem === "Roadmap" ? <RoadmapPage /> : null}
             {activeItem === "Notifications" ? <NotificationsPage /> : null}
           </main>
         </SidebarInset>
@@ -80,7 +84,7 @@ export function App() {
           onOpenChange={setAccountOpen}
         />
       </SidebarProvider>
-    </NotificationsProvider>
+    </ClinicDataProvider>
   )
 }
 

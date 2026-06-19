@@ -1,12 +1,12 @@
-import { useState } from "react"
-import { Plus, Trash2, UserPlus } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Plus, Save, Trash2, UserPlus } from "lucide-react"
 
 import type {
   Patient,
   PatientModality,
   PatientSchedule,
   PatientStatus,
-} from "@/components/patients-page"
+} from "@/data/types"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -26,11 +26,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { cn } from "@/lib/utils"
+import { formatNextSession } from "@/data/patients"
 
 type NewPatientDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreate: (patient: Patient) => void
+  patient?: Patient | null
+  onCreate?: (patient: Patient) => void
+  onUpdate?: (patient: Patient) => void
 }
 
 const genderOptions = [
@@ -74,6 +78,9 @@ const weekdays = [
 
 const OTHER = "__outro"
 
+const fieldClass =
+  "border-border bg-background/40 hover:bg-accent/50 focus-visible:bg-card"
+
 const emptyForm = {
   name: "",
   birthDate: "",
@@ -99,6 +106,8 @@ const emptyForm = {
   referral: "",
   referralOther: "",
   modality: "presencial" as PatientModality,
+  complaint: "",
+  approach: "",
   notes: "",
 }
 
@@ -116,24 +125,232 @@ function currentMonthLabel() {
     .replace(/^\w/, (char) => char.toUpperCase())
 }
 
+const weekdayFromLabel: Record<string, string> = {
+  Segunda: "Seg",
+  Terça: "Ter",
+  Quarta: "Qua",
+  Quinta: "Qui",
+  Sexta: "Sex",
+  Sábado: "Sáb",
+  Domingo: "Dom",
+}
+
+function brDateToInput(value?: string) {
+  if (!value) return ""
+  if (value.includes("-")) return value
+  const [day, month, year] = value.split("/")
+  if (!day || !month || !year) return ""
+  return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
+}
+
+function inputToBrDate(value: string) {
+  if (!value) return ""
+  const [year, month, day] = value.split("-")
+  if (!year || !month || !day) return value
+  return `${day}/${month}/${year}`
+}
+
+function resolveSelectValue(value: string | undefined, options: string[]) {
+  if (!value) return ""
+  return options.includes(value) ? value : OTHER
+}
+
+function patientToForm(patient: Patient) {
+  const gender = resolveSelectValue(patient.gender, genderOptions)
+  const referral = resolveSelectValue(patient.referral, referralOptions)
+
+  return {
+    name: patient.name,
+    birthDate: brDateToInput(patient.birthDate),
+    cpf: patient.cpf,
+    gender,
+    genderOther: gender === OTHER ? patient.gender ?? "" : "",
+    cep: patient.cep ?? "",
+    street: patient.street ?? "",
+    number: patient.number ?? "",
+    complement: patient.complement ?? "",
+    neighborhood: patient.neighborhood ?? "",
+    city: patient.city ?? "",
+    state: patient.state ?? "",
+    phone: patient.phone,
+    email: patient.email,
+    contactName: patient.contactName ?? "",
+    contactPhone: patient.contactPhone ?? "",
+    contactRelation: patient.contactRelation ?? "",
+    patientType: patient.patientType ?? "Primeira entrevista",
+    status: patient.status,
+    therapyStart: brDateToInput(patient.therapyStart),
+    price: patient.price,
+    referral,
+    referralOther: referral === OTHER ? patient.referral ?? "" : "",
+    modality: patient.modality,
+    complaint: patient.complaint === "—" ? "" : patient.complaint,
+    approach: patient.approach === "—" ? "" : patient.approach,
+    notes: "",
+  }
+}
+
+function normalizeSchedules(schedules: PatientSchedule[]): PatientSchedule[] {
+  return schedules.map((schedule) => ({
+    ...schedule,
+    weekday: weekdayFromLabel[schedule.weekday] ?? schedule.weekday,
+    duration: schedule.duration || "50",
+    modality: (schedule.modality || "") as PatientModality | "",
+  }))
+}
+
+function patientSchedules(patient: Patient) {
+  if (patient.schedules?.length) {
+    return normalizeSchedules(patient.schedules)
+  }
+  if (patient.sessionTime && patient.sessionDay) {
+    return [
+      {
+        weekday: weekdayFromLabel[patient.sessionDay] ?? patient.sessionDay,
+        time: patient.sessionTime,
+        duration: String(patient.sessionDuration ?? 50),
+        modality:
+          patient.modality === "hibrido" ? ("" as PatientModality | "") : patient.modality,
+      },
+    ]
+  }
+  return []
+}
+
+function buildPatientPayload(
+  form: typeof emptyForm,
+  schedules: PatientSchedule[],
+  base?: Patient
+): Patient {
+  const first = schedules.find((row) => row.time !== "") ?? schedules[0]
+  const sessionDay = first?.weekday ?? ""
+  const sessionTime = first?.time ?? ""
+  const sessionDuration = Number(first?.duration || 50)
+  const nextSession =
+    form.status === "ativo" && sessionTime
+      ? formatNextSession(sessionDay, sessionTime)
+      : null
+
+  const gender = form.gender === OTHER ? form.genderOther.trim() : form.gender
+  const referral =
+    form.referral === OTHER ? form.referralOther.trim() : form.referral
+
+  return {
+    id: base?.id ?? crypto.randomUUID(),
+    name: form.name.trim(),
+    cpf: form.cpf.trim(),
+    email: form.email.trim(),
+    phone: form.phone.trim(),
+    complaint: form.complaint.trim() || "—",
+    approach: form.approach.trim() || "—",
+    modality: form.modality,
+    price: form.price.trim(),
+    status: form.status,
+    sessionDay,
+    sessionTime,
+    sessionDuration,
+    nextSession,
+    sessions: base?.sessions ?? 0,
+    since: base?.since ?? currentMonthLabel(),
+    paymentOverdue: base?.paymentOverdue,
+    biweekly: base?.biweekly,
+    birthDate: inputToBrDate(form.birthDate) || undefined,
+    gender: gender || undefined,
+    cep: form.cep.trim() || undefined,
+    street: form.street.trim() || undefined,
+    number: form.number.trim() || undefined,
+    complement: form.complement.trim() || undefined,
+    neighborhood: form.neighborhood.trim() || undefined,
+    city: form.city.trim() || undefined,
+    state: form.state.trim() || undefined,
+    contactName: form.contactName.trim() || undefined,
+    contactPhone: form.contactPhone.trim() || undefined,
+    contactRelation: form.contactRelation.trim() || undefined,
+    patientType: form.patientType,
+    therapyStart: inputToBrDate(form.therapyStart) || undefined,
+    referral: referral || undefined,
+    schedules,
+  }
+}
+
+function FormSection({
+  title,
+  children,
+  className,
+}: {
+  title: string
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <section
+      className={cn(
+        "flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm",
+        className
+      )}
+    >
+      <h3 className="font-heading text-sm font-semibold text-foreground">
+        {title}
+      </h3>
+      {children}
+    </section>
+  )
+}
+
+function Field({
+  label,
+  htmlFor,
+  required,
+  className,
+  children,
+}: {
+  label: string
+  htmlFor?: string
+  required?: boolean
+  className?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
+      <Label htmlFor={htmlFor} className="text-xs text-muted-foreground">
+        {label}
+        {required ? <span className="text-destructive"> *</span> : null}
+      </Label>
+      {children}
+    </div>
+  )
+}
+
 export function NewPatientDialog({
   open,
   onOpenChange,
+  patient = null,
   onCreate,
+  onUpdate,
 }: NewPatientDialogProps) {
+  const isEditing = patient != null
   const [form, setForm] = useState(emptyForm)
   const [schedules, setSchedules] = useState<PatientSchedule[]>([])
   const [selectOpen, setSelectOpen] = useState(false)
 
   const canSubmit = form.name.trim() !== ""
 
+  useEffect(() => {
+    if (!open) return
+    if (patient) {
+      setForm(patientToForm(patient))
+      setSchedules(patientSchedules(patient))
+      return
+    }
+    setForm(emptyForm)
+    setSchedules([])
+  }, [open, patient])
+
   function handleSelectOpenChange(next: boolean) {
     if (next) {
       setSelectOpen(true)
       return
     }
-    // Atrasa o reset: o mesmo clique que fecha o select não pode
-    // ser interpretado como "clique fora" e fechar o modal junto.
     window.setTimeout(() => setSelectOpen(false), 100)
   }
 
@@ -168,7 +385,6 @@ export function NewPatientDialog({
   }
 
   function handleOpenChange(next: boolean) {
-    // Não deixa o modal fechar enquanto um select estiver aberto.
     if (!next && selectOpen) return
     if (!next) resetForm()
     onOpenChange(next)
@@ -178,50 +394,13 @@ export function NewPatientDialog({
     event.preventDefault()
     if (!canSubmit) return
 
-    const first = schedules.find((row) => row.time !== "") ?? schedules[0]
-    const sessionDay = first?.weekday ?? ""
-    const sessionTime = first?.time ?? ""
-    const nextSession =
-      first && first.time ? `${first.weekday} · ${first.time}` : null
+    const payload = buildPatientPayload(form, schedules, patient ?? undefined)
 
-    const gender =
-      form.gender === OTHER ? form.genderOther.trim() : form.gender
-    const referral =
-      form.referral === OTHER ? form.referralOther.trim() : form.referral
-
-    onCreate({
-      id: crypto.randomUUID(),
-      name: form.name.trim(),
-      cpf: form.cpf.trim(),
-      email: form.email.trim(),
-      phone: form.phone.trim(),
-      complaint: "—",
-      approach: "—",
-      modality: form.modality,
-      price: form.price.trim(),
-      status: form.status,
-      sessionDay,
-      sessionTime,
-      nextSession,
-      sessions: 0,
-      since: currentMonthLabel(),
-      birthDate: form.birthDate,
-      gender,
-      cep: form.cep.trim(),
-      street: form.street.trim(),
-      number: form.number.trim(),
-      complement: form.complement.trim(),
-      neighborhood: form.neighborhood.trim(),
-      city: form.city.trim(),
-      state: form.state.trim(),
-      contactName: form.contactName.trim(),
-      contactPhone: form.contactPhone.trim(),
-      contactRelation: form.contactRelation.trim(),
-      patientType: form.patientType,
-      therapyStart: form.therapyStart,
-      referral,
-      schedules,
-    })
+    if (isEditing) {
+      onUpdate?.(payload)
+    } else {
+      onCreate?.(payload)
+    }
 
     resetForm()
     onOpenChange(false)
@@ -230,7 +409,7 @@ export function NewPatientDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="max-h-[90vh] overflow-y-auto bg-[#FAF6EC] sm:max-w-2xl"
+        className="!flex max-h-[92vh] min-h-0 w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-[#FAF6EC] p-0 sm:max-w-[72rem]"
         onPointerDownOutside={(event) => {
           if (selectOpen) event.preventDefault()
         }}
@@ -241,386 +420,523 @@ export function NewPatientDialog({
           if (selectOpen) event.preventDefault()
         }}
       >
-        <DialogHeader>
-          <DialogTitle>Novo paciente</DialogTitle>
+        <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
+          <DialogTitle className="text-lg">
+            {isEditing ? "Editar paciente" : "Novo paciente"}
+          </DialogTitle>
           <DialogDescription>
-            Cadastre um novo paciente. Apenas o nome é obrigatório.
+            {isEditing
+              ? "Atualize os dados cadastrais e clínicos do paciente."
+              : "Cadastre um novo paciente. Apenas o nome é obrigatório."}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          <section className="flex flex-col gap-3">
-            <h3 className="font-heading text-sm font-semibold">
-              Dados pessoais
-            </h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
-              <div className="flex flex-col gap-2 sm:col-span-8">
-                <Label htmlFor="patient-name">
-                  Nome completo <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="patient-name"
-                  value={form.name}
-                  onChange={(event) => update("name", event.target.value)}
-                  placeholder="Nome e sobrenome"
-                  autoFocus
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-4">
-                <Label htmlFor="patient-birth">Data de nascimento</Label>
-                <Input
-                  id="patient-birth"
-                  type="date"
-                  value={form.birthDate}
-                  onChange={(event) => update("birthDate", event.target.value)}
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-6">
-                <Label htmlFor="patient-cpf">CPF</Label>
-                <Input
-                  id="patient-cpf"
-                  value={form.cpf}
-                  onChange={(event) => update("cpf", event.target.value)}
-                  placeholder="000.000.000-00"
-                  inputMode="numeric"
-                  maxLength={14}
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-6">
-                <Label htmlFor="patient-gender">Gênero</Label>
-                <Select
-                  value={form.gender}
-                  onValueChange={(value) => update("gender", value)}
-                  onOpenChange={handleSelectOpenChange}
-                >
-                  <SelectTrigger id="patient-gender" className="w-full">
-                    <SelectValue placeholder="Selecione…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {genderOptions.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                    <SelectItem value={OTHER}>Outro (especificar)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {form.gender === OTHER ? (
-                <div className="flex flex-col gap-2 sm:col-span-12">
-                  <Label htmlFor="patient-gender-other">
-                    Especifique o gênero
-                  </Label>
-                  <Input
-                    id="patient-gender-other"
-                    value={form.genderOther}
-                    onChange={(event) =>
-                      update("genderOther", event.target.value)
-                    }
-                    placeholder="Digite o gênero"
-                  />
-                </div>
-              ) : null}
-            </div>
-          </section>
-
-          <section className="flex flex-col gap-3">
-            <h3 className="font-heading text-sm font-semibold">Endereço</h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
-              <div className="flex flex-col gap-2 sm:col-span-3">
-                <Label htmlFor="patient-cep">CEP</Label>
-                <Input
-                  id="patient-cep"
-                  value={form.cep}
-                  onChange={(event) => update("cep", event.target.value)}
-                  placeholder="00000-000"
-                  inputMode="numeric"
-                  maxLength={9}
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-9">
-                <Label htmlFor="patient-street">Rua / Logradouro</Label>
-                <Input
-                  id="patient-street"
-                  value={form.street}
-                  onChange={(event) => update("street", event.target.value)}
-                  placeholder="Ex.: Rua das Flores"
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-2">
-                <Label htmlFor="patient-number">Número</Label>
-                <Input
-                  id="patient-number"
-                  value={form.number}
-                  onChange={(event) => update("number", event.target.value)}
-                  placeholder="123"
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-4">
-                <Label htmlFor="patient-complement">Complemento</Label>
-                <Input
-                  id="patient-complement"
-                  value={form.complement}
-                  onChange={(event) => update("complement", event.target.value)}
-                  placeholder="Apto, bloco…"
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-6">
-                <Label htmlFor="patient-neighborhood">Bairro</Label>
-                <Input
-                  id="patient-neighborhood"
-                  value={form.neighborhood}
-                  onChange={(event) =>
-                    update("neighborhood", event.target.value)
-                  }
-                  placeholder="Bairro"
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-9">
-                <Label htmlFor="patient-city">Cidade</Label>
-                <Input
-                  id="patient-city"
-                  value={form.city}
-                  onChange={(event) => update("city", event.target.value)}
-                  placeholder="Cidade"
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-3">
-                <Label htmlFor="patient-state">UF</Label>
-                <Input
-                  id="patient-state"
-                  value={form.state}
-                  onChange={(event) =>
-                    update(
-                      "state",
-                      event.target.value.toUpperCase().replace(/[^A-Z]/g, "")
-                    )
-                  }
-                  placeholder="SP"
-                  maxLength={2}
-                />
-              </div>
-            </div>
-          </section>
-
-          <section className="flex flex-col gap-3">
-            <h3 className="font-heading text-sm font-semibold">Contato</h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
-              <div className="flex flex-col gap-2 sm:col-span-4">
-                <Label htmlFor="patient-phone">Celular</Label>
-                <Input
-                  id="patient-phone"
-                  type="tel"
-                  value={form.phone}
-                  onChange={(event) => update("phone", event.target.value)}
-                  placeholder="(00) 00000-0000"
-                  maxLength={15}
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-8">
-                <Label htmlFor="patient-email">E-mail</Label>
-                <Input
-                  id="patient-email"
-                  type="email"
-                  value={form.email}
-                  onChange={(event) => update("email", event.target.value)}
-                  placeholder="email@example.com"
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-5">
-                <Label htmlFor="patient-contact-name">
-                  Contato próximo · Nome
-                </Label>
-                <Input
-                  id="patient-contact-name"
-                  value={form.contactName}
-                  onChange={(event) =>
-                    update("contactName", event.target.value)
-                  }
-                  placeholder="Nome do contato (opcional)"
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-4">
-                <Label htmlFor="patient-contact-phone">
-                  Contato próximo · Telefone
-                </Label>
-                <Input
-                  id="patient-contact-phone"
-                  type="tel"
-                  value={form.contactPhone}
-                  onChange={(event) =>
-                    update("contactPhone", event.target.value)
-                  }
-                  placeholder="(00) 00000-0000"
-                  maxLength={15}
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-3">
-                <Label htmlFor="patient-contact-relation">Relação</Label>
-                <Input
-                  id="patient-contact-relation"
-                  value={form.contactRelation}
-                  onChange={(event) =>
-                    update("contactRelation", event.target.value)
-                  }
-                  placeholder="Mãe, irmão…"
-                />
-              </div>
-            </div>
-          </section>
-
-          <section className="flex flex-col gap-3">
-            <h3 className="font-heading text-sm font-semibold">
-              Informações da terapia
-            </h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
-              <div className="flex flex-col gap-2 sm:col-span-6">
-                <Label htmlFor="patient-type">Tipo de paciente</Label>
-                <Select
-                  value={form.patientType}
-                  onValueChange={(value) => update("patientType", value)}
-                  onOpenChange={handleSelectOpenChange}
-                >
-                  <SelectTrigger id="patient-type" className="w-full">
-                    <SelectValue placeholder="Selecione…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {patientTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-6">
-                <Label htmlFor="patient-status">Status</Label>
-                <Select
-                  value={form.status}
-                  onValueChange={(value) =>
-                    update("status", value as PatientStatus)
-                  }
-                  onOpenChange={handleSelectOpenChange}
-                >
-                  <SelectTrigger id="patient-status" className="w-full">
-                    <SelectValue placeholder="Selecione…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="em-pausa">Em pausa</SelectItem>
-                    <SelectItem value="lista-espera">Lista de espera</SelectItem>
-                    <SelectItem value="alta">Alta</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-4">
-                <Label htmlFor="patient-therapy-start">
-                  Data início da terapia
-                </Label>
-                <Input
-                  id="patient-therapy-start"
-                  type="date"
-                  value={form.therapyStart}
-                  onChange={(event) =>
-                    update("therapyStart", event.target.value)
-                  }
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-4">
-                <Label htmlFor="patient-price">Valor da sessão</Label>
-                <div className="relative">
-                  <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
-                    R$
-                  </span>
-                  <Input
-                    id="patient-price"
-                    value={form.price}
-                    onChange={(event) => update("price", event.target.value)}
-                    placeholder="0,00"
-                    inputMode="decimal"
-                    className="pl-9"
-                  />
-                </div>
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-4">
-                <Label htmlFor="patient-referral">Indicação</Label>
-                <Select
-                  value={form.referral}
-                  onValueChange={(value) => update("referral", value)}
-                  onOpenChange={handleSelectOpenChange}
-                >
-                  <SelectTrigger id="patient-referral" className="w-full">
-                    <SelectValue placeholder="Como chegou ao tratamento?" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {referralOptions.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                    <SelectItem value={OTHER}>Outro (especificar)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {form.referral === OTHER ? (
-                <div className="flex flex-col gap-2 sm:col-span-12">
-                  <Label htmlFor="patient-referral-other">
-                    Especifique a indicação
-                  </Label>
-                  <Input
-                    id="patient-referral-other"
-                    value={form.referralOther}
-                    onChange={(event) =>
-                      update("referralOther", event.target.value)
-                    }
-                    placeholder="De onde veio a indicação?"
-                  />
-                </div>
-              ) : null}
-              <div className="flex flex-col gap-2 sm:col-span-12">
-                <Label htmlFor="patient-modality">
-                  Modalidade de atendimento
-                </Label>
-                <Select
-                  value={form.modality}
-                  onValueChange={(value) =>
-                    update("modality", value as PatientModality)
-                  }
-                  onOpenChange={handleSelectOpenChange}
-                >
-                  <SelectTrigger id="patient-modality" className="w-full">
-                    <SelectValue placeholder="Selecione…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {modalityOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label>Dias e horários de atendimento</Label>
-              {schedules.length === 0 ? (
-                <p className="rounded-xl border border-dashed px-3 py-4 text-sm text-muted-foreground">
-                  Nenhum horário cadastrado. Clique em "Adicionar horário" para
-                  incluir um atendimento recorrente.
-                </p>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {schedules.map((row, index) => (
-                    <div
-                      key={index}
-                      className="flex flex-col gap-3 rounded-xl border bg-card p-3"
+        <form
+          onSubmit={handleSubmit}
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
+        >
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="flex flex-col gap-4 p-6">
+              <div className="grid gap-4 lg:grid-cols-2">
+                <FormSection title="Dados pessoais">
+                  <div className="grid grid-cols-12 gap-3">
+                    <Field
+                      label="Nome completo"
+                      htmlFor="patient-name"
+                      required
+                      className="col-span-12"
                     >
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div className="flex flex-col gap-1.5">
-                          <Label className="text-xs text-muted-foreground">
-                            Dia da semana
-                          </Label>
+                      <Input
+                        id="patient-name"
+                        value={form.name}
+                        onChange={(event) => update("name", event.target.value)}
+                        placeholder="Nome e sobrenome"
+                        className={fieldClass}
+                        autoFocus
+                      />
+                    </Field>
+                    <Field
+                      label="Data de nascimento"
+                      htmlFor="patient-birth"
+                      className="col-span-12 sm:col-span-4"
+                    >
+                      <Input
+                        id="patient-birth"
+                        type="date"
+                        value={form.birthDate}
+                        onChange={(event) =>
+                          update("birthDate", event.target.value)
+                        }
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="CPF"
+                      htmlFor="patient-cpf"
+                      className="col-span-12 sm:col-span-4"
+                    >
+                      <Input
+                        id="patient-cpf"
+                        value={form.cpf}
+                        onChange={(event) => update("cpf", event.target.value)}
+                        placeholder="000.000.000-00"
+                        inputMode="numeric"
+                        maxLength={14}
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="Gênero"
+                      htmlFor="patient-gender"
+                      className="col-span-12 sm:col-span-4"
+                    >
+                      <Select
+                        value={form.gender}
+                        onValueChange={(value) => update("gender", value)}
+                        onOpenChange={handleSelectOpenChange}
+                      >
+                        <SelectTrigger
+                          id="patient-gender"
+                          className={cn("w-full", fieldClass)}
+                        >
+                          <SelectValue placeholder="Selecione…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {genderOptions.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value={OTHER}>
+                            Outro (especificar)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    {form.gender === OTHER ? (
+                      <Field
+                        label="Especifique o gênero"
+                        htmlFor="patient-gender-other"
+                        className="col-span-12"
+                      >
+                        <Input
+                          id="patient-gender-other"
+                          value={form.genderOther}
+                          onChange={(event) =>
+                            update("genderOther", event.target.value)
+                          }
+                          placeholder="Digite o gênero"
+                          className={fieldClass}
+                        />
+                      </Field>
+                    ) : null}
+                  </div>
+                </FormSection>
+
+                <FormSection title="Endereço">
+                  <div className="grid grid-cols-12 gap-3">
+                    <Field
+                      label="CEP"
+                      htmlFor="patient-cep"
+                      className="col-span-4 sm:col-span-3"
+                    >
+                      <Input
+                        id="patient-cep"
+                        value={form.cep}
+                        onChange={(event) => update("cep", event.target.value)}
+                        placeholder="00000-000"
+                        inputMode="numeric"
+                        maxLength={9}
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="Rua / Logradouro"
+                      htmlFor="patient-street"
+                      className="col-span-8 sm:col-span-9"
+                    >
+                      <Input
+                        id="patient-street"
+                        value={form.street}
+                        onChange={(event) =>
+                          update("street", event.target.value)
+                        }
+                        placeholder="Ex.: Rua das Flores"
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="Número"
+                      htmlFor="patient-number"
+                      className="col-span-4 sm:col-span-2"
+                    >
+                      <Input
+                        id="patient-number"
+                        value={form.number}
+                        onChange={(event) =>
+                          update("number", event.target.value)
+                        }
+                        placeholder="123"
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="Complemento"
+                      htmlFor="patient-complement"
+                      className="col-span-8 sm:col-span-4"
+                    >
+                      <Input
+                        id="patient-complement"
+                        value={form.complement}
+                        onChange={(event) =>
+                          update("complement", event.target.value)
+                        }
+                        placeholder="Apto, bloco…"
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="Bairro"
+                      htmlFor="patient-neighborhood"
+                      className="col-span-12 sm:col-span-6"
+                    >
+                      <Input
+                        id="patient-neighborhood"
+                        value={form.neighborhood}
+                        onChange={(event) =>
+                          update("neighborhood", event.target.value)
+                        }
+                        placeholder="Bairro"
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="Cidade"
+                      htmlFor="patient-city"
+                      className="col-span-8 sm:col-span-9"
+                    >
+                      <Input
+                        id="patient-city"
+                        value={form.city}
+                        onChange={(event) => update("city", event.target.value)}
+                        placeholder="Cidade"
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="UF"
+                      htmlFor="patient-state"
+                      className="col-span-4 sm:col-span-3"
+                    >
+                      <Input
+                        id="patient-state"
+                        value={form.state}
+                        onChange={(event) =>
+                          update(
+                            "state",
+                            event.target.value.toUpperCase().replace(/[^A-Z]/g, "")
+                          )
+                        }
+                        placeholder="SP"
+                        maxLength={2}
+                        className={fieldClass}
+                      />
+                    </Field>
+                  </div>
+                </FormSection>
+
+                <FormSection title="Contato" className="lg:col-span-1">
+                  <div className="grid grid-cols-12 gap-3">
+                    <Field
+                      label="Celular"
+                      htmlFor="patient-phone"
+                      className="col-span-12 sm:col-span-5"
+                    >
+                      <Input
+                        id="patient-phone"
+                        type="tel"
+                        value={form.phone}
+                        onChange={(event) => update("phone", event.target.value)}
+                        placeholder="(00) 00000-0000"
+                        maxLength={15}
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="E-mail"
+                      htmlFor="patient-email"
+                      className="col-span-12 sm:col-span-7"
+                    >
+                      <Input
+                        id="patient-email"
+                        type="email"
+                        value={form.email}
+                        onChange={(event) => update("email", event.target.value)}
+                        placeholder="email@example.com"
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="Contato próximo · Nome"
+                      htmlFor="patient-contact-name"
+                      className="col-span-12 sm:col-span-5"
+                    >
+                      <Input
+                        id="patient-contact-name"
+                        value={form.contactName}
+                        onChange={(event) =>
+                          update("contactName", event.target.value)
+                        }
+                        placeholder="Opcional"
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="Contato próximo · Telefone"
+                      htmlFor="patient-contact-phone"
+                      className="col-span-12 sm:col-span-4"
+                    >
+                      <Input
+                        id="patient-contact-phone"
+                        type="tel"
+                        value={form.contactPhone}
+                        onChange={(event) =>
+                          update("contactPhone", event.target.value)
+                        }
+                        placeholder="(00) 00000-0000"
+                        maxLength={15}
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="Relação"
+                      htmlFor="patient-contact-relation"
+                      className="col-span-12 sm:col-span-3"
+                    >
+                      <Input
+                        id="patient-contact-relation"
+                        value={form.contactRelation}
+                        onChange={(event) =>
+                          update("contactRelation", event.target.value)
+                        }
+                        placeholder="Mãe, irmão…"
+                        className={fieldClass}
+                      />
+                    </Field>
+                  </div>
+                </FormSection>
+
+                <FormSection title="Informações da terapia" className="lg:col-span-1">
+                  <div className="grid grid-cols-12 gap-3">
+                    <Field
+                      label="Queixa principal"
+                      htmlFor="patient-complaint"
+                      className="col-span-12 sm:col-span-6"
+                    >
+                      <Input
+                        id="patient-complaint"
+                        value={form.complaint}
+                        onChange={(event) =>
+                          update("complaint", event.target.value)
+                        }
+                        placeholder="Ansiedade, luto, relacionamento…"
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="Abordagem"
+                      htmlFor="patient-approach"
+                      className="col-span-12 sm:col-span-6"
+                    >
+                      <Input
+                        id="patient-approach"
+                        value={form.approach}
+                        onChange={(event) =>
+                          update("approach", event.target.value)
+                        }
+                        placeholder="TCC, Psicanálise, Humanista…"
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="Tipo de paciente"
+                      htmlFor="patient-type"
+                      className="col-span-12 sm:col-span-6"
+                    >
+                      <Select
+                        value={form.patientType}
+                        onValueChange={(value) => update("patientType", value)}
+                        onOpenChange={handleSelectOpenChange}
+                      >
+                        <SelectTrigger
+                          id="patient-type"
+                          className={cn("w-full", fieldClass)}
+                        >
+                          <SelectValue placeholder="Selecione…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {patientTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    <Field
+                      label="Status"
+                      htmlFor="patient-status"
+                      className="col-span-12 sm:col-span-6"
+                    >
+                      <Select
+                        value={form.status}
+                        onValueChange={(value) =>
+                          update("status", value as PatientStatus)
+                        }
+                        onOpenChange={handleSelectOpenChange}
+                      >
+                        <SelectTrigger
+                          id="patient-status"
+                          className={cn("w-full", fieldClass)}
+                        >
+                          <SelectValue placeholder="Selecione…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ativo">Ativo</SelectItem>
+                          <SelectItem value="em-pausa">Em pausa</SelectItem>
+                          <SelectItem value="lista-espera">
+                            Lista de espera
+                          </SelectItem>
+                          <SelectItem value="alta">Alta</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    <Field
+                      label="Início da terapia"
+                      htmlFor="patient-therapy-start"
+                      className="col-span-12 sm:col-span-4"
+                    >
+                      <Input
+                        id="patient-therapy-start"
+                        type="date"
+                        value={form.therapyStart}
+                        onChange={(event) =>
+                          update("therapyStart", event.target.value)
+                        }
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label="Valor da sessão"
+                      htmlFor="patient-price"
+                      className="col-span-12 sm:col-span-4"
+                    >
+                      <div className="relative">
+                        <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
+                          R$
+                        </span>
+                        <Input
+                          id="patient-price"
+                          value={form.price}
+                          onChange={(event) =>
+                            update("price", event.target.value)
+                          }
+                          placeholder="0,00"
+                          inputMode="decimal"
+                          className={cn("pl-9", fieldClass)}
+                        />
+                      </div>
+                    </Field>
+                    <Field
+                      label="Modalidade"
+                      htmlFor="patient-modality"
+                      className="col-span-12 sm:col-span-4"
+                    >
+                      <Select
+                        value={form.modality}
+                        onValueChange={(value) =>
+                          update("modality", value as PatientModality)
+                        }
+                        onOpenChange={handleSelectOpenChange}
+                      >
+                        <SelectTrigger
+                          id="patient-modality"
+                          className={cn("w-full", fieldClass)}
+                        >
+                          <SelectValue placeholder="Selecione…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {modalityOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    <Field
+                      label="Indicação"
+                      htmlFor="patient-referral"
+                      className="col-span-12"
+                    >
+                      <Select
+                        value={form.referral}
+                        onValueChange={(value) => update("referral", value)}
+                        onOpenChange={handleSelectOpenChange}
+                      >
+                        <SelectTrigger
+                          id="patient-referral"
+                          className={cn("w-full", fieldClass)}
+                        >
+                          <SelectValue placeholder="Como chegou ao tratamento?" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {referralOptions.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value={OTHER}>
+                            Outro (especificar)
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    {form.referral === OTHER ? (
+                      <Field
+                        label="Especifique a indicação"
+                        htmlFor="patient-referral-other"
+                        className="col-span-12"
+                      >
+                        <Input
+                          id="patient-referral-other"
+                          value={form.referralOther}
+                          onChange={(event) =>
+                            update("referralOther", event.target.value)
+                          }
+                          placeholder="De onde veio a indicação?"
+                          className={fieldClass}
+                        />
+                      </Field>
+                    ) : null}
+                  </div>
+                </FormSection>
+              </div>
+
+              <FormSection title="Horários recorrentes">
+                {schedules.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-border bg-background/40 px-4 py-5 text-sm text-muted-foreground">
+                    Nenhum horário cadastrado. Adicione um atendimento semanal
+                    recorrente.
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {schedules.map((row, index) => (
+                      <div
+                        key={index}
+                        className="grid grid-cols-1 items-end gap-3 rounded-xl border border-border bg-background/40 p-3 sm:grid-cols-[1.4fr_1fr_1fr_1.2fr_auto]"
+                      >
+                        <Field label="Dia da semana">
                           <Select
                             value={row.weekday}
                             onValueChange={(value) =>
@@ -628,7 +944,7 @@ export function NewPatientDialog({
                             }
                             onOpenChange={handleSelectOpenChange}
                           >
-                            <SelectTrigger className="w-full">
+                            <SelectTrigger className={cn("w-full", fieldClass)}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -639,23 +955,18 @@ export function NewPatientDialog({
                               ))}
                             </SelectContent>
                           </Select>
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <Label className="text-xs text-muted-foreground">
-                            Horário
-                          </Label>
+                        </Field>
+                        <Field label="Horário">
                           <Input
                             type="time"
                             value={row.time}
                             onChange={(event) =>
                               updateSchedule(index, "time", event.target.value)
                             }
+                            className={fieldClass}
                           />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <Label className="text-xs text-muted-foreground">
-                            Duração
-                          </Label>
+                        </Field>
+                        <Field label="Duração">
                           <Select
                             value={row.duration}
                             onValueChange={(value) =>
@@ -663,7 +974,7 @@ export function NewPatientDialog({
                             }
                             onOpenChange={handleSelectOpenChange}
                           >
-                            <SelectTrigger className="w-full">
+                            <SelectTrigger className={cn("w-full", fieldClass)}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -677,11 +988,8 @@ export function NewPatientDialog({
                               ))}
                             </SelectContent>
                           </Select>
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <Label className="text-xs text-muted-foreground">
-                            Modalidade
-                          </Label>
+                        </Field>
+                        <Field label="Modalidade">
                           <Select
                             value={row.modality}
                             onValueChange={(value) =>
@@ -693,7 +1001,7 @@ export function NewPatientDialog({
                             }
                             onOpenChange={handleSelectOpenChange}
                           >
-                            <SelectTrigger className="w-full">
+                            <SelectTrigger className={cn("w-full", fieldClass)}>
                               <SelectValue placeholder="Selecione…" />
                             </SelectTrigger>
                             <SelectContent>
@@ -707,58 +1015,67 @@ export function NewPatientDialog({
                               ))}
                             </SelectContent>
                           </Select>
-                        </div>
+                        </Field>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => removeSchedule(index)}
+                          aria-label="Remover horário"
+                        >
+                          <Trash2 />
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 self-end text-destructive hover:text-destructive"
-                        onClick={() => removeSchedule(index)}
-                      >
-                        <Trash2 />
-                        Remover
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="self-start"
-                onClick={addSchedule}
-              >
-                <Plus />
-                Adicionar horário
-              </Button>
-            </div>
+                    ))}
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="self-start border-border bg-background/40 hover:bg-accent/50"
+                  onClick={addSchedule}
+                >
+                  <Plus />
+                  Adicionar horário
+                </Button>
+              </FormSection>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="patient-notes">Observações</Label>
-              <Textarea
-                id="patient-notes"
-                value={form.notes}
-                onChange={(event) => update("notes", event.target.value)}
-                placeholder="Anotações adicionais (opcional)"
-                className="resize-none"
-                rows={3}
-              />
+              <FormSection title="Observações">
+                <Textarea
+                  id="patient-notes"
+                  value={form.notes}
+                  onChange={(event) => update("notes", event.target.value)}
+                  placeholder="Anotações adicionais (opcional)"
+                  className={cn("min-h-24 resize-none", fieldClass)}
+                  rows={3}
+                />
+              </FormSection>
             </div>
-          </section>
+          </div>
 
-          <DialogFooter>
+          <DialogFooter className="shrink-0 border-t border-border bg-card/60 px-6 py-4">
             <Button
               type="button"
               variant="ghost"
+              className="hover:bg-accent/50"
               onClick={() => handleOpenChange(false)}
             >
               Cancelar
             </Button>
             <Button type="submit" disabled={!canSubmit}>
-              <UserPlus />
-              Adicionar paciente
+              {isEditing ? (
+                <>
+                  <Save />
+                  Salvar alterações
+                </>
+              ) : (
+                <>
+                  <UserPlus />
+                  Adicionar paciente
+                </>
+              )}
             </Button>
           </DialogFooter>
         </form>

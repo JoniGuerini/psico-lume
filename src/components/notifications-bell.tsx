@@ -46,7 +46,7 @@ export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
         <Button
           variant="outline"
           size="icon"
-          className="relative bg-card shadow-sm"
+          className="relative border-border bg-card shadow-sm hover:bg-accent/50 aria-expanded:bg-card aria-expanded:text-foreground data-[state=open]:bg-card data-[state=open]:text-foreground"
           aria-label="Notificações"
         >
           <Bell />
@@ -62,7 +62,12 @@ export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold">Notificações</span>
             {unreadCount > 0 ? (
-              <Badge variant="secondary">{unreadCount} novas</Badge>
+              <Badge
+                variant="outline"
+                className="border-border bg-background/40"
+              >
+                {unreadCount} novas
+              </Badge>
             ) : null}
           </div>
           <Button
@@ -78,7 +83,7 @@ export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
         </div>
         <div className="px-3 pb-3">
           <Tabs value={tab} onValueChange={setTab}>
-            <TabsList className="w-full">
+            <TabsList className="w-full border border-border bg-background/40">
               <TabsTrigger value="todas" className="flex-1">
                 Todas
               </TabsTrigger>
@@ -108,7 +113,7 @@ export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
                     !item.read && "bg-accent/30"
                   )}
                 >
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-background/40 text-foreground">
                     <item.icon className="size-4" />
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -132,7 +137,11 @@ export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
         </ScrollArea>
         <Separator />
         <div className="p-2">
-          <Button variant="ghost" className="w-full" onClick={handleViewAll}>
+          <Button
+            variant="ghost"
+            className="w-full hover:bg-accent/50"
+            onClick={handleViewAll}
+          >
             Ver todas as notificações
           </Button>
         </div>

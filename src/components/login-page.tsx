@@ -106,7 +106,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                       placeholder="voce@example.com"
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
-                      className="pl-9"
+                      className="border-border bg-background/40 pl-9 hover:bg-accent/50 focus-visible:bg-card"
                     />
                   </div>
                 </div>
@@ -130,7 +130,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                       placeholder="••••••••"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
-                      className="px-9"
+                      className="border-border bg-background/40 px-9 hover:bg-accent/50 focus-visible:bg-card"
                     />
                     <button
                       type="button"
@@ -184,7 +184,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full"
+                  className="w-full border-border bg-background/40 hover:bg-accent/50"
                   onClick={onLogin}
                 >
                   <svg className="size-4" viewBox="0 0 24 24" aria-hidden="true">

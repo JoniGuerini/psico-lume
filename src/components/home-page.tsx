@@ -1,16 +1,17 @@
-import { useMemo } from "react"
 import { ArrowRight, CalendarDays } from "lucide-react"
+import { useMemo } from "react"
 
-import {
-  initialPatients,
-  modalityLabel,
-  type Patient,
-} from "@/components/patients-page"
+import { modalityLabel } from "@/components/patients-page"
+import { SessionStatusBadge } from "@/components/session-status-control"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { useClinicData } from "@/context/clinic-data-provider"
+import { eventsOfDay } from "@/data/calendar"
+import { getWeekdayCode } from "@/data/patients"
+import { getEventStatus } from "@/lib/session-status"
 
-const SESSION_DURATION = 45
-const weekdayCodes = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+const SESSION_DURATION = 50
+
 const businessDayLabels: Record<string, string> = {
   Seg: "Segunda",
   Ter: "Terça",
@@ -24,32 +25,28 @@ const brl = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
 })
 
-function parsePrice(price: string) {
-  if (!price) return 0
-  const normalized = price.replace(/\./g, "").replace(",", ".")
-  const value = Number.parseFloat(normalized)
-  return Number.isNaN(value) ? 0 : value
-}
-
-function addMinutes(time: string, minutes: number) {
-  const [hours, mins] = time.split(":").map(Number)
-  const total = hours * 60 + mins + minutes
-  const hh = Math.floor(total / 60) % 24
-  const mm = total % 60
-  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`
-}
-
-function isScheduled(patient: Patient) {
-  return patient.status === "ativo" && patient.sessionTime !== ""
-}
-
 type HomePageProps = {
   onViewAgenda?: () => void
 }
 
 export function HomePage({ onViewAgenda }: HomePageProps) {
+  const {
+    patients,
+    events,
+    activeCount,
+    scheduledCount,
+    weekRevenue,
+    overduePatients,
+    overdueValue,
+  } = useClinicData()
+
   const today = new Date()
-  const todayCode = weekdayCodes[today.getDay()]
+  const todayCode = getWeekdayCode(today)
+  const todaysEvents = useMemo(() => eventsOfDay(events, today), [events, today])
+  const patientById = useMemo(
+    () => new Map(patients.map((patient) => [patient.id, patient])),
+    [patients]
+  )
 
   const greeting =
     today.getHours() < 12
@@ -65,33 +62,6 @@ export function HomePage({ onViewAgenda }: HomePageProps) {
   })
   const formattedDate = rawDate.charAt(0).toUpperCase() + rawDate.slice(1)
 
-  const todaysAppointments = useMemo(
-    () =>
-      initialPatients
-        .filter((p) => isScheduled(p) && p.sessionDay === todayCode)
-        .sort((a, b) => a.sessionTime.localeCompare(b.sessionTime)),
-    [todayCode]
-  )
-
-  const weekSessions = useMemo(
-    () => initialPatients.filter(isScheduled),
-    []
-  )
-
-  const weekRevenue = weekSessions.reduce(
-    (sum, p) => sum + parsePrice(p.price),
-    0
-  )
-  const activeCount = initialPatients.filter((p) => p.status === "ativo").length
-
-  const overduePatients = initialPatients.filter((p) =>
-    ["4", "9"].includes(p.id)
-  )
-  const overdueValue = overduePatients.reduce(
-    (sum, p) => sum + parsePrice(p.price),
-    0
-  )
-
   const stats: {
     label: string
     value: string
@@ -100,13 +70,13 @@ export function HomePage({ onViewAgenda }: HomePageProps) {
   }[] = [
     {
       label: "Total de pacientes",
-      value: String(initialPatients.length),
+      value: String(patients.length),
       hint: `${activeCount} em acompanhamento`,
     },
     {
       label: "Atendimentos da semana",
-      value: String(weekSessions.length),
-      hint: "Sessões agendadas",
+      value: String(scheduledCount),
+      hint: "Sessões recorrentes",
     },
     {
       label: "Receita da semana",
@@ -134,10 +104,10 @@ export function HomePage({ onViewAgenda }: HomePageProps) {
         </div>
         <div className="flex flex-col items-end">
           <span className="font-heading text-3xl font-semibold tabular-nums text-sidebar-primary">
-            {todaysAppointments.length}
+            {todaysEvents.length}
           </span>
           <span className="text-sm text-sidebar-foreground/80">
-            {todaysAppointments.length === 1
+            {todaysEvents.length === 1
               ? "atendimento hoje"
               : "atendimentos hoje"}
           </span>
@@ -174,7 +144,7 @@ export function HomePage({ onViewAgenda }: HomePageProps) {
           </Button>
         </div>
 
-        {todaysAppointments.length === 0 ? (
+        {todaysEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed px-6 py-16 text-center">
             <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
               <CalendarDays className="size-5" />
@@ -188,31 +158,48 @@ export function HomePage({ onViewAgenda }: HomePageProps) {
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {todaysAppointments.map((patient) => (
-              <div
-                key={patient.id}
-                className="flex items-stretch gap-4 rounded-2xl border bg-card px-4 py-3"
-              >
-                <div className="flex w-14 shrink-0 flex-col items-center">
-                  <span className="font-heading text-xl font-semibold leading-none tabular-nums">
-                    {patient.sessionTime}
-                  </span>
-                  <span className="mt-1 text-xs tabular-nums text-muted-foreground">
-                    {addMinutes(patient.sessionTime, SESSION_DURATION)}
-                  </span>
-                </div>
-                <div className="w-px self-stretch bg-border" />
-                <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
-                  <span className="truncate text-sm font-semibold">
-                    {patient.name}
-                  </span>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>{modalityLabel[patient.modality]}</span>
-                    <span>{SESSION_DURATION} min</span>
+            {todaysEvents.map((event) => {
+              const patient = event.patientId
+                ? patientById.get(event.patientId)
+                : undefined
+              const status = getEventStatus(event)
+              return (
+                <div
+                  key={event.id}
+                  className="flex items-stretch gap-4 rounded-2xl border bg-card px-4 py-3"
+                >
+                  <div className="flex w-14 shrink-0 flex-col items-center">
+                    <span className="font-heading text-xl font-semibold leading-none tabular-nums">
+                      {event.start}
+                    </span>
+                    <span className="mt-1 text-xs tabular-nums text-muted-foreground">
+                      {event.end}
+                    </span>
+                  </div>
+                  <div className="w-px self-stretch bg-border" />
+                  <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="truncate text-sm font-semibold">
+                        {event.title}
+                      </span>
+                      <SessionStatusBadge status={status} />
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      {patient ? (
+                        <>
+                          <span>{modalityLabel[patient.modality]}</span>
+                          <span>
+                            {patient.sessionDuration ?? SESSION_DURATION} min
+                          </span>
+                        </>
+                      ) : (
+                        <span>Sessão avulsa</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

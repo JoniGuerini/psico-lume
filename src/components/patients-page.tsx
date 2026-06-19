@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 
 import { NewPatientDialog } from "@/components/new-patient-dialog"
+import { PatientProfile } from "@/components/patient-profile"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -37,52 +38,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useClinicData } from "@/context/clinic-data-provider"
+import { getInitials } from "@/data/patients"
+import type { Patient, PatientModality, PatientStatus } from "@/data/types"
 import { cn } from "@/lib/utils"
 
-export type PatientStatus = "ativo" | "em-pausa" | "lista-espera" | "alta"
-
-export type PatientModality = "presencial" | "online" | "hibrido"
-
-export type PatientSchedule = {
-  weekday: string
-  time: string
-  duration: string
-  modality: PatientModality | ""
-}
-
-export type Patient = {
-  id: string
-  name: string
-  cpf: string
-  email: string
-  phone: string
-  complaint: string
-  approach: string
-  modality: PatientModality
-  price: string
-  status: PatientStatus
-  sessionDay: string
-  sessionTime: string
-  nextSession: string | null
-  sessions: number
-  since: string
-  birthDate?: string
-  gender?: string
-  cep?: string
-  street?: string
-  number?: string
-  complement?: string
-  neighborhood?: string
-  city?: string
-  state?: string
-  contactName?: string
-  contactPhone?: string
-  contactRelation?: string
-  patientType?: string
-  therapyStart?: string
-  referral?: string
-  schedules?: PatientSchedule[]
-}
+export type {
+  Patient,
+  PatientModality,
+  PatientSchedule,
+  PatientStatus,
+} from "@/data/types"
 
 export const statusConfig: Record<
   PatientStatus,
@@ -100,222 +66,6 @@ export const modalityLabel: Record<PatientModality, string> = {
   hibrido: "Híbrido",
 }
 
-export const initialPatients: Patient[] = [
-  {
-    id: "1",
-    name: "Mariana Lopes",
-    cpf: "312.456.789-00",
-    email: "mariana.lopes@example.com",
-    phone: "(11) 99812-4471",
-    complaint: "Ansiedade",
-    approach: "TCC",
-    modality: "online",
-    price: "180,00",
-    status: "ativo",
-    sessionDay: "Qua",
-    sessionTime: "09:00",
-    nextSession: "Qua · 09:00",
-    sessions: 14,
-    since: "Mar 2025",
-  },
-  {
-    id: "2",
-    name: "Rafael Souza",
-    cpf: "987.654.321-12",
-    email: "rafael.souza@example.com",
-    phone: "(11) 99654-3320",
-    complaint: "Burnout",
-    approach: "TCC",
-    modality: "presencial",
-    price: "200,00",
-    status: "ativo",
-    sessionDay: "Qua",
-    sessionTime: "11:00",
-    nextSession: "Qua · 11:00",
-    sessions: 8,
-    since: "Jan 2026",
-  },
-  {
-    id: "3",
-    name: "Camila Nunes",
-    cpf: "456.789.123-00",
-    email: "camila.nunes@example.com",
-    phone: "(21) 98123-7788",
-    complaint: "Relacionamento",
-    approach: "Psicanálise",
-    modality: "presencial",
-    price: "220,00",
-    status: "ativo",
-    sessionDay: "Qui",
-    sessionTime: "14:30",
-    nextSession: "Qui · 14:30",
-    sessions: 22,
-    since: "Set 2024",
-  },
-  {
-    id: "4",
-    name: "Thiago Martins",
-    cpf: "321.654.987-00",
-    email: "thiago.martins@example.com",
-    phone: "(11) 99441-2210",
-    complaint: "Depressão",
-    approach: "TCC",
-    modality: "hibrido",
-    price: "190,00",
-    status: "em-pausa",
-    sessionDay: "Seg",
-    sessionTime: "",
-    nextSession: null,
-    sessions: 31,
-    since: "Fev 2024",
-  },
-  {
-    id: "5",
-    name: "Ana Beatriz",
-    cpf: "159.753.486-00",
-    email: "ana.beatriz@example.com",
-    phone: "(31) 98777-1102",
-    complaint: "Luto",
-    approach: "Humanista",
-    modality: "online",
-    price: "170,00",
-    status: "ativo",
-    sessionDay: "Sex",
-    sessionTime: "10:00",
-    nextSession: "Sex · 10:00",
-    sessions: 5,
-    since: "Abr 2026",
-  },
-  {
-    id: "6",
-    name: "Pedro Henrique",
-    cpf: "753.951.852-00",
-    email: "pedro.h@example.com",
-    phone: "(11) 99012-5567",
-    complaint: "Ansiedade social",
-    approach: "TCC",
-    modality: "online",
-    price: "160,00",
-    status: "lista-espera",
-    sessionDay: "Seg",
-    sessionTime: "",
-    nextSession: null,
-    sessions: 0,
-    since: "—",
-  },
-  {
-    id: "7",
-    name: "Juliana Castro",
-    cpf: "852.456.951-00",
-    email: "juliana.castro@example.com",
-    phone: "(48) 99654-8890",
-    complaint: "Pânico",
-    approach: "TCC",
-    modality: "presencial",
-    price: "210,00",
-    status: "ativo",
-    sessionDay: "Sex",
-    sessionTime: "16:00",
-    nextSession: "Sex · 16:00",
-    sessions: 12,
-    since: "Out 2025",
-  },
-  {
-    id: "8",
-    name: "Lucas Almeida",
-    cpf: "147.258.369-00",
-    email: "lucas.almeida@example.com",
-    phone: "(11) 98321-4455",
-    complaint: "Estresse profissional",
-    approach: "Coaching",
-    modality: "hibrido",
-    price: "250,00",
-    status: "alta",
-    sessionDay: "Ter",
-    sessionTime: "",
-    nextSession: null,
-    sessions: 40,
-    since: "Jan 2023",
-  },
-  {
-    id: "9",
-    name: "Beatriz Ramos",
-    cpf: "369.258.147-00",
-    email: "bia.ramos@example.com",
-    phone: "(85) 99100-2233",
-    complaint: "Autoestima",
-    approach: "Humanista",
-    modality: "online",
-    price: "175,00",
-    status: "em-pausa",
-    sessionDay: "Qua",
-    sessionTime: "",
-    nextSession: null,
-    sessions: 9,
-    since: "Jul 2025",
-  },
-  {
-    id: "10",
-    name: "Gustavo Pereira",
-    cpf: "258.147.369-00",
-    email: "gustavo.pereira@example.com",
-    phone: "(11) 99765-0098",
-    complaint: "TOC",
-    approach: "TCC",
-    modality: "presencial",
-    price: "200,00",
-    status: "ativo",
-    sessionDay: "Seg",
-    sessionTime: "08:30",
-    nextSession: "Seg · 08:30",
-    sessions: 18,
-    since: "Mai 2025",
-  },
-  {
-    id: "11",
-    name: "Fernanda Dias",
-    cpf: "741.852.963-00",
-    email: "fernanda.dias@example.com",
-    phone: "(11) 98654-7712",
-    complaint: "Casal",
-    approach: "Sistêmica",
-    modality: "presencial",
-    price: "280,00",
-    status: "lista-espera",
-    sessionDay: "Qui",
-    sessionTime: "",
-    nextSession: null,
-    sessions: 0,
-    since: "—",
-  },
-  {
-    id: "12",
-    name: "Otávio Ribeiro",
-    cpf: "963.852.741-00",
-    email: "otavio.ribeiro@example.com",
-    phone: "(21) 99888-1145",
-    complaint: "Fobia específica",
-    approach: "TCC",
-    modality: "hibrido",
-    price: "190,00",
-    status: "ativo",
-    sessionDay: "Ter",
-    sessionTime: "15:00",
-    nextSession: "Ter · 15:00",
-    sessions: 6,
-    since: "Mar 2026",
-  },
-]
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase()
-}
-
 const columnWidths = ["22%", "12%", "11%", "10%", "12%", "12%", "9%", "7%", "5%"]
 
 function PatientCols() {
@@ -329,10 +79,20 @@ function PatientCols() {
 }
 
 export function PatientsPage() {
-  const [patients, setPatients] = useState(initialPatients)
+  const { patients, activeCount, addPatient } = useClinicData()
   const [query, setQuery] = useState("")
   const [status, setStatus] = useState<PatientStatus | "todos">("todos")
   const [newPatientOpen, setNewPatientOpen] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [profileTab, setProfileTab] = useState<"overview" | "records">("overview")
+
+  function openProfile(patientId: string, tab: "overview" | "records" = "overview") {
+    setProfileTab(tab)
+    setSelectedId(patientId)
+  }
+
+  const selectedPatient =
+    patients.find((patient) => patient.id === selectedId) ?? null
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase()
@@ -348,10 +108,18 @@ export function PatientsPage() {
     })
   }, [patients, query, status])
 
-  const activeCount = patients.filter((p) => p.status === "ativo").length
-
   function handleCreate(patient: Patient) {
-    setPatients((current) => [patient, ...current])
+    addPatient(patient)
+  }
+
+  if (selectedPatient) {
+    return (
+      <PatientProfile
+        patient={selectedPatient}
+        initialTab={profileTab}
+        onBack={() => setSelectedId(null)}
+      />
+    )
   }
 
   return (
@@ -445,7 +213,11 @@ export function PatientsPage() {
                 </TableRow>
               ) : (
                 filtered.map((patient) => (
-                  <TableRow key={patient.id}>
+                  <TableRow
+                    key={patient.id}
+                    className="cursor-pointer hover:bg-accent/50"
+                    onClick={() => openProfile(patient.id)}
+                  >
                     <TableCell className="pl-4">
                       <div className="flex items-center gap-3">
                         <Avatar className="size-9 rounded-lg after:rounded-lg">
@@ -498,7 +270,10 @@ export function PatientsPage() {
                     <TableCell className="text-right text-sm tabular-nums">
                       {patient.sessions}
                     </TableCell>
-                    <TableCell className="pr-4">
+                    <TableCell
+                      className="pr-4"
+                      onClick={(event) => event.stopPropagation()}
+                    >
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -513,7 +288,9 @@ export function PatientsPage() {
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuLabel>Ações</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => openProfile(patient.id, "records")}
+                          >
                             <Eye />
                             Ver prontuário
                           </DropdownMenuItem>

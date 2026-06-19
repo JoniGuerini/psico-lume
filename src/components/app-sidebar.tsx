@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Users } from "lucide-react"
+import { Calendar, Home, Inbox, Map, Users, Wallet } from "lucide-react"
 
 import { NavUser } from "@/components/nav-user"
 import {
@@ -18,6 +18,8 @@ const items = [
   { title: "Inbox", url: "#", icon: Inbox },
   { title: "Agenda", url: "#", icon: Calendar },
   { title: "Pacientes", url: "#", icon: Users },
+  { title: "Financeiro", url: "#", icon: Wallet },
+  { title: "Roadmap", url: "#", icon: Map },
 ]
 
 type AppSidebarProps = {
