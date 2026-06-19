@@ -43,20 +43,21 @@ export function AppSidebar({
 }: AppSidebarProps) {
   return (
     <Sidebar variant="inset" collapsible="icon">
-      <SidebarHeader>
+      <SidebarHeader className="group-data-[collapsible=icon]:px-4">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              size="lg"
+              size="default"
               tooltip="Lume"
-              className="data-[active=true]:bg-transparent data-[active=true]:text-sidebar-foreground"
+              className="h-14 gap-2 px-3 data-[active=true]:bg-transparent data-[active=true]:text-sidebar-foreground group-data-[collapsible=icon]:overflow-visible group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:justify-center [&_svg]:!size-9"
               onClick={() => onSelect("Home")}
             >
-              <svg
-                viewBox="0 0 24 24"
-                className="!size-9 shrink-0"
-                aria-hidden="true"
-              >
+              <span className="inline-flex size-8 shrink-0 items-center justify-center group-data-[collapsible=icon]:translate-x-px">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="size-9 shrink-0"
+                  aria-hidden="true"
+                >
                 <path
                   fillRule="evenodd"
                   clipRule="evenodd"
@@ -69,7 +70,8 @@ export function AppSidebar({
                   opacity="0.28"
                 />
               </svg>
-              <span className="truncate text-left font-heading text-lg font-semibold">
+              </span>
+              <span className="truncate font-heading text-lg font-semibold group-data-[collapsible=icon]:hidden">
                 Lume
               </span>
             </SidebarMenuButton>
