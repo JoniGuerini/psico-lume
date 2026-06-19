@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
 import { FileSpreadsheet } from "lucide-react"
 
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { useClinicData } from "@/context/clinic-data-provider"
 import { buildClinicSheets } from "@/lib/clinic-export"
 import type { StyledSheetConfig } from "@/lib/clinic-export-xlsx"
@@ -12,7 +13,7 @@ import {
   resolveRowStyle,
   SHEET_COLORS,
 } from "@/lib/clinic-sheet-styles"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { lumeSurfaces } from "@/lib/design-system"
 import { cn } from "@/lib/utils"
 
 function SheetTabs({
@@ -25,7 +26,7 @@ function SheetTabs({
   onChange: (name: string) => void
 }) {
   return (
-    <div className="shrink-0 overflow-x-auto border-b border-[#E5E0D5] bg-[#F8F6F0]">
+    <div className={lumeSurfaces.sheetTabBar}>
       <div className="flex min-w-max items-end px-1 pt-1">
         {sheets.map((sheet) => {
           const selected = sheet.name === active
@@ -36,9 +37,7 @@ function SheetTabs({
               onClick={() => onChange(sheet.name)}
               className={cn(
                 "relative shrink-0 rounded-t-md border border-b-0 px-3 py-1.5 text-xs font-medium transition-colors",
-                selected
-                  ? "z-10 border-[#E5E0D5] bg-white text-[#1B3A5C] shadow-sm"
-                  : "border-transparent bg-[#EDE9DF] text-[#1B3A5C]/70 hover:bg-[#E5E0D5]/60 hover:text-[#1B3A5C]"
+                selected ? lumeSurfaces.sheetTabActive : lumeSurfaces.sheetTabIdle
               )}
             >
               {sheet.name}
@@ -55,17 +54,14 @@ function SheetTable({ config }: { config: StyledSheetConfig }) {
 
   return (
     <ScrollArea className="min-h-0 min-w-0 flex-1">
-      <table className="w-max border-collapse text-[13px] leading-snug text-[#1B3A5C]">
+      <table className="w-max border-collapse text-[13px] leading-snug text-foreground">
         <thead>
           <tr>
             {headers.map((header) => (
               <th
                 key={header}
-                className="sticky top-0 z-20 whitespace-nowrap border border-[#E5E0D5] px-2.5 py-2 text-left text-[11px] font-bold"
-                style={{
-                  backgroundColor: SHEET_COLORS.headerBg,
-                  color: SHEET_COLORS.headerText,
-                }}
+                className="sticky top-0 z-20 whitespace-nowrap border border-surface-sheet-border px-2.5 py-2 text-left text-[11px] font-bold text-primary-foreground"
+                style={{ backgroundColor: SHEET_COLORS.headerBg }}
               >
                 {header}
               </th>
@@ -77,7 +73,7 @@ function SheetTable({ config }: { config: StyledSheetConfig }) {
             <tr>
               <td
                 colSpan={headers.length}
-                className="border border-[#E5E0D5] px-4 py-8 text-center text-muted-foreground"
+                className="border border-surface-sheet-border px-4 py-8 text-center text-muted-foreground"
               >
                 Nenhum registro
               </td>
@@ -101,7 +97,7 @@ function SheetTable({ config }: { config: StyledSheetConfig }) {
                       <td
                         key={header}
                         className={cn(
-                          "border border-[#E5E0D5] px-2.5 py-1.5 align-top",
+                          "border border-surface-sheet-border px-2.5 py-1.5 align-top",
                           numeric && "text-right tabular-nums",
                           isWrapColumn(header)
                             ? "max-w-xs whitespace-normal"
@@ -146,16 +142,16 @@ export function ClinicSheetsPage() {
   if (!activeConfig) return null
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-[#E5E0D5] bg-white shadow-sm">
-      <div className="flex shrink-0 items-center gap-3 border-b border-[#E5E0D5] bg-[#F8F6F0] px-4 py-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#1B3A5C]/10">
-          <FileSpreadsheet className="size-4 text-[#1B3A5C]" />
+    <div className={lumeSurfaces.sheetRoot}>
+      <div className={lumeSurfaces.sheetToolbar}>
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+          <FileSpreadsheet className="size-4 text-primary" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-heading text-sm font-semibold text-[#1B3A5C]">
+          <p className="font-heading text-sm font-semibold text-foreground">
             Visão em planilha
           </p>
-          <p className="text-xs text-[#1B3A5C]/65">
+          <p className="text-xs text-muted-foreground">
             {activeConfig.rows.length}{" "}
             {activeConfig.rows.length === 1 ? "linha" : "linhas"} · mesmas abas
             e cores do export XLSX

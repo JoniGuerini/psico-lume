@@ -106,9 +106,9 @@ export function HomePage({
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <Card className="flex flex-row flex-wrap items-center justify-between gap-4 border-transparent bg-[#1B3A5C] p-6 text-sidebar-foreground">
+      <Card className="flex flex-row flex-wrap items-center justify-between gap-4 border-transparent bg-sidebar p-6 text-sidebar-foreground">
         <div className="flex flex-col gap-1">
-          <h2 className="text-2xl font-semibold tracking-tight text-[#FAF6EC]">
+          <h2 className="text-2xl font-semibold tracking-tight text-primary-foreground">
             {greeting}
           </h2>
           <p className="text-sm font-medium text-sidebar-primary">

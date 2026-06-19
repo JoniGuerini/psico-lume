@@ -29,6 +29,8 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import { densityPresets, themePresets } from "@/lib/design-system"
+import { useTheme } from "@/context/theme-provider"
 
 type AccountDialogProps = {
   user: {
@@ -72,13 +74,6 @@ const sections: Section[] = [
     description: "Personalize o visual do seu workspace.",
     icon: Palette,
   },
-]
-
-const accentColors = [
-  { id: "mint", value: "#A0CFB1", label: "Menta" },
-  { id: "navy", value: "#1B3A5C", label: "Azul" },
-  { id: "terracota", value: "#C97B63", label: "Terracota" },
-  { id: "lavanda", value: "#9A8FC1", label: "Lavanda" },
 ]
 
 const activeSessions = [
@@ -177,8 +172,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
     productUpdates: false,
   })
 
-  const [accent, setAccent] = useState("mint")
-  const [density, setDensity] = useState("confortavel")
+  const { theme, density, setTheme, setDensity } = useTheme()
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [avatarUrl, setAvatarUrl] = useState(user.avatar)
@@ -285,7 +279,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                     </button>
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <h4 className="font-heading text-xl font-semibold text-[#FAF6EC]">
+                    <h4 className="font-heading text-xl font-semibold text-primary-foreground">
                       {name}
                     </h4>
                     <p className="truncate text-sm text-sidebar-foreground/70">
@@ -544,36 +538,53 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                 <Panel className="gap-4">
                   <div className="flex flex-col gap-1">
                     <h4 className="font-heading text-base font-semibold">
-                      Cor de destaque
+                      Tema do workspace
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      Usada em itens selecionados e destaques.
+                      Cores do shell, fundo e destaques em todo o app.
                     </p>
                   </div>
-                  <div className="flex flex-wrap gap-3">
-                    {accentColors.map((color) => {
-                      const isActive = accent === color.id
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {themePresets.map((preset) => {
+                      const isActive = theme === preset.id
                       return (
                         <button
-                          key={color.id}
+                          key={preset.id}
                           type="button"
-                          onClick={() => setAccent(color.id)}
+                          onClick={() => setTheme(preset.id)}
                           className={cn(
-                            "flex items-center gap-2 rounded-xl border px-3 py-2 text-sm transition-colors",
+                            "flex flex-col gap-3 rounded-xl border p-4 text-left transition-colors",
                             isActive
-                              ? "border-primary bg-accent/50 font-medium"
+                              ? "border-primary bg-accent/50"
                               : "border-border hover:bg-accent/50"
                           )}
                         >
-                          <span
-                            className="flex size-5 items-center justify-center rounded-full"
-                            style={{ backgroundColor: color.value }}
-                          >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="h-9 flex-1 rounded-lg border border-black/5"
+                              style={{ backgroundColor: preset.preview.sidebar }}
+                              aria-hidden
+                            />
+                            <span
+                              className="h-9 flex-1 rounded-lg border border-black/5"
+                              style={{ backgroundColor: preset.preview.background }}
+                              aria-hidden
+                            />
+                            <span
+                              className="size-9 shrink-0 rounded-full border border-black/5"
+                              style={{ backgroundColor: preset.preview.accent }}
+                              aria-hidden
+                            />
+                          </div>
+                          <span className="flex w-full items-center justify-between text-sm font-medium">
+                            {preset.label}
                             {isActive ? (
-                              <Check className="size-3 text-white" />
+                              <Check className="size-4 text-primary" />
                             ) : null}
                           </span>
-                          {color.label}
+                          <span className="text-xs text-muted-foreground">
+                            {preset.description}
+                          </span>
                         </button>
                       )
                     })}
@@ -590,18 +601,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                     </p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    {[
-                      {
-                        id: "confortavel",
-                        label: "Confortável",
-                        hint: "Mais respiro entre os itens.",
-                      },
-                      {
-                        id: "compacto",
-                        label: "Compacto",
-                        hint: "Mostra mais conteúdo na tela.",
-                      },
-                    ].map((option) => {
+                    {densityPresets.map((option) => {
                       const isActive = density === option.id
                       return (
                         <button
@@ -622,7 +622,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                             ) : null}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            {option.hint}
+                            {option.description}
                           </span>
                         </button>
                       )

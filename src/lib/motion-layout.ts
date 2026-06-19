@@ -1,6 +1,8 @@
-/** Painel creme compartilhado entre login e app. */
-export const LUME_MAIN_SURFACE_CLASS =
-  "relative flex min-h-0 min-w-0 flex-1 flex-col self-stretch overflow-hidden rounded-2xl bg-background shadow-sm m-2 ml-0"
+export {
+  LUME_DIALOG_SURFACE_CLASS,
+  LUME_MAIN_SURFACE_CLASS,
+  lumeSurfaces,
+} from "@/lib/design-system"
 
 /** Fade único na troca login ↔ app. */
 export const authFadeTransition = {

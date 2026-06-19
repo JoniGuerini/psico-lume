@@ -1,32 +1,23 @@
 import type { PatientStatus, SessionStatus } from "@/data/types"
+import { sheetPalette } from "@/lib/design-system"
 import type { ExportRow, StyledSheetConfig } from "@/lib/clinic-export-xlsx"
 
-/** Cores hex alinhadas ao tema Lume / export XLSX. */
 export const SHEET_COLORS = {
-  headerBg: "#1B3A5C",
-  headerText: "#FAF6EC",
-  border: "#E5E0D5",
-  zebra: "#F8F6F0",
-  card: "#FFFFFF",
-  overdue: "#FEE2E2",
-  overdueText: "#B91C1C",
-  metricLabel: "#1B3A5C",
+  headerBg: sheetPalette.headerBg,
+  headerText: sheetPalette.headerText,
+  border: sheetPalette.border,
+  zebra: sheetPalette.zebra,
+  card: sheetPalette.card,
+  overdue: sheetPalette.overdue,
+  overdueText: sheetPalette.overdueText,
+  metricLabel: sheetPalette.metricLabel,
 } as const
 
-export const sessionStatusFill: Record<SessionStatus, string> = {
-  agendada: "#F8F6F0",
-  realizada: "#EAF5EF",
-  faltou: "#FEE2E2",
-  remarcada: "#E8EEF5",
-  cancelada: "#F3F4F6",
-}
+export const sessionStatusFill: Record<SessionStatus, string> =
+  sheetPalette.sessionStatusFill
 
-export const patientStatusFill: Record<PatientStatus, string> = {
-  ativo: "#EAF5EF",
-  "em-pausa": "#FEF3C7",
-  "lista-espera": "#E0F2FE",
-  alta: "#F3F4F6",
-}
+export const patientStatusFill: Record<PatientStatus, string> =
+  sheetPalette.patientStatusFill
 
 export type SheetCellStyle = {
   backgroundColor: string
@@ -42,7 +33,7 @@ export function getSheetHeaders(rows: ExportRow[]) {
 
 function baseCellStyle(
   backgroundColor: string,
-  color = "#1B3A5C",
+  color = "var(--foreground)",
   fontWeight: "normal" | "bold" = "normal"
 ): SheetCellStyle {
   return { backgroundColor, color, fontWeight }
@@ -59,7 +50,10 @@ export function resolveRowStyle(
     if (sessionStatus === "faltou" || sessionStatus === "cancelada") {
       return {
         ...style,
-        color: sessionStatus === "faltou" ? SHEET_COLORS.overdueText : "#6B7280",
+        color:
+          sessionStatus === "faltou"
+            ? SHEET_COLORS.overdueText
+            : "#6B7280",
         textDecoration: "line-through",
       }
     }
@@ -70,7 +64,11 @@ export function resolveRowStyle(
     config.overdueColumn &&
     String(row[config.overdueColumn] ?? "").toLowerCase() === "sim"
   ) {
-    return baseCellStyle(SHEET_COLORS.overdue, SHEET_COLORS.overdueText, "bold")
+    return baseCellStyle(
+      SHEET_COLORS.overdue,
+      SHEET_COLORS.overdueText,
+      "bold"
+    )
   }
 
   const isZebra = rowIndex % 2 === 1
@@ -92,7 +90,7 @@ export function resolveCellStyle(
     if (patientStatus) {
       return {
         backgroundColor: patientStatusFill[patientStatus],
-        color: "#1B3A5C",
+        color: "var(--foreground)",
         fontWeight: "bold",
       }
     }
@@ -110,7 +108,11 @@ export function resolveCellStyle(
     config.name === "Resumo" &&
     String(row.Métrica ?? "").toLowerCase().includes("atraso")
   ) {
-    return baseCellStyle(SHEET_COLORS.overdue, SHEET_COLORS.overdueText, "bold")
+    return baseCellStyle(
+      SHEET_COLORS.overdue,
+      SHEET_COLORS.overdueText,
+      "bold"
+    )
   }
 
   return rowStyle

@@ -170,7 +170,7 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
             <ClipboardList className="size-5 text-sidebar-primary" />
           </div>
           <div className="flex flex-col gap-1">
-            <h3 className="font-heading text-lg font-semibold text-[#FAF6EC]">
+            <h3 className="font-heading text-lg font-semibold text-primary-foreground">
               Prontuário clínico
             </h3>
             <p className="text-sm text-sidebar-foreground/75">

@@ -180,7 +180,7 @@ export function PatientProfile({
         </Avatar>
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <div className="flex flex-col gap-0.5">
-            <h2 className="font-heading text-2xl font-semibold text-[#FAF6EC]">
+            <h2 className="font-heading text-2xl font-semibold text-primary-foreground">
               {patient.name}
             </h2>
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-sidebar-foreground/70">

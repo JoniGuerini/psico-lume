@@ -1,40 +1,42 @@
 import ExcelJS from "exceljs"
 
 import type { PatientStatus, SessionStatus } from "@/data/types"
+import { sheetPalette } from "@/lib/design-system"
 
 /** Cores alinhadas ao tema Lume (ARGB para Excel). */
 export const EXPORT_COLORS = {
-  headerBg: "FF1B3A5C",
-  headerText: "FFFAF6EC",
-  border: "FFE5E0D5",
-  zebra: "FFF8F6F0",
-  card: "FFFFFFFF",
-  overdue: "FFFEE2E2",
-  overdueText: "FFB91C1C",
-  metricLabel: "FF1B3A5C",
+  headerBg: `FF${sheetPalette.headerBg.slice(1)}`,
+  headerText: `FF${sheetPalette.headerText.slice(1)}`,
+  border: `FF${sheetPalette.border.slice(1)}`,
+  zebra: `FF${sheetPalette.zebra.slice(1)}`,
+  card: `FF${sheetPalette.card.slice(1)}`,
+  overdue: `FF${sheetPalette.overdue.slice(1)}`,
+  overdueText: `FF${sheetPalette.overdueText.slice(1)}`,
+  metricLabel: `FF${sheetPalette.metricLabel.slice(1)}`,
 } as const
 
-export const sessionStatusExcelFill: Record<SessionStatus, string> = {
-  agendada: "FFF8F6F0",
-  realizada: "FFEAF5EF",
-  faltou: "FFFEE2E2",
-  remarcada: "FFE8EEF5",
-  cancelada: "FFF3F4F6",
-}
+export const sessionStatusExcelFill: Record<SessionStatus, string> =
+  Object.fromEntries(
+    Object.entries(sheetPalette.sessionStatusFill).map(([key, hex]) => [
+      key,
+      `FF${hex.slice(1)}`,
+    ])
+  ) as Record<SessionStatus, string>
 
 export const sessionStatusExcelFont: Partial<
   Record<SessionStatus, Partial<ExcelJS.Font>>
 > = {
-  faltou: { color: { argb: "FFB91C1C" }, strike: true },
+  faltou: { color: { argb: EXPORT_COLORS.overdueText }, strike: true },
   cancelada: { color: { argb: "FF6B7280" }, strike: true },
 }
 
-export const patientStatusExcelFill: Record<PatientStatus, string> = {
-  ativo: "FFEAF5EF",
-  "em-pausa": "FFFEF3C7",
-  "lista-espera": "FFE0F2FE",
-  alta: "FFF3F4F6",
-}
+export const patientStatusExcelFill: Record<PatientStatus, string> =
+  Object.fromEntries(
+    Object.entries(sheetPalette.patientStatusFill).map(([key, hex]) => [
+      key,
+      `FF${hex.slice(1)}`,
+    ])
+  ) as Record<PatientStatus, string>
 
 export type ExportRow = Record<string, string | number | boolean | undefined>
 
@@ -153,7 +155,11 @@ function addStyledSheet(
       }
 
       if (config.name === "Resumo" && colNumber === 1) {
-        cellFont = { ...cellFont, bold: true, color: { argb: EXPORT_COLORS.metricLabel } }
+        cellFont = {
+          ...cellFont,
+          bold: true,
+          color: { argb: EXPORT_COLORS.metricLabel },
+        }
       }
 
       if (
@@ -161,7 +167,11 @@ function addStyledSheet(
         String(row.Métrica ?? "").includes("atraso")
       ) {
         cellFill = EXPORT_COLORS.overdue
-        cellFont = { ...cellFont, color: { argb: EXPORT_COLORS.overdueText }, bold: true }
+        cellFont = {
+          ...cellFont,
+          color: { argb: EXPORT_COLORS.overdueText },
+          bold: true,
+        }
       }
 
       cell.fill = {
@@ -174,7 +184,8 @@ function addStyledSheet(
       cell.alignment = {
         vertical: "top",
         horizontal: typeof cell.value === "number" ? "right" : "left",
-        wrapText: header === "Evolução" || header === "Resumo" || header === "Plano",
+        wrapText:
+          header === "Evolução" || header === "Resumo" || header === "Plano",
       }
     })
   })

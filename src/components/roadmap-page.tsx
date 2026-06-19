@@ -155,7 +155,7 @@ export function RoadmapPage() {
             </Badge>
           </div>
           <div className="flex flex-col gap-1">
-            <h2 className="font-heading text-2xl font-semibold text-[#FAF6EC]">
+            <h2 className="font-heading text-2xl font-semibold text-primary-foreground">
               Roadmap & próximos passos
             </h2>
             <p className="max-w-2xl text-sm text-sidebar-foreground/75">
@@ -175,19 +175,19 @@ export function RoadmapPage() {
           </div>
           <div className="flex flex-col gap-0.5 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
             <span className="text-xs text-sidebar-foreground/70">Próximos</span>
-            <span className="font-heading text-xl font-semibold tabular-nums text-[#FAF6EC]">
+            <span className="font-heading text-xl font-semibold tabular-nums text-primary-foreground">
               {nextCount}
             </span>
           </div>
           <div className="flex flex-col gap-0.5 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
             <span className="text-xs text-sidebar-foreground/70">Planejados</span>
-            <span className="font-heading text-xl font-semibold tabular-nums text-[#FAF6EC]">
+            <span className="font-heading text-xl font-semibold tabular-nums text-primary-foreground">
               {plannedCount}
             </span>
           </div>
           <div className="flex flex-col gap-0.5 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
             <span className="text-xs text-sidebar-foreground/70">Total</span>
-            <span className="font-heading text-xl font-semibold tabular-nums text-[#FAF6EC]">
+            <span className="font-heading text-xl font-semibold tabular-nums text-primary-foreground">
               {totalCount}
             </span>
           </div>

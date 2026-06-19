@@ -80,7 +80,7 @@ export function GlobalSearchDialog({
       {open ? (
         <DialogContent
           className={cn(
-            "!flex max-h-[min(92vh,44rem)] min-h-0 w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-[#FAF6EC] p-0 sm:max-w-3xl",
+            "!flex max-h-[min(92vh,44rem)] min-h-0 w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-3xl",
             "duration-75 data-open:zoom-in-100 data-closed:zoom-out-100 data-open:fade-in-0"
           )}
         >

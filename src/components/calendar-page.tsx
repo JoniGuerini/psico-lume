@@ -402,7 +402,7 @@ function TimeGrid({
       <PopoverContent
         side="right"
         align="start"
-        className="w-80 gap-0 overflow-hidden bg-[#FAF6EC] p-0"
+        className="w-80 gap-0 overflow-hidden bg-surface-dialog p-0"
         onOpenAutoFocus={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => {
           if (selectOpen) event.preventDefault()
@@ -475,7 +475,7 @@ function NewSessionPopover({
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
         align={align}
-        className="w-80 gap-0 overflow-hidden bg-[#FAF6EC] p-0"
+        className="w-80 gap-0 overflow-hidden bg-surface-dialog p-0"
         onOpenAutoFocus={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => {
           if (selectOpen) event.preventDefault()

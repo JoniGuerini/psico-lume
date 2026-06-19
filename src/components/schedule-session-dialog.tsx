@@ -37,7 +37,7 @@ export function ScheduleSessionDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="gap-0 overflow-hidden bg-[#FAF6EC] p-0 sm:max-w-md"
+        className="gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md"
         onPointerDownOutside={(event) => {
           if (selectOpen) event.preventDefault()
         }}

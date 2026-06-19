@@ -250,7 +250,7 @@ export function App() {
                     </header>
                     <main
                       className={cn(
-                        "flex min-h-0 flex-1 flex-col gap-4 p-4",
+                        "flex min-h-0 flex-1 flex-col p-4 gap-[var(--density-page-gap)]",
                         fillViewportPages.has(activeItem)
                           ? "overflow-hidden"
                           : "overflow-y-auto overscroll-contain"

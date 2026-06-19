@@ -1,0 +1,234 @@
+/**
+ * Temas Lume — tokens semânticos por [data-theme] no <html>.
+ * Primitivos compartilhados em :root; cada tema redefine semânticos e superfícies.
+ */
+
+:root {
+  /* ── Primitivos (compartilhados entre temas) ── */
+  --lume-navy-900: #1b3a5c;
+  --lume-navy-800: #1c3351;
+  --lume-cream-100: #faf6ec;
+  --lume-cream-200: #f5f2ea;
+  --lume-sand-100: #efe7d5;
+  --lume-sand-200: #eae0cc;
+  --lume-sand-300: #ece3d0;
+  --lume-mint-400: #a0cfb1;
+  --lume-mint-logo: #a8d5ba;
+  --lume-white: #ffffff;
+  --lume-slate-500: #5e6b7e;
+  --lume-gold-400: #c9a86a;
+  --lume-mint-300: #8fb9a0;
+  --lume-mint-on-accent: #184032;
+  --lume-terracotta: #c97b63;
+  --lume-lavender: #9a8fc1;
+  --lume-blue-accent: #dce7f2;
+
+  --lume-navy-alpha-14: #1b3a5c24;
+  --lume-navy-alpha-20: #1b3a5c33;
+  --lume-navy-alpha-25: #1b3a5c40;
+  --lume-navy-alpha-44: #1b3a5c70;
+  --lume-white-alpha-10: #ffffff1a;
+  --lume-white-alpha-12: #ffffff1f;
+
+  --lume-sheet-border: #e5e0d5;
+  --lume-sheet-zebra: #f8f6f0;
+  --lume-sheet-tab: #ede9df;
+  --lume-sheet-realized: #eaf5ef;
+  --lume-sheet-overdue: #fee2e2;
+  --lume-sheet-overdue-text: #b91c1c;
+  --lume-sheet-rescheduled: #e8eef5;
+  --lume-sheet-muted: #f3f4f6;
+  --lume-sheet-pause: #fef3c7;
+  --lume-sheet-waitlist: #e0f2fe;
+
+  /* Refúgio — primitivos extras */
+  --refugio-slate-900: #2d3a4a;
+  --refugio-slate-800: #2a3544;
+  --refugio-slate-700: #3d5166;
+  --refugio-mist-100: #e8edf2;
+  --refugio-mist-200: #dce4ec;
+  --refugio-mist-300: #d5dde6;
+  --refugio-dialog: #f4f6f9;
+  --refugio-cream: #f5f7fa;
+  --refugio-slate-alpha-14: #3d516624;
+  --refugio-slate-alpha-20: #3d516633;
+  --refugio-slate-alpha-25: #3d516640;
+  --refugio-slate-alpha-44: #3d516670;
+
+  --coral-accent: #e8927c;
+
+  /* Coral — blush + petróleo */
+  --coral-blush-100: #faede8;
+  --coral-blush-200: #f0ddd6;
+  --coral-blush-300: #e8cfc6;
+  --coral-teal-900: #1a4844;
+  --coral-teal-800: #245550;
+  --coral-teal-700: #1f5650;
+  --coral-dialog: #fff6f3;
+  --coral-cream: #fff0eb;
+  --coral-teal-alpha-14: #1a484424;
+  --coral-teal-alpha-20: #1a484433;
+  --coral-teal-alpha-25: #1a484440;
+  --coral-teal-alpha-44: #1a484470;
+
+  --radius: 0.625rem;
+  --density-page-gap: 1rem;
+  --density-table-cell-py: 0.375rem;
+  --density-table-cell-py-compact: 0.25rem;
+}
+
+/* ── Tema Lume ── */
+[data-theme="lume"] {
+  --background: var(--lume-sand-100);
+  --foreground: var(--lume-navy-800);
+  --card: var(--lume-white);
+  --card-foreground: var(--lume-navy-800);
+  --popover: var(--lume-white);
+  --popover-foreground: var(--lume-navy-800);
+  --primary: var(--lume-navy-900);
+  --primary-foreground: var(--lume-cream-100);
+  --secondary: var(--lume-sand-100);
+  --secondary-foreground: var(--lume-navy-800);
+  --muted: var(--lume-sand-200);
+  --muted-foreground: var(--lume-slate-500);
+  --accent: var(--lume-blue-accent);
+  --accent-foreground: var(--lume-navy-800);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: var(--lume-navy-alpha-14);
+  --input: var(--lume-navy-alpha-20);
+  --ring: var(--lume-navy-900);
+  --chart-1: var(--lume-navy-900);
+  --chart-2: var(--lume-mint-400);
+  --chart-3: var(--lume-gold-400);
+  --chart-4: var(--lume-slate-500);
+  --chart-5: var(--lume-mint-300);
+
+  --sidebar: var(--lume-navy-900);
+  --sidebar-foreground: var(--lume-cream-200);
+  --sidebar-primary: var(--accent-brand);
+  --sidebar-primary-foreground: var(--lume-mint-on-accent);
+  --sidebar-accent: var(--lume-white-alpha-10);
+  --sidebar-accent-foreground: var(--lume-cream-200);
+  --sidebar-border: var(--lume-white-alpha-12);
+  --sidebar-ring: var(--accent-brand);
+
+  --scrollbar-thumb: var(--lume-navy-alpha-25);
+  --scrollbar-thumb-hover: var(--lume-navy-alpha-44);
+
+  --surface-dialog: var(--lume-cream-100);
+  --surface-navy: var(--lume-navy-900);
+  --surface-navy-heading: var(--lume-cream-100);
+  --surface-sheet-border: var(--lume-sheet-border);
+  --surface-sheet-muted: var(--lume-sheet-zebra);
+  --surface-sheet-tab: var(--lume-sheet-tab);
+  --surface-sheet-tab-active: var(--lume-white);
+
+  --accent-brand: var(--lume-mint-400);
+  --theme-logo-mark: var(--lume-mint-logo);
+}
+
+/* ── Tema Refúgio (padrão) — ardósia fria + terracota ── */
+:root:not([data-theme]),
+[data-theme="refugio"] {
+  --background: var(--refugio-mist-100);
+  --foreground: var(--refugio-slate-800);
+  --card: var(--lume-white);
+  --card-foreground: var(--refugio-slate-800);
+  --popover: var(--lume-white);
+  --popover-foreground: var(--refugio-slate-800);
+  --primary: var(--refugio-slate-700);
+  --primary-foreground: var(--refugio-cream);
+  --secondary: var(--refugio-mist-200);
+  --secondary-foreground: var(--refugio-slate-800);
+  --muted: var(--refugio-mist-300);
+  --muted-foreground: #5a6578;
+  --accent: #e8e0da;
+  --accent-foreground: var(--refugio-slate-800);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: var(--refugio-slate-alpha-14);
+  --input: var(--refugio-slate-alpha-20);
+  --ring: var(--refugio-slate-700);
+  --chart-1: var(--refugio-slate-700);
+  --chart-2: var(--lume-terracotta);
+  --chart-3: var(--lume-lavender);
+  --chart-4: #5a6578;
+  --chart-5: #8fa3b8;
+
+  --sidebar: var(--refugio-slate-900);
+  --sidebar-foreground: var(--refugio-cream);
+  --sidebar-primary: var(--accent-brand);
+  --sidebar-primary-foreground: #fffaf7;
+  --sidebar-accent: #ffffff14;
+  --sidebar-accent-foreground: var(--refugio-cream);
+  --sidebar-border: #ffffff1a;
+  --sidebar-ring: var(--accent-brand);
+
+  --scrollbar-thumb: var(--refugio-slate-alpha-25);
+  --scrollbar-thumb-hover: var(--refugio-slate-alpha-44);
+
+  --surface-dialog: var(--refugio-dialog);
+  --surface-navy: var(--refugio-slate-900);
+  --surface-navy-heading: var(--refugio-cream);
+  --surface-sheet-border: #d5dde6;
+  --surface-sheet-muted: #eef1f5;
+  --surface-sheet-tab: #e2e8ef;
+  --surface-sheet-tab-active: var(--lume-white);
+
+  --accent-brand: var(--lume-terracotta);
+  --theme-logo-mark: var(--lume-terracotta);
+}
+
+/* ── Tema Coral — blush + petróleo + coral ── */
+[data-theme="coral"] {
+  --background: var(--coral-blush-100);
+  --foreground: #3a2a28;
+  --card: var(--lume-white);
+  --card-foreground: #3a2a28;
+  --popover: var(--lume-white);
+  --popover-foreground: #3a2a28;
+  --primary: var(--coral-teal-700);
+  --primary-foreground: var(--coral-cream);
+  --secondary: var(--coral-blush-200);
+  --secondary-foreground: #3a2a28;
+  --muted: var(--coral-blush-300);
+  --muted-foreground: #8a6a62;
+  --accent: #fce8e2;
+  --accent-foreground: #3a2a28;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: var(--coral-teal-alpha-14);
+  --input: var(--coral-teal-alpha-20);
+  --ring: var(--coral-teal-700);
+  --chart-1: var(--coral-teal-700);
+  --chart-2: var(--coral-accent);
+  --chart-3: var(--lume-gold-400);
+  --chart-4: #8a6a62;
+  --chart-5: #f0b8a8;
+
+  --sidebar: var(--coral-teal-900);
+  --sidebar-foreground: var(--coral-cream);
+  --sidebar-primary: var(--accent-brand);
+  --sidebar-primary-foreground: #fffaf7;
+  --sidebar-accent: #ffffff14;
+  --sidebar-accent-foreground: var(--coral-cream);
+  --sidebar-border: #ffffff1a;
+  --sidebar-ring: var(--accent-brand);
+
+  --scrollbar-thumb: var(--coral-teal-alpha-25);
+  --scrollbar-thumb-hover: var(--coral-teal-alpha-44);
+
+  --surface-dialog: var(--coral-dialog);
+  --surface-navy: var(--coral-teal-900);
+  --surface-navy-heading: var(--coral-cream);
+  --surface-sheet-border: #e8cfc6;
+  --surface-sheet-muted: #faf0ec;
+  --surface-sheet-tab: #f0ddd6;
+  --surface-sheet-tab-active: var(--lume-white);
+
+  --accent-brand: var(--coral-accent);
+  --theme-logo-mark: var(--coral-accent);
+}
+
+[data-density="compact"] {
+  --density-page-gap: 0.75rem;
+  --density-table-cell-py: var(--density-table-cell-py-compact);
+}

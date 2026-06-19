@@ -118,7 +118,7 @@ export function UnpaidSessionsPage({
             <CircleDollarSign className="size-5 text-sidebar-primary" />
           </div>
           <div className="flex flex-col gap-1">
-            <h2 className="font-heading text-lg font-semibold text-[#FAF6EC]">
+            <h2 className="font-heading text-lg font-semibold text-primary-foreground">
               Sessões a receber
             </h2>
             <p className="text-sm text-sidebar-foreground/75">
@@ -131,7 +131,7 @@ export function UnpaidSessionsPage({
           <Button
             variant="outline"
             size="sm"
-            className="shrink-0 border-white/20 bg-white/10 text-sidebar-foreground hover:bg-white/15 hover:text-[#FAF6EC]"
+            className="shrink-0 border-white/20 bg-white/10 text-sidebar-foreground hover:bg-white/15 hover:text-primary-foreground"
             onClick={() => markAllEventsPaid(visibleIds)}
           >
             <CheckCheck />
