@@ -2,16 +2,33 @@ import { findPatient, mockPatients } from "@/data/patients"
 import type { InboxEmail, Patient } from "@/data/types"
 
 export function buildInboxEmails(patients: Patient[] = mockPatients): InboxEmail[] {
-  const mariana = findPatient(patients, "1")!
-  const rafael = findPatient(patients, "2")!
-  const camila = findPatient(patients, "3")!
-  const juliana = findPatient(patients, "7")!
-  const gustavo = findPatient(patients, "10")!
-  const fernanda = findPatient(patients, "11")!
-  const carolina = findPatient(patients, "13")!
-  const pedro = findPatient(patients, "6")!
-  const leonardo = findPatient(patients, "21")!
-  const nora = findPatient(patients, "23")!
+  if (patients.length === 0) return []
+
+  const mariana = findPatient(patients, "1")
+  const rafael = findPatient(patients, "2")
+  const camila = findPatient(patients, "3")
+  const juliana = findPatient(patients, "7")
+  const gustavo = findPatient(patients, "10")
+  const fernanda = findPatient(patients, "11")
+  const carolina = findPatient(patients, "13")
+  const pedro = findPatient(patients, "6")
+  const leonardo = findPatient(patients, "21")
+  const nora = findPatient(patients, "23")
+
+  if (
+    !mariana ||
+    !rafael ||
+    !camila ||
+    !juliana ||
+    !gustavo ||
+    !fernanda ||
+    !carolina ||
+    !pedro ||
+    !leonardo ||
+    !nora
+  ) {
+    return []
+  }
 
   return [
     {

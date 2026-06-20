@@ -1,5 +1,8 @@
 import { useState } from "react"
-import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react"
+import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, UserRound } from "lucide-react"
+
+import { GuestLoginDialog } from "@/components/guest-login-dialog"
+import { readGuestProfileName } from "@/lib/guest-clinic-storage"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -33,22 +36,40 @@ function LumeMark({ className }: { className?: string }) {
 }
 
 type LoginFormContentProps = {
-  onLogin: () => void
+  onLoginDemo: () => void
+  onLoginGuest: (name: string) => void
 }
 
-export function LoginFormContent({ onLogin }: LoginFormContentProps) {
+export function LoginFormContent({
+  onLoginDemo,
+  onLoginGuest,
+}: LoginFormContentProps) {
   const [email, setEmail] = useState("jonathan.guerini@example.com")
   const [password, setPassword] = useState("demo1234")
   const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(true)
   const [loading, setLoading] = useState(false)
+  const [guestDialogOpen, setGuestDialogOpen] = useState(false)
+  const savedGuestName = readGuestProfileName()
+
+  function handleGuestLogin() {
+    if (savedGuestName) {
+      setLoading(true)
+      window.setTimeout(() => {
+        setLoading(false)
+        onLoginGuest(savedGuestName)
+      }, 350)
+      return
+    }
+    setGuestDialogOpen(true)
+  }
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     setLoading(true)
     window.setTimeout(() => {
       setLoading(false)
-      onLogin()
+      onLoginDemo()
     }, 700)
   }
 
@@ -56,7 +77,7 @@ export function LoginFormContent({ onLogin }: LoginFormContentProps) {
     setLoading(true)
     window.setTimeout(() => {
       setLoading(false)
-      onLogin()
+      onLoginDemo()
     }, 400)
   }
 
@@ -192,18 +213,33 @@ export function LoginFormContent({ onLogin }: LoginFormContentProps) {
                 </svg>
                 Entrar com Google
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full border-border bg-background/40 hover:bg-accent/50"
+                disabled={loading}
+                onClick={handleGuestLogin}
+              >
+                <UserRound />
+                {savedGuestName
+                  ? `Entrar como ${savedGuestName}`
+                  : "Continuar como convidado"}
+              </Button>
             </form>
           </CardContent>
         </Card>
 
+        <GuestLoginDialog
+          open={guestDialogOpen}
+          onOpenChange={setGuestDialogOpen}
+          onConfirm={onLoginGuest}
+        />
+
         <p className="text-center text-sm text-muted-foreground">
-          Não tem uma conta?{" "}
-          <button
-            type="button"
-            className="font-medium text-foreground underline-offset-4 hover:underline"
-          >
-            Criar conta
-          </button>
+          Quer explorar com dados de exemplo?{" "}
+          <span className="text-foreground/80">
+            Use o login acima ou o Google.
+          </span>
         </p>
       </div>
     </div>

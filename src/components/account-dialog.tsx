@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   Bell,
   Camera,
@@ -9,6 +9,7 @@ import {
   Palette,
   ShieldCheck,
   Smartphone,
+  Trash2,
   User,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -20,6 +21,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -40,6 +42,8 @@ type AccountDialogProps = {
   }
   open: boolean
   onOpenChange: (open: boolean) => void
+  isGuest?: boolean
+  onDeleteGuestProfile?: () => void
 }
 
 type Section = {
@@ -75,6 +79,13 @@ const sections: Section[] = [
     icon: Palette,
   },
 ]
+
+const guestDeleteAccountSection: Section = {
+  id: "excluir-conta",
+  label: "Excluir conta",
+  description: "Encerrar conta convidada neste navegador.",
+  icon: Trash2,
+}
 
 const activeSessions = [
   {
@@ -151,8 +162,15 @@ function Panel({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) {
+export function AccountDialog({
+  user,
+  open,
+  onOpenChange,
+  isGuest = false,
+  onDeleteGuestProfile,
+}: AccountDialogProps) {
   const [section, setSection] = useState("perfil")
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
   const [name, setName] = useState(user.name)
   const [email, setEmail] = useState(user.email)
@@ -174,8 +192,23 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
 
   const { theme, density, setTheme, setDensity } = useTheme()
 
+  const visibleSections = useMemo(
+    () => (isGuest ? [...sections, guestDeleteAccountSection] : sections),
+    [isGuest]
+  )
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [avatarUrl, setAvatarUrl] = useState(user.avatar)
+
+  useEffect(() => {
+    if (!open) setDeleteConfirmOpen(false)
+  }, [open])
+
+  useEffect(() => {
+    if (!isGuest && section === guestDeleteAccountSection.id) {
+      setSection("perfil")
+    }
+  }, [isGuest, section])
 
   useEffect(() => {
     return () => {
@@ -205,7 +238,14 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
     setNotifications((current) => ({ ...current, [key]: value }))
   }
 
+  function handleConfirmDeleteGuestProfile() {
+    setDeleteConfirmOpen(false)
+    onOpenChange(false)
+    onDeleteGuestProfile?.()
+  }
+
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[85vh] max-h-[calc(100%-2rem)] w-[92vw] flex-col gap-0 overflow-hidden bg-sidebar p-0 text-sidebar-foreground sm:max-w-5xl md:flex-row">
         <aside className="flex shrink-0 flex-col gap-1 p-3 md:w-64 md:p-4">
@@ -218,7 +258,7 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
             </DialogDescription>
           </DialogHeader>
           <nav className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
-            {sections.map((item) => {
+            {visibleSections.map((item) => {
               const isActive = section === item.id
               return (
                 <button
@@ -313,6 +353,54 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
                   <div className="flex justify-end gap-2 border-t border-border pt-5">
                     <Button variant="ghost">Cancelar</Button>
                     <Button>Salvar alterações</Button>
+                  </div>
+                </Panel>
+              </div>
+            ) : null}
+
+            {section === "excluir-conta" && isGuest ? (
+              <div className="flex flex-col gap-6">
+                <SectionHeading
+                  title="Excluir conta"
+                  description="Encerre sua conta convidada neste navegador. Esta ação apaga o perfil e tudo o que foi cadastrado."
+                />
+
+                <Panel className="gap-4">
+                  <div className="flex flex-col gap-1">
+                    <h4 className="font-heading text-base font-semibold">
+                      O que será removido
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      A conta de{" "}
+                      <span className="font-medium text-foreground">
+                        {user.name}
+                      </span>{" "}
+                      e todos os dados dela: pacientes, agenda, prontuários,
+                      notificações e preferências salvas localmente.
+                    </p>
+                  </div>
+                </Panel>
+
+                <Panel className="gap-4 border-destructive/25 bg-destructive/5">
+                  <div className="flex flex-col gap-1">
+                    <h4 className="font-heading text-base font-semibold text-destructive">
+                      Zona de perigo
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Esta ação é permanente e não pode ser desfeita. Você será
+                      desconectado e precisará criar uma nova conta convidada
+                      para usar o Lume de novo neste navegador.
+                    </p>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => setDeleteConfirmOpen(true)}
+                    >
+                      <Trash2 />
+                      Excluir conta
+                    </Button>
                   </div>
                 </Panel>
               </div>
@@ -636,5 +724,38 @@ export function AccountDialog({ user, open, onOpenChange }: AccountDialogProps) 
         </div>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+      <DialogContent className="gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md">
+        <DialogHeader className="border-b border-border px-6 py-4">
+          <DialogTitle className="text-lg">Excluir conta convidada?</DialogTitle>
+          <DialogDescription>
+            A conta de{" "}
+            <span className="font-medium text-foreground">{user.name}</span> e
+            todos os dados associados serão apagados deste navegador. Você
+            precisará criar uma nova conta convidada para voltar a usar o Lume
+            aqui.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="border-t border-border px-6 py-4">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => setDeleteConfirmOpen(false)}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleConfirmDeleteGuestProfile}
+          >
+            <Trash2 />
+            Excluir conta
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }

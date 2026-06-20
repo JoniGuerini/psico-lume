@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { Plus } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { Save } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
 import { modalityLabel } from "@/components/patients-page"
 import type { Patient, PatientModality, SessionNote } from "@/data/types"
 import { cn } from "@/lib/utils"
@@ -62,6 +63,57 @@ function fromDateInput(value: string) {
   return `${day}/${month}/${year}`
 }
 
+function FormSection({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description?: string
+  children: React.ReactNode
+}) {
+  return (
+    <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <div className="flex flex-col gap-0.5">
+        <h3 className="font-heading text-sm font-semibold text-foreground">
+          {title}
+        </h3>
+        {description ? (
+          <p className="text-xs text-muted-foreground">{description}</p>
+        ) : null}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+function Field({
+  label,
+  htmlFor,
+  required,
+  hint,
+  className,
+  children,
+}: {
+  label: string
+  htmlFor?: string
+  required?: boolean
+  hint?: string
+  className?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className={cn("flex min-w-0 flex-col gap-1.5", className)}>
+      <Label htmlFor={htmlFor} className="text-xs text-muted-foreground">
+        {label}
+        {required ? <span className="text-destructive"> *</span> : null}
+      </Label>
+      {children}
+      {hint ? <p className="text-xs text-muted-foreground/80">{hint}</p> : null}
+    </div>
+  )
+}
+
 export function NewSessionNoteDialog({
   open,
   onOpenChange,
@@ -69,7 +121,7 @@ export function NewSessionNoteDialog({
   nextSessionNumber,
   onCreate,
 }: NewSessionNoteDialogProps) {
-  const [selectOpen, setSelectOpen] = useState(false)
+  const summaryRef = useRef<HTMLTextAreaElement>(null)
   const [date, setDate] = useState(toDateInput(todayBr()))
   const [summary, setSummary] = useState("")
   const [evolution, setEvolution] = useState("")
@@ -79,6 +131,13 @@ export function NewSessionNoteDialog({
   const [modality, setModality] = useState<PatientModality>(
     patient.modality === "hibrido" ? "online" : patient.modality
   )
+
+  const canSubmit = summary.trim().length > 0 && evolution.trim().length > 0
+
+  const parsedTags = tags
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean)
 
   function resetForm() {
     setDate(toDateInput(todayBr()))
@@ -97,9 +156,15 @@ export function NewSessionNoteDialog({
     onOpenChange(next)
   }
 
+  useEffect(() => {
+    if (!open) return
+    const timer = window.setTimeout(() => summaryRef.current?.focus(), 50)
+    return () => window.clearTimeout(timer)
+  }, [open])
+
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
-    if (!summary.trim() || !evolution.trim()) return
+    if (!canSubmit) return
 
     onCreate({
       id: crypto.randomUUID(),
@@ -109,10 +174,7 @@ export function NewSessionNoteDialog({
       summary: summary.trim(),
       evolution: evolution.trim(),
       plan: plan.trim() || undefined,
-      tags: tags
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean),
+      tags: parsedTags,
       mood: mood || undefined,
       modality,
     })
@@ -123,23 +185,13 @@ export function NewSessionNoteDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        className="!flex max-h-[92vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-lg"
-        onPointerDownOutside={(event) => {
-          if (selectOpen) event.preventDefault()
-        }}
-        onInteractOutside={(event) => {
-          if (selectOpen) event.preventDefault()
-        }}
-        onEscapeKeyDown={(event) => {
-          if (selectOpen) event.preventDefault()
-        }}
-      >
+      <DialogContent className="!flex max-h-[92vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-2xl">
         <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
           <DialogTitle className="text-lg">Nova evolução</DialogTitle>
           <DialogDescription>
-            Registre a nota da sessão de {patient.name}. Resumo e evolução são
-            obrigatórios.
+            Registre a nota da sessão de{" "}
+            <span className="font-medium text-foreground">{patient.name}</span>.
+            Resumo e evolução clínica são obrigatórios.
           </DialogDescription>
         </DialogHeader>
 
@@ -149,130 +201,154 @@ export function NewSessionNoteDialog({
         >
           <ScrollArea className="h-[calc(92vh-10rem)] shrink-0">
             <div className="flex flex-col gap-4 p-6">
-            <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="note-date">Data da sessão</Label>
-                  <Input
-                    id="note-date"
-                    type="date"
-                    value={date}
-                    onChange={(event) => setDate(event.target.value)}
-                    className={fieldClass}
+              <FormSection
+                title="Identificação da sessão"
+                description="Metadados do encontro — preenchidos antes do registro clínico."
+              >
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Data da sessão" htmlFor="note-date">
+                    <Input
+                      id="note-date"
+                      type="date"
+                      value={date}
+                      onChange={(event) => setDate(event.target.value)}
+                      className={fieldClass}
+                      required
+                    />
+                  </Field>
+                  <Field label="Nº da sessão">
+                    <div
+                      className="flex h-9 items-center rounded-xl border border-border bg-muted/50 px-3 font-heading text-sm font-semibold tabular-nums text-foreground"
+                      aria-live="polite"
+                    >
+                      {nextSessionNumber}ª sessão
+                    </div>
+                  </Field>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Humor / estado" htmlFor="note-mood">
+                    <Select value={mood} onValueChange={setMood}>
+                      <SelectTrigger id="note-mood" className={fieldClass}>
+                        <SelectValue placeholder="Selecione (opcional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {moodOptions.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field label="Modalidade" htmlFor="note-modality">
+                    <Select
+                      value={modality}
+                      onValueChange={(value) =>
+                        setModality(value as PatientModality)
+                      }
+                    >
+                      <SelectTrigger id="note-modality" className={fieldClass}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(["presencial", "online"] as const).map((value) => (
+                          <SelectItem key={value} value={value}>
+                            {modalityLabel[value]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </div>
+              </FormSection>
+
+              <FormSection
+                title="Registro clínico"
+                description="Conteúdo principal do prontuário desta sessão."
+              >
+                <Field
+                  label="Resumo da sessão"
+                  htmlFor="note-summary"
+                  required
+                  hint="Temas abordados, queixas trazidas e contexto do encontro."
+                >
+                  <Textarea
+                    ref={summaryRef}
+                    id="note-summary"
+                    value={summary}
+                    onChange={(event) => setSummary(event.target.value)}
+                    placeholder="O que foi trabalhado, queixas e contexto..."
+                    rows={4}
+                    className={cn(fieldClass, "min-h-24 resize-y")}
                     required
                   />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="note-session">Nº da sessão</Label>
-                  <Input
-                    id="note-session"
-                    value={String(nextSessionNumber)}
-                    readOnly
-                    className={cn(fieldClass, "bg-background/60")}
+                </Field>
+
+                <Field
+                  label="Evolução clínica"
+                  htmlFor="note-evolution"
+                  required
+                  hint="Progressos observados, intervenções realizadas e impressões clínicas."
+                >
+                  <Textarea
+                    id="note-evolution"
+                    value={evolution}
+                    onChange={(event) => setEvolution(event.target.value)}
+                    placeholder="Observações clínicas, progressos e insights..."
+                    rows={5}
+                    className={cn(fieldClass, "min-h-28 resize-y")}
+                    required
                   />
-                </div>
-              </div>
+                </Field>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="note-mood">Humor / estado</Label>
-                  <Select
-                    value={mood}
-                    onValueChange={setMood}
-                    onOpenChange={setSelectOpen}
-                  >
-                    <SelectTrigger id="note-mood" className={fieldClass}>
-                      <SelectValue placeholder="Selecione (opcional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {moodOptions.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
-                        </SelectItem>
+                <Separator />
+
+                <Field
+                  label="Plano / tarefa de casa"
+                  htmlFor="note-plan"
+                  hint="Opcional — próximos passos acordados com o paciente."
+                >
+                  <Textarea
+                    id="note-plan"
+                    value={plan}
+                    onChange={(event) => setPlan(event.target.value)}
+                    placeholder="Próximos passos acordados com o paciente..."
+                    rows={3}
+                    className={cn(fieldClass, "min-h-20 resize-y")}
+                  />
+                </Field>
+
+                <Field
+                  label="Tags"
+                  htmlFor="note-tags"
+                  hint="Separe por vírgula — ex.: TCC, Ansiedade, Progresso."
+                >
+                  <Input
+                    id="note-tags"
+                    value={tags}
+                    onChange={(event) => setTags(event.target.value)}
+                    placeholder="TCC, Ansiedade, Progresso"
+                    className={fieldClass}
+                  />
+                  {parsedTags.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5 pt-0.5">
+                      {parsedTags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full border border-border bg-background/60 px-2 py-0.5 text-xs text-muted-foreground"
+                        >
+                          {tag}
+                        </span>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="note-modality">Modalidade</Label>
-                  <Select
-                    value={modality}
-                    onValueChange={(value) =>
-                      setModality(value as PatientModality)
-                    }
-                    onOpenChange={setSelectOpen}
-                  >
-                    <SelectTrigger id="note-modality" className={fieldClass}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(["presencial", "online"] as const).map((value) => (
-                        <SelectItem key={value} value={value}>
-                          {modalityLabel[value]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="note-summary">
-                  Resumo da sessão <span className="text-destructive">*</span>
-                </Label>
-                <Textarea
-                  id="note-summary"
-                  value={summary}
-                  onChange={(event) => setSummary(event.target.value)}
-                  placeholder="O que foi trabalhado, queixas e contexto..."
-                  rows={3}
-                  className={cn(fieldClass, "resize-none")}
-                  required
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="note-evolution">
-                  Evolução clínica <span className="text-destructive">*</span>
-                </Label>
-                <Textarea
-                  id="note-evolution"
-                  value={evolution}
-                  onChange={(event) => setEvolution(event.target.value)}
-                  placeholder="Observações clínicas, progressos e insights..."
-                  rows={4}
-                  className={cn(fieldClass, "resize-none")}
-                  required
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="note-plan">Plano / tarefa de casa</Label>
-                <Textarea
-                  id="note-plan"
-                  value={plan}
-                  onChange={(event) => setPlan(event.target.value)}
-                  placeholder="Próximos passos acordados com o paciente..."
-                  rows={2}
-                  className={cn(fieldClass, "resize-none")}
-                />
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="note-tags">Tags</Label>
-                <Input
-                  id="note-tags"
-                  value={tags}
-                  onChange={(event) => setTags(event.target.value)}
-                  placeholder="TCC, Ansiedade, Progresso (separadas por vírgula)"
-                  className={fieldClass}
-                />
-              </div>
-            </section>
-          </div>
+                    </div>
+                  ) : null}
+                </Field>
+              </FormSection>
+            </div>
           </ScrollArea>
 
-          <DialogFooter className="shrink-0 border-t border-border px-6 py-4">
+          <DialogFooter className="shrink-0 border-t border-border bg-card/60 px-6 py-4">
             <Button
               type="button"
               variant="ghost"
@@ -281,8 +357,8 @@ export function NewSessionNoteDialog({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={!summary.trim() || !evolution.trim()}>
-              <Plus />
+            <Button type="submit" disabled={!canSubmit}>
+              <Save />
               Salvar evolução
             </Button>
           </DialogFooter>

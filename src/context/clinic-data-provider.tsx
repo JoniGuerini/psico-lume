@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from "react"
+import { createContext, useContext, useEffect, useMemo, useState } from "react"
 
 import { buildCalendarEvents } from "@/data/calendar"
 import { buildClinicalRecords } from "@/data/clinical-records"
@@ -20,6 +20,11 @@ import type {
   SessionNote,
   SessionStatus,
 } from "@/data/types"
+import {
+  createEmptyGuestClinicSnapshot,
+  loadGuestClinicSnapshot,
+  saveGuestClinicSnapshot,
+} from "@/lib/guest-clinic-storage"
 import {
   getEventStatus,
   mergeEventStatuses,
@@ -135,21 +140,54 @@ function applySessionCountChange(
   }
 }
 
+export type ClinicDataMode = "demo" | "guest"
+
+function createDemoInitialState() {
+  return {
+    patients: mockPatients,
+    sessionNotes: buildClinicalRecords(mockPatients),
+    events: syncStaleEventStatuses(
+      buildCalendarEvents(mockPatients),
+      mockPatients
+    ),
+    notifications: buildNotifications(mockPatients),
+  }
+}
+
+function createGuestInitialState() {
+  return loadGuestClinicSnapshot() ?? createEmptyGuestClinicSnapshot()
+}
+
 export function ClinicDataProvider({
   children,
+  mode = "demo",
 }: {
   children: React.ReactNode
+  mode?: ClinicDataMode
 }) {
-  const [patients, setPatients] = useState<Patient[]>(mockPatients)
-  const [sessionNotes, setSessionNotes] = useState<SessionNote[]>(() =>
-    buildClinicalRecords(mockPatients)
+  const initialState = useMemo(
+    () =>
+      mode === "guest" ? createGuestInitialState() : createDemoInitialState(),
+    [mode]
   )
-  const [events, setEvents] = useState<CalendarEvent[]>(() =>
-    syncStaleEventStatuses(buildCalendarEvents(mockPatients), mockPatients)
+  const [patients, setPatients] = useState<Patient[]>(initialState.patients)
+  const [sessionNotes, setSessionNotes] = useState<SessionNote[]>(
+    initialState.sessionNotes
   )
-  const [notifications, setNotifications] = useState<Notification[]>(() =>
-    buildNotifications(mockPatients)
+  const [events, setEvents] = useState<CalendarEvent[]>(initialState.events)
+  const [notifications, setNotifications] = useState<Notification[]>(
+    initialState.notifications
   )
+
+  useEffect(() => {
+    if (mode !== "guest") return
+    saveGuestClinicSnapshot({
+      patients,
+      events,
+      sessionNotes,
+      notifications,
+    })
+  }, [mode, patients, events, sessionNotes, notifications])
   const emails = useMemo(() => buildInboxEmails(patients), [patients])
 
   const activeCount = useMemo(() => getActivePatients(patients).length, [patients])

@@ -19,7 +19,10 @@ import { ClinicSheetsPage } from "@/components/clinic-sheets-page"
 import { NotificationsBell } from "@/components/notifications-bell"
 import { NotificationsPage } from "@/components/notifications-page"
 import { LoginHeroSlot, ShellLeftRail } from "@/components/shell-left-rail"
-import { ClinicDataProvider } from "@/context/clinic-data-provider"
+import {
+  ClinicDataProvider,
+  type ClinicDataMode,
+} from "@/context/clinic-data-provider"
 import { PatientsPage } from "@/components/patients-page"
 import { ReportsPage } from "@/components/reports-page"
 import { RoadmapPage } from "@/components/roadmap-page"
@@ -29,16 +32,18 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import type { GlobalSearchAction } from "@/lib/global-search"
 import {
+  authSessionToUser,
+  clearAuthSession,
+  persistAuthSession,
+  readAuthSession,
+  type AuthSession,
+} from "@/lib/auth-session"
+import { persistGuestProfileName, clearGuestLocalData } from "@/lib/guest-clinic-storage"
+import {
   LUME_MAIN_SURFACE_CLASS,
   authFadeTransition,
 } from "@/lib/motion-layout"
 import { cn } from "@/lib/utils"
-
-const user = {
-  name: "Jonathan Guerini",
-  email: "jonathan.guerini@example.com",
-  avatar: "",
-}
 
 const fillViewportPages = new Set([
   "Inbox",
@@ -49,7 +54,15 @@ const fillViewportPages = new Set([
 ])
 
 export function App() {
-  const [authenticated, setAuthenticated] = useState(false)
+  const [authSession, setAuthSession] = useState<AuthSession | null>(() =>
+    readAuthSession()
+  )
+  const authenticated = authSession !== null
+  const clinicMode: ClinicDataMode =
+    authSession?.mode === "guest" ? "guest" : "demo"
+  const user = authSession
+    ? authSessionToUser(authSession)
+    : authSessionToUser({ mode: "demo" })
   const [activeItem, setActiveItem] = useState("Home")
   const [accountOpen, setAccountOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -156,12 +169,22 @@ export function App() {
     }
   }
 
-  function handleLogin() {
-    setAuthenticated(true)
+  function handleLoginDemo() {
+    const session: AuthSession = { mode: "demo" }
+    persistAuthSession(session)
+    setAuthSession(session)
+  }
+
+  function handleLoginGuest(name: string) {
+    persistGuestProfileName(name)
+    const session: AuthSession = { mode: "guest", name: name.trim() }
+    persistAuthSession(session)
+    setAuthSession(session)
   }
 
   function handleLogout() {
-    setAuthenticated(false)
+    clearAuthSession()
+    setAuthSession(null)
     setActiveItem("Home")
     setPatientFocus(null)
     setEventFocus(null)
@@ -170,11 +193,16 @@ export function App() {
     setSearchOpen(false)
   }
 
+  function handleDeleteGuestProfile() {
+    clearGuestLocalData()
+    handleLogout()
+  }
+
   return (
     <MotionConfig reducedMotion="user">
       <div className="fixed inset-0 isolate overflow-hidden bg-sidebar">
         <LumeNavyGlow fixed />
-        <ClinicDataProvider>
+        <ClinicDataProvider mode={clinicMode} key={clinicMode}>
           <SidebarProvider
             showGlow={false}
             className="relative z-10 h-svh overflow-hidden !bg-transparent"
@@ -196,7 +224,10 @@ export function App() {
                     data-slot="sidebar-inset"
                     className={LUME_MAIN_SURFACE_CLASS}
                   >
-                    <LoginFormContent onLogin={handleLogin} />
+                    <LoginFormContent
+                      onLoginDemo={handleLoginDemo}
+                      onLoginGuest={handleLoginGuest}
+                    />
                   </main>
                 </motion.div>
               ) : (
@@ -312,6 +343,8 @@ export function App() {
                     user={user}
                     open={accountOpen}
                     onOpenChange={setAccountOpen}
+                    isGuest={authSession?.mode === "guest"}
+                    onDeleteGuestProfile={handleDeleteGuestProfile}
                   />
                 </motion.div>
               )}
