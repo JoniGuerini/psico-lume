@@ -116,7 +116,12 @@ export function UnpaidSessionsPage({
   }
 
   return (
-    <div className={LUME_PAGE_CONTENT_CLASS}>
+    <div
+      className={cn(
+        LUME_PAGE_CONTENT_CLASS,
+        filtered.length === 0 && "min-h-[calc(100svh-5rem-2rem)] flex-1"
+      )}
+    >
       <Card className="flex flex-col gap-4 border-transparent bg-sidebar p-5 text-sidebar-foreground sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/10">
@@ -216,21 +221,23 @@ export function UnpaidSessionsPage({
       </Card>
 
       {filtered.length === 0 ? (
-        <Card className="flex flex-col items-center gap-3 border-dashed bg-background/40 px-6 py-12 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full border border-border bg-background/40">
-            <Check className="size-5 text-sidebar-primary" />
-          </div>
-          <div className="flex flex-col gap-1">
-            <p className="font-medium">
-              {filter === "atraso"
-                ? t("receivables.empty.overdueTitle")
-                : t("receivables.empty.allTitle")}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {filter === "atraso"
-                ? t("receivables.empty.overdueDescription")
-                : t("receivables.empty.allDescription")}
-            </p>
+        <Card className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+          <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-6 py-12 text-center">
+            <div className="flex size-12 items-center justify-center rounded-full border border-border bg-muted">
+              <Check className="size-5 text-sidebar-primary" />
+            </div>
+            <div className="flex max-w-md flex-col gap-1">
+              <p className="font-medium">
+                {filter === "atraso"
+                  ? t("receivables.empty.overdueTitle")
+                  : t("receivables.empty.allTitle")}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {filter === "atraso"
+                  ? t("receivables.empty.overdueDescription")
+                  : t("receivables.empty.allDescription")}
+              </p>
+            </div>
           </div>
         </Card>
       ) : (
