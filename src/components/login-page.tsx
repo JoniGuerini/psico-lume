@@ -2,6 +2,7 @@ import { useState } from "react"
 import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail, UserRound } from "lucide-react"
 
 import { GuestLoginDialog } from "@/components/guest-login-dialog"
+import { useTranslation } from "@/context/locale-provider"
 import { readGuestProfileName } from "@/lib/guest-clinic-storage"
 
 import { Button } from "@/components/ui/button"
@@ -44,6 +45,7 @@ export function LoginFormContent({
   onLoginDemo,
   onLoginGuest,
 }: LoginFormContentProps) {
+  const { t } = useTranslation()
   const [email, setEmail] = useState("jonathan.guerini@example.com")
   const [password, setPassword] = useState("demo1234")
   const [showPassword, setShowPassword] = useState(false)
@@ -86,27 +88,25 @@ export function LoginFormContent({
       <div className="flex w-full max-w-sm flex-col gap-8">
         <div className="flex flex-col items-center gap-3 text-center lg:hidden">
           <LumeMark className="size-12" />
-          <span className="font-heading text-2xl font-semibold">Lume</span>
+          <span className="font-heading text-2xl font-semibold">{t("nav.brand")}</span>
         </div>
 
         <Card className="w-full shadow-sm ring-1 ring-border/50">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Bem-vindo de volta</CardTitle>
-            <CardDescription>
-              Entre na sua conta para acessar o painel.
-            </CardDescription>
+            <CardTitle className="text-2xl">{t("login.welcomeBack")}</CardTitle>
+            <CardDescription>{t("login.subtitle")}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="login-email">E-mail</Label>
+                <Label htmlFor="login-email">{t("login.email")}</Label>
                 <div className="relative">
                   <Mail className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="login-email"
                     type="email"
                     autoComplete="email"
-                    placeholder="voce@example.com"
+                    placeholder={t("login.emailPlaceholder")}
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     className="border-border bg-background/40 pl-9 hover:bg-accent/50 focus-visible:bg-card"
@@ -116,12 +116,12 @@ export function LoginFormContent({
 
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="login-password">Senha</Label>
+                  <Label htmlFor="login-password">{t("login.password")}</Label>
                   <button
                     type="button"
                     className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
                   >
-                    Esqueci a senha
+                    {t("login.forgotPassword")}
                   </button>
                 </div>
                 <div className="relative">
@@ -139,7 +139,9 @@ export function LoginFormContent({
                     type="button"
                     onClick={() => setShowPassword((current) => !current)}
                     aria-label={
-                      showPassword ? "Ocultar senha" : "Mostrar senha"
+                      showPassword
+                        ? t("login.hidePassword")
+                        : t("login.showPassword")
                     }
                     className="absolute top-1/2 right-2 flex size-7 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
                   >
@@ -162,7 +164,7 @@ export function LoginFormContent({
                   htmlFor="login-remember"
                   className="text-sm font-normal text-muted-foreground"
                 >
-                  Manter conectado
+                  {t("login.rememberMe")}
                 </Label>
               </div>
 
@@ -170,11 +172,11 @@ export function LoginFormContent({
                 {loading ? (
                   <>
                     <Loader2 className="animate-spin" />
-                    Entrando...
+                    {t("login.signingIn")}
                   </>
                 ) : (
                   <>
-                    Entrar
+                    {t("login.signIn")}
                     <ArrowRight />
                   </>
                 )}
@@ -182,7 +184,7 @@ export function LoginFormContent({
 
               <div className="flex items-center gap-3">
                 <Separator className="flex-1" />
-                <span className="text-xs text-muted-foreground">ou</span>
+                <span className="text-xs text-muted-foreground">{t("common.or")}</span>
                 <Separator className="flex-1" />
               </div>
 
@@ -211,7 +213,7 @@ export function LoginFormContent({
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38z"
                   />
                 </svg>
-                Entrar com Google
+                {t("login.signInWithGoogle")}
               </Button>
               <Button
                 type="button"
@@ -222,8 +224,8 @@ export function LoginFormContent({
               >
                 <UserRound />
                 {savedGuestName
-                  ? `Entrar como ${savedGuestName}`
-                  : "Continuar como convidado"}
+                  ? t("login.enterAs", { name: savedGuestName })
+                  : t("login.continueAsGuest")}
               </Button>
             </form>
           </CardContent>
@@ -236,10 +238,8 @@ export function LoginFormContent({
         />
 
         <p className="text-center text-sm text-muted-foreground">
-          Quer explorar com dados de exemplo?{" "}
-          <span className="text-foreground/80">
-            Use o login acima ou o Google.
-          </span>
+          {t("login.exploreHint")}{" "}
+          <span className="text-foreground/80">{t("login.exploreDetail")}</span>
         </p>
       </div>
     </div>

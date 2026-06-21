@@ -20,10 +20,7 @@ import { NewPatientDialog } from "@/components/new-patient-dialog"
 import { PatientRecordsTab } from "@/components/patient-records-tab"
 import { PatientSessionsTab } from "@/components/patient-sessions-tab"
 import { ScheduleSessionDialog } from "@/components/schedule-session-dialog"
-import {
-  modalityLabel,
-  statusConfig,
-} from "@/components/patients-page"
+import { statusConfig } from "@/components/patients-page"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -46,22 +43,24 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useClinicData } from "@/context/clinic-data-provider"
+import { useTranslation } from "@/context/locale-provider"
 import { getRecordsForPatient } from "@/data/clinical-records"
 import { getInitials } from "@/data/patients"
 import type { CalendarEvent, Patient } from "@/data/types"
+import {
+  formatLocaleCurrency,
+  formatLocaleDate,
+  getModalityLabel,
+  getPatientStatusLabel,
+  getSessionFrequencyLabel,
+} from "@/lib/i18n-helpers"
 import { getPatientBillableSummary } from "@/lib/finance-metrics"
 import {
   getSessionAmount,
   isPatientOverdue,
   isSessionPaymentOverdue,
 } from "@/lib/session-payment"
-import { sessionFrequencyLabel } from "@/lib/session-frequency"
 import { cn } from "@/lib/utils"
-
-const brl = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-})
 
 type PatientProfileTab = "overview" | "sessions" | "records"
 
@@ -123,6 +122,7 @@ export function PatientProfile({
   onPatientDeleted,
   initialTab = "overview",
 }: PatientProfileProps) {
+  const { t } = useTranslation()
   const {
     sessionNotes,
     updatePatient,
@@ -166,7 +166,7 @@ export function PatientProfile({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ArrowLeft />
-          Voltar
+          {t("patients.profile.back")}
         </Button>
         <div className="flex gap-2">
           <Button
@@ -176,11 +176,11 @@ export function PatientProfile({
             onClick={() => setEditOpen(true)}
           >
             <Pencil />
-            Editar
+            {t("patients.profile.edit")}
           </Button>
           <Button size="sm" onClick={() => setScheduleOpen(true)}>
             <CalendarPlus />
-            Agendar sessão
+            {t("patients.profile.scheduleSession")}
           </Button>
         </div>
       </div>
@@ -193,7 +193,7 @@ export function PatientProfile({
         </Avatar>
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           <div className="flex flex-col gap-0.5">
-            <h2 className="font-heading text-2xl font-semibold text-primary-foreground">
+            <h2 className="font-heading text-2xl font-semibold text-surface-navy-heading">
               {patient.name}
             </h2>
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-sidebar-foreground/70">
@@ -214,7 +214,7 @@ export function PatientProfile({
           <div className="flex flex-wrap gap-2">
             <Badge className="gap-1.5 border-white/15 bg-white/10 text-sidebar-foreground">
               <span className={cn("size-2 rounded-full", status.dot)} />
-              {status.label}
+              {getPatientStatusLabel(t, patient.status)}
             </Badge>
             {patient.approach && patient.approach !== "—" ? (
               <Badge className="border-white/15 bg-white/10 text-sidebar-foreground">
@@ -222,20 +222,29 @@ export function PatientProfile({
               </Badge>
             ) : null}
             <Badge className="border-white/15 bg-white/10 text-sidebar-foreground">
-              {modalityLabel[patient.modality]}
+              {getModalityLabel(t, patient.modality)}
             </Badge>
           </div>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Sessões realizadas" value={String(patient.sessions)} />
-        <Stat label="Paciente desde" value={patient.since || "—"} />
         <Stat
-          label="Valor da sessão"
+          label={t("patients.profile.stats.completedSessions")}
+          value={String(patient.sessions)}
+        />
+        <Stat
+          label={t("patients.profile.stats.patientSince")}
+          value={patient.since || "—"}
+        />
+        <Stat
+          label={t("patients.profile.stats.sessionPrice")}
           value={patient.price ? `R$ ${patient.price}` : "—"}
         />
-        <Stat label="Próxima sessão" value={patient.nextSession ?? "—"} />
+        <Stat
+          label={t("patients.profile.stats.nextSession")}
+          value={patient.nextSession ?? "—"}
+        />
       </div>
 
       <Card className="p-4">
@@ -244,13 +253,16 @@ export function PatientProfile({
           onValueChange={(value) => setTab(value as PatientProfileTab)}
         >
           <TabsList className="border border-border bg-background/40">
-            <TabsTrigger value="overview">Visão geral</TabsTrigger>
+            <TabsTrigger value="overview">
+              {t("patients.profile.tabs.overview")}
+            </TabsTrigger>
             <TabsTrigger value="sessions">
-              Histórico de sessões
+              {t("patients.profile.tabs.sessions")}
               {sessionCount > 0 ? ` (${sessionCount})` : ""}
             </TabsTrigger>
             <TabsTrigger value="records">
-              Prontuário{noteCount > 0 ? ` (${noteCount})` : ""}
+              {t("patients.profile.tabs.records")}
+              {noteCount > 0 ? ` (${noteCount})` : ""}
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -289,11 +301,11 @@ export function PatientProfile({
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent className="gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md">
           <DialogHeader className="border-b border-border px-6 py-4">
-            <DialogTitle className="text-lg">Excluir paciente?</DialogTitle>
+            <DialogTitle className="text-lg">
+              {t("patients.profile.delete.title")}
+            </DialogTitle>
             <DialogDescription>
-              <span className="font-medium text-foreground">{patient.name}</span>{" "}
-              e todo o prontuário, agenda e histórico financeiro associados
-              serão removidos permanentemente.
+              {t("patients.profile.delete.description", { name: patient.name })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="border-t border-border px-6 py-4">
@@ -302,7 +314,7 @@ export function PatientProfile({
               variant="ghost"
               onClick={() => setDeleteOpen(false)}
             >
-              Cancelar
+              {t("common.cancel")}
             </Button>
             <Button
               type="button"
@@ -315,7 +327,7 @@ export function PatientProfile({
               }}
             >
               <Trash2 />
-              Excluir paciente
+              {t("patients.profile.delete.confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -339,6 +351,7 @@ function PatientOverview({
   onSetPaymentOverdueManual: (patientId: string, manual: boolean | null) => void
   onDeleteRequest: () => void
 }) {
+  const { t, locale } = useTranslation()
   const billing = useMemo(
     () => getPatientBillableSummary(patient.id, events, patient),
     [patient, events]
@@ -356,63 +369,63 @@ function PatientOverview({
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-        <Section title="Dados pessoais" icon={User}>
+        <Section title={t("patients.profile.sections.personal")} icon={User}>
           <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-            <Field label="Nome completo" value={patient.name} />
-            <Field label="CPF" value={patient.cpf} />
-            <Field label="Data de nascimento" value={patient.birthDate} />
-            <Field label="Gênero" value={patient.gender} />
-            <Field label="Tipo de paciente" value={patient.patientType} />
+            <Field label={t("patients.profile.fields.fullName")} value={patient.name} />
+            <Field label={t("patients.profile.fields.cpf")} value={patient.cpf} />
+            <Field label={t("patients.profile.fields.birthDate")} value={patient.birthDate} />
+            <Field label={t("patients.profile.fields.gender")} value={patient.gender} />
+            <Field label={t("patients.profile.fields.patientType")} value={patient.patientType} />
           </div>
         </Section>
 
-        <Section title="Contato" icon={Phone}>
+        <Section title={t("patients.profile.sections.contact")} icon={Phone}>
           <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-            <Field label="E-mail" value={patient.email} />
-            <Field label="Telefone" value={patient.phone} />
-            <Field label="Contato de emergência" value={patient.contactName} />
+            <Field label={t("patients.profile.fields.email")} value={patient.email} />
+            <Field label={t("patients.profile.fields.phone")} value={patient.phone} />
+            <Field label={t("patients.profile.fields.emergencyContact")} value={patient.contactName} />
             <Field
-              label="Telefone de emergência"
+              label={t("patients.profile.fields.emergencyPhone")}
               value={patient.contactPhone}
             />
-            <Field label="Parentesco" value={patient.contactRelation} />
+            <Field label={t("patients.profile.fields.relation")} value={patient.contactRelation} />
           </div>
         </Section>
 
-        <Section title="Endereço" icon={MapPin}>
+        <Section title={t("patients.profile.sections.address")} icon={MapPin}>
           <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-            <Field label="CEP" value={patient.cep} />
-            <Field label="Logradouro" value={patient.street} />
-            <Field label="Número" value={patient.number} />
-            <Field label="Complemento" value={patient.complement} />
-            <Field label="Bairro" value={patient.neighborhood} />
-            <Field label="Cidade" value={patient.city} />
-            <Field label="Estado" value={patient.state} />
+            <Field label={t("patients.profile.fields.cep")} value={patient.cep} />
+            <Field label={t("patients.profile.fields.street")} value={patient.street} />
+            <Field label={t("patients.profile.fields.number")} value={patient.number} />
+            <Field label={t("patients.profile.fields.complement")} value={patient.complement} />
+            <Field label={t("patients.profile.fields.neighborhood")} value={patient.neighborhood} />
+            <Field label={t("patients.profile.fields.city")} value={patient.city} />
+            <Field label={t("patients.profile.fields.state")} value={patient.state} />
           </div>
           {address ? (
             <p className="text-sm text-muted-foreground">{address}</p>
           ) : null}
         </Section>
 
-        <Section title="Acompanhamento" icon={ClipboardList}>
+        <Section title={t("patients.profile.sections.care")} icon={ClipboardList}>
           <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
-            <Field label="Queixa principal" value={patient.complaint} />
-            <Field label="Abordagem" value={patient.approach} />
+            <Field label={t("patients.profile.fields.complaint")} value={patient.complaint} />
+            <Field label={t("patients.profile.fields.approach")} value={patient.approach} />
             <Field
-              label="Modalidade"
-              value={modalityLabel[patient.modality]}
+              label={t("patients.profile.fields.modality")}
+              value={getModalityLabel(t, patient.modality)}
             />
-            <Field label="Início da terapia" value={patient.therapyStart} />
-            <Field label="Encaminhamento" value={patient.referral} />
+            <Field label={t("patients.profile.fields.therapyStart")} value={patient.therapyStart} />
+            <Field label={t("patients.profile.fields.referral")} value={patient.referral} />
             <Field
-              label="Valor da sessão"
+              label={t("patients.profile.fields.sessionPrice")}
               value={patient.price ? `R$ ${patient.price}` : undefined}
             />
           </div>
           {patient.notes ? (
             <div className="flex flex-col gap-1.5 pt-2">
               <span className="text-xs font-medium text-muted-foreground">
-                Observações
+                {t("patients.profile.fields.notes")}
               </span>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">
                 {patient.notes}
@@ -421,15 +434,15 @@ function PatientOverview({
           ) : null}
         </Section>
 
-        <Section title="Horários" icon={Clock} className="lg:col-span-2">
+        <Section title={t("patients.profile.sections.schedule")} icon={Clock} className="lg:col-span-2">
           <div className="grid gap-x-6 gap-y-4 sm:grid-cols-3">
             <Field
-              label="Frequência"
-              value={sessionFrequencyLabel(patient.sessionFrequency)}
+              label={t("patients.profile.fields.frequency")}
+              value={getSessionFrequencyLabel(t, patient.sessionFrequency)}
             />
-            <Field label="Dia da sessão" value={patient.sessionDay} />
-            <Field label="Horário" value={patient.sessionTime} />
-            <Field label="Próxima sessão" value={patient.nextSession} />
+            <Field label={t("patients.profile.fields.sessionDay")} value={patient.sessionDay} />
+            <Field label={t("patients.profile.fields.sessionTime")} value={patient.sessionTime} />
+            <Field label={t("patients.profile.fields.nextSession")} value={patient.nextSession} />
           </div>
 
           {patient.schedules && patient.schedules.length > 0 ? (
@@ -456,7 +469,7 @@ function PatientOverview({
                       variant="outline"
                       className="ml-auto border-border bg-background/40"
                     >
-                      {modalityLabel[schedule.modality]}
+                      {getModalityLabel(t, schedule.modality)}
                     </Badge>
                   ) : null}
                 </div>
@@ -466,38 +479,40 @@ function PatientOverview({
         </Section>
 
         <Section
-          title="Resumo financeiro"
+          title={t("patients.profile.sections.financial")}
           icon={CreditCard}
           className="lg:col-span-2"
         >
           <div className="grid gap-x-6 gap-y-4 sm:grid-cols-3">
             <Field
-              label="Valor por sessão"
+              label={t("patients.profile.fields.pricePerSession")}
               value={patient.price ? `R$ ${patient.price}` : undefined}
             />
             <Field
-              label="Recebido"
-              value={brl.format(billing.paidTotal)}
+              label={t("patients.profile.fields.received")}
+              value={formatLocaleCurrency(billing.paidTotal, locale)}
             />
             <Field
-              label="A receber"
-              value={brl.format(billing.unpaidTotal)}
+              label={t("patients.profile.fields.receivable")}
+              value={formatLocaleCurrency(billing.unpaidTotal, locale)}
             />
           </div>
 
           <div className="flex flex-col gap-2 pt-2">
             <span className="text-xs font-medium text-muted-foreground">
-              Status de inadimplência
+              {t("patients.profile.fields.overdueStatus")}
             </span>
             <div className="flex flex-wrap items-center gap-3">
               <Badge
                 variant="outline"
                 className={cn(
                   "border-border bg-background/40",
-                  overdue && "border-destructive/40 text-destructive"
+                  overdue && "border-attention/40 text-attention"
                 )}
               >
-                {overdue ? "Inadimplente" : "Em dia"}
+                {overdue
+                  ? t("patients.profile.payment.overdue")
+                  : t("patients.profile.payment.onTrack")}
               </Badge>
               <Select
                 value={manualValue}
@@ -515,9 +530,15 @@ function PatientOverview({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="auto">Automático (por sessões)</SelectItem>
-                  <SelectItem value="overdue">Marcar inadimplente</SelectItem>
-                  <SelectItem value="clear">Marcar em dia</SelectItem>
+                  <SelectItem value="auto">
+                    {t("patients.profile.payment.auto")}
+                  </SelectItem>
+                  <SelectItem value="overdue">
+                    {t("patients.profile.payment.markOverdue")}
+                  </SelectItem>
+                  <SelectItem value="clear">
+                    {t("patients.profile.payment.markClear")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -526,7 +547,7 @@ function PatientOverview({
           {billing.unpaidSessions.length > 0 ? (
             <div className="flex flex-col gap-2 pt-4">
               <span className="text-xs font-medium text-muted-foreground">
-                Sessões pendentes
+                {t("patients.profile.fields.pendingSessions")}
               </span>
               <div className="flex flex-col gap-2">
                 {billing.unpaidSessions.map((session) => {
@@ -539,11 +560,13 @@ function PatientOverview({
                     >
                       <div className="flex min-w-0 flex-col gap-0.5">
                         <span className="text-sm font-medium">
-                          {session.date.toLocaleDateString("pt-BR")}
+                          {formatLocaleDate(session.date, locale)}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {brl.format(amount)}
-                          {sessionOverdue ? " · em atraso" : ""}
+                          {formatLocaleCurrency(amount, locale)}
+                          {sessionOverdue
+                            ? t("patients.profile.payment.overdueHint")
+                            : ""}
                         </span>
                       </div>
                       <Button
@@ -553,7 +576,7 @@ function PatientOverview({
                         onClick={() => onMarkPaid(session.id, true)}
                       >
                         <CheckCircle2 className="size-3.5" />
-                        Marcar paga
+                        {t("patients.profile.payment.markPaid")}
                       </Button>
                     </div>
                   )
@@ -567,13 +590,12 @@ function PatientOverview({
           <div className="flex items-center gap-2">
             <Trash2 className="size-4 text-destructive" />
             <h3 className="font-heading text-base font-semibold text-destructive">
-              Zona de perigo
+              {t("patients.profile.sections.danger")}
             </h3>
           </div>
           <Separator />
           <p className="text-sm text-muted-foreground">
-            Excluir {patient.name} remove permanentemente o cadastro, prontuário,
-            sessões agendadas e registros financeiros deste paciente.
+            {t("patients.profile.delete.dangerDescription", { name: patient.name })}
           </p>
           <div>
             <Button
@@ -583,7 +605,7 @@ function PatientOverview({
               onClick={onDeleteRequest}
             >
               <Trash2 />
-              Excluir paciente
+              {t("patients.profile.delete.confirm")}
             </Button>
           </div>
         </Card>

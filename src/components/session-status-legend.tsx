@@ -1,3 +1,5 @@
+import { useTranslation } from "@/context/locale-provider"
+import { getSessionStatusLabel } from "@/lib/i18n-helpers"
 import {
   sessionStatusConfig,
   sessionStatusOptions,
@@ -13,6 +15,8 @@ export function SessionStatusLegend({
   className,
   inline = false,
 }: SessionStatusLegendProps) {
+  const { t } = useTranslation()
+
   return (
     <div
       className={cn(
@@ -21,7 +25,9 @@ export function SessionStatusLegend({
         className
       )}
     >
-      <span className="text-xs font-medium text-muted-foreground">Legenda</span>
+      <span className="text-xs font-medium text-muted-foreground">
+        {t("calendar.legend")}
+      </span>
       {sessionStatusOptions.map((status) => {
         const config = sessionStatusConfig[status]
         return (
@@ -33,7 +39,9 @@ export function SessionStatusLegend({
               )}
               aria-hidden
             />
-            <span className="text-xs text-muted-foreground">{config.label}</span>
+            <span className="text-xs text-muted-foreground">
+              {getSessionStatusLabel(t, status)}
+            </span>
           </div>
         )
       })}

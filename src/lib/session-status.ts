@@ -15,39 +15,53 @@ export const sessionStatusOptions: SessionStatus[] = [
   "cancelada",
 ]
 
-export const sessionStatusConfig: Record<
-  SessionStatus,
-  { label: string; badge: string; block: string }
-> = {
+type SessionStatusStyle = {
+  label: string
+  badge: string
+  block: string
+  blockMuted: string
+}
+
+export const sessionStatusConfig: Record<SessionStatus, SessionStatusStyle> = {
   agendada: {
     label: "Agendada",
-    badge: "border-border bg-background/40 text-foreground",
+    badge:
+      "border-[var(--session-agendada-border)] bg-[var(--session-agendada-bg)] text-[var(--session-agendada-fg)]",
     block:
-      "border-border bg-[color-mix(in_oklch,var(--background)_40%,var(--card))]",
+      "border-[var(--session-agendada-border)] bg-[var(--session-agendada-bg)] text-[var(--session-agendada-fg)]",
+    blockMuted: "text-[var(--session-agendada-fg-muted)]",
   },
   realizada: {
     label: "Realizada",
-    badge: "border-sidebar-primary/30 bg-sidebar-primary/10 text-foreground",
+    badge:
+      "border-[var(--session-realizada-border)] bg-[var(--session-realizada-bg)] text-[var(--session-realizada-fg)]",
     block:
-      "border-sidebar-primary/40 bg-[color-mix(in_oklch,var(--sidebar-primary)_10%,var(--card))]",
+      "border-[var(--session-realizada-border)] bg-[var(--session-realizada-bg)] text-[var(--session-realizada-fg)]",
+    blockMuted: "text-[var(--session-realizada-fg-muted)]",
   },
   faltou: {
     label: "Faltou",
-    badge: "border-destructive/30 bg-destructive/10 text-destructive",
+    badge:
+      "border-[var(--session-faltou-border)] bg-[var(--session-faltou-bg)] text-[var(--session-faltou-fg)]",
     block:
-      "border-destructive/40 bg-[color-mix(in_oklch,var(--destructive)_10%,var(--card))]",
+      "border-[var(--session-faltou-border)] bg-[var(--session-faltou-bg)] text-[var(--session-faltou-fg)]",
+    blockMuted: "text-[var(--session-faltou-fg-muted)]",
   },
   remarcada: {
     label: "Remarcada",
-    badge: "border-primary/30 bg-primary/10 text-foreground",
+    badge:
+      "border-[var(--session-remarcada-border)] bg-[var(--session-remarcada-bg)] text-[var(--session-remarcada-fg)]",
     block:
-      "border-primary/40 bg-[color-mix(in_oklch,var(--primary)_10%,var(--card))]",
+      "border-[var(--session-remarcada-border)] bg-[var(--session-remarcada-bg)] text-[var(--session-remarcada-fg)]",
+    blockMuted: "text-[var(--session-remarcada-fg-muted)]",
   },
   cancelada: {
     label: "Cancelada",
-    badge: "border-muted-foreground/30 bg-muted/60 text-muted-foreground",
+    badge:
+      "border-[var(--session-cancelada-border)] bg-[var(--session-cancelada-bg)] text-[var(--session-cancelada-fg)]",
     block:
-      "border-muted-foreground/40 bg-[color-mix(in_oklch,var(--muted)_50%,var(--card))]",
+      "border-[var(--session-cancelada-border)] bg-[var(--session-cancelada-bg)] text-[var(--session-cancelada-fg)]",
+    blockMuted: "text-[var(--session-cancelada-fg-muted)]",
   },
 }
 

@@ -9,20 +9,20 @@ import {
 } from "lucide-react"
 
 import { NoPatientsEmptyPage } from "@/components/no-patients-empty-page"
-import { modalityLabel } from "@/components/patients-page"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useClinicData } from "@/context/clinic-data-provider"
+import { useTranslation } from "@/context/locale-provider"
 import { getInitials } from "@/data/patients"
+import {
+  formatLocaleCurrency,
+  formatLocaleDate,
+  getModalityLabel,
+} from "@/lib/i18n-helpers"
 import { cn } from "@/lib/utils"
-
-const brl = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-})
 
 type Filter = "todas" | "atraso"
 
@@ -30,16 +30,6 @@ type UnpaidSessionsPageProps = {
   onOpenPatient?: (patientId: string) => void
   onNewPatient?: () => void
   initialFilter?: Filter
-}
-
-function formatSessionDate(date: Date) {
-  const raw = date.toLocaleDateString("pt-BR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  })
-  return raw.charAt(0).toUpperCase() + raw.slice(1)
 }
 
 function Stat({
@@ -51,7 +41,7 @@ function Stat({
   label: string
   value: string
   hint?: string
-  tone?: "destructive"
+  tone?: "attention"
 }) {
   return (
     <Card size="sm" className="gap-1 p-4">
@@ -59,7 +49,7 @@ function Stat({
       <span
         className={cn(
           "font-heading text-2xl font-semibold tracking-tight tabular-nums",
-          tone === "destructive" && "text-destructive"
+          tone === "attention" && "text-attention"
         )}
       >
         {value}
@@ -76,6 +66,7 @@ export function UnpaidSessionsPage({
   onNewPatient,
   initialFilter = "todas",
 }: UnpaidSessionsPageProps) {
+  const { t, locale } = useTranslation()
   const {
     patients,
     unpaidSessions,
@@ -118,7 +109,7 @@ export function UnpaidSessionsPage({
     return (
       <NoPatientsEmptyPage
         onNewPatient={onNewPatient}
-        description="Cadastre pacientes e registre sessões realizadas para acompanhar os pagamentos aqui."
+        description={t("receivables.emptyPatientsDescription")}
       />
     )
   }
@@ -131,12 +122,11 @@ export function UnpaidSessionsPage({
             <CircleDollarSign className="size-5 text-sidebar-primary" />
           </div>
           <div className="flex flex-col gap-1">
-            <h2 className="font-heading text-lg font-semibold text-primary-foreground">
-              Sessões a receber
+            <h2 className="font-heading text-lg font-semibold text-surface-navy-heading">
+              {t("receivables.title")}
             </h2>
             <p className="text-sm text-sidebar-foreground/75">
-              Sessões realizadas ainda não pagas — marque como recebidas quando
-              o pagamento for confirmado.
+              {t("receivables.subtitle")}
             </p>
           </div>
         </div>
@@ -144,39 +134,41 @@ export function UnpaidSessionsPage({
           <Button
             variant="outline"
             size="sm"
-            className="shrink-0 border-white/20 bg-white/10 text-sidebar-foreground hover:bg-white/15 hover:text-primary-foreground"
+            className="shrink-0 border-white/20 bg-white/10 text-sidebar-foreground hover:bg-white/15 hover:text-surface-navy-heading"
             onClick={() => markAllEventsPaid(visibleIds)}
           >
             <CheckCheck />
-            Marcar visíveis como pagas
+            {t("receivables.markVisiblePaid")}
           </Button>
         ) : null}
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
-          label="Sessões em aberto"
+          label={t("receivables.stats.openSessions")}
           value={String(unpaidSessions.length)}
-          hint="Realizadas sem pagamento"
+          hint={t("receivables.stats.openSessionsHint")}
         />
         <Stat
-          label="Total a receber"
-          value={brl.format(unpaidSessionsTotal)}
-          hint="Valor consolidado"
+          label={t("receivables.stats.totalDue")}
+          value={formatLocaleCurrency(unpaidSessionsTotal, locale)}
+          hint={t("receivables.stats.totalDueHint")}
         />
         <Stat
-          label="Em atraso"
+          label={t("receivables.stats.overdue")}
           value={String(overdueCount)}
-          hint="Após o mês da sessão"
-          tone={overdueCount > 0 ? "destructive" : undefined}
+          hint={t("receivables.stats.overdueHint")}
+          tone={overdueCount > 0 ? "attention" : undefined}
         />
         <Stat
-          label="Valor em atraso"
-          value={brl.format(overdueTotal)}
+          label={t("receivables.stats.overdueAmount")}
+          value={formatLocaleCurrency(overdueTotal, locale)}
           hint={
-            overdueCount > 0 ? "Priorize a cobrança" : "Nenhuma pendência antiga"
+            overdueCount > 0
+              ? t("receivables.stats.prioritize")
+              : t("receivables.stats.noOldPending")
           }
-          tone={overdueTotal > 0 ? "destructive" : undefined}
+          tone={overdueTotal > 0 ? "attention" : undefined}
         />
       </div>
 
@@ -188,7 +180,7 @@ export function UnpaidSessionsPage({
           >
             <TabsList className="h-9 border border-border bg-background/40">
               <TabsTrigger value="todas" className="text-xs">
-                Todas
+                {t("receivables.tabs.all")}
                 {unpaidSessions.length > 0 ? (
                   <Badge
                     variant="outline"
@@ -199,11 +191,11 @@ export function UnpaidSessionsPage({
                 ) : null}
               </TabsTrigger>
               <TabsTrigger value="atraso" className="text-xs">
-                Em atraso
+                {t("receivables.tabs.overdue")}
                 {overdueCount > 0 ? (
                   <Badge
                     variant="outline"
-                    className="ml-1.5 border-destructive/30 bg-destructive/10 px-1.5 py-0 text-[10px] text-destructive"
+                    className="ml-1.5 border-attention/30 bg-attention/10 px-1.5 py-0 text-[10px] text-attention"
                   >
                     {overdueCount}
                   </Badge>
@@ -212,8 +204,12 @@ export function UnpaidSessionsPage({
             </TabsList>
           </Tabs>
           <p className="text-sm text-muted-foreground">
-            {filtered.length}{" "}
-            {filtered.length === 1 ? "sessão listada" : "sessões listadas"}
+            {t(
+              filtered.length === 1
+                ? "receivables.listed_one"
+                : "receivables.listed_other",
+              { count: filtered.length }
+            )}
           </p>
         </div>
       </Card>
@@ -226,13 +222,13 @@ export function UnpaidSessionsPage({
           <div className="flex flex-col gap-1">
             <p className="font-medium">
               {filter === "atraso"
-                ? "Nenhuma sessão em atraso"
-                : "Tudo recebido por aqui"}
+                ? t("receivables.empty.overdueTitle")
+                : t("receivables.empty.allTitle")}
             </p>
             <p className="text-sm text-muted-foreground">
               {filter === "atraso"
-                ? "Não há pendências com mais de uma semana."
-                : "Quando uma sessão for realizada e ainda não paga, ela aparece nesta lista."}
+                ? t("receivables.empty.overdueDescription")
+                : t("receivables.empty.allDescription")}
             </p>
           </div>
         </Card>
@@ -243,86 +239,95 @@ export function UnpaidSessionsPage({
               key={row.event.id}
               className={cn(
                 "flex flex-col gap-3 p-4 shadow-sm sm:flex-row sm:items-center",
-                row.overdue ? "border-destructive/25" : "border-border"
+                row.overdue ? "border-attention/25" : "border-border"
               )}
             >
-                <div className="flex min-w-0 flex-1 items-start gap-3">
-                  <Avatar className="size-10 shrink-0">
-                    <AvatarFallback className="bg-sidebar-primary/15 text-sm font-medium text-foreground">
-                      {getInitials(row.patient.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        className="truncate text-left font-medium hover:underline"
-                        onClick={() => onOpenPatient?.(row.patient.id)}
-                      >
-                        {row.patient.name}
-                      </button>
-                      {row.overdue ? (
-                        <Badge
-                          variant="outline"
-                          className="border-destructive/30 bg-destructive/10 font-normal text-destructive"
-                        >
-                          <AlertCircle className="size-3" />
-                          Em atraso
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="border-border bg-background/40 font-normal"
-                        >
-                          Pendente
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                      <span>{formatSessionDate(row.event.date)}</span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="size-3.5 shrink-0" />
-                        {row.event.start} – {row.event.end}
-                      </span>
-                      <span>{modalityLabel[row.patient.modality]}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {row.daysSince === 0
-                        ? "Realizada hoje"
-                        : row.daysSince === 1
-                          ? "Há 1 dia"
-                          : `Há ${row.daysSince} dias`}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end lg:flex-row lg:items-center">
-                  <span className="font-heading text-lg font-semibold tabular-nums">
-                    {brl.format(row.amount)}
-                  </span>
-                  <div className="flex gap-2">
-                    {onOpenPatient ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-border bg-background/40 hover:bg-accent/50"
-                        onClick={() => onOpenPatient(row.patient.id)}
-                      >
-                        <User />
-                        Perfil
-                      </Button>
-                    ) : null}
-                    <Button
-                      size="sm"
-                      onClick={() => markEventPaid(row.event.id)}
+              <div className="flex min-w-0 flex-1 items-start gap-3">
+                <Avatar className="size-10 shrink-0">
+                  <AvatarFallback className="bg-sidebar-primary/15 text-sm font-medium text-foreground">
+                    {getInitials(row.patient.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      className="truncate text-left font-medium hover:underline"
+                      onClick={() => onOpenPatient?.(row.patient.id)}
                     >
-                      <Check />
-                      Marcar paga
-                    </Button>
+                      {row.patient.name}
+                    </button>
+                    {row.overdue ? (
+                      <Badge
+                        variant="outline"
+                        className="border-attention/30 bg-attention/10 font-normal text-attention"
+                      >
+                        <AlertCircle className="size-3" />
+                        {t("receivables.badges.overdue")}
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="border-border bg-background/40 font-normal"
+                      >
+                        {t("receivables.badges.pending")}
+                      </Badge>
+                    )}
                   </div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+                    <span>
+                      {formatLocaleDate(row.event.date, locale, {
+                        weekday: "short",
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="size-3.5 shrink-0" />
+                      {row.event.start} – {row.event.end}
+                    </span>
+                    <span>{getModalityLabel(t, row.patient.modality)}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {row.daysSince === 0
+                      ? t("receivables.doneToday")
+                      : row.daysSince === 1
+                        ? t("receivables.daysAgo_one")
+                        : t("receivables.daysAgo_other", {
+                            count: row.daysSince,
+                          })}
+                  </span>
                 </div>
-              </Card>
-            ))}
+              </div>
+
+              <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end lg:flex-row lg:items-center">
+                <span className="font-heading text-lg font-semibold tabular-nums">
+                  {formatLocaleCurrency(row.amount, locale)}
+                </span>
+                <div className="flex gap-2">
+                  {onOpenPatient ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-border bg-background/40 hover:bg-accent/50"
+                      onClick={() => onOpenPatient(row.patient.id)}
+                    >
+                      <User />
+                      {t("receivables.profile")}
+                    </Button>
+                  ) : null}
+                  <Button
+                    size="sm"
+                    onClick={() => markEventPaid(row.event.id)}
+                  >
+                    <Check />
+                    {t("receivables.markPaid")}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       )}
     </div>

@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useTranslation } from "@/context/locale-provider"
 import { formFieldClass } from "@/lib/form-input-styles"
 import { cn } from "@/lib/utils"
 
@@ -62,7 +63,7 @@ export function TimePicker({
   id,
   value,
   onChange,
-  placeholder = "Selecionar horário",
+  placeholder,
   className,
   disabled,
   minuteStep = 1,
@@ -70,7 +71,9 @@ export function TimePicker({
   endHour = 23,
   onOpenChange,
 }: TimePickerProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  const resolvedPlaceholder = placeholder ?? t("ui.timePicker.selectTime")
   const parsed = parseTime(value || "09:00")
   const [hour, setHour] = useState(parsed.hour)
   const [minute, setMinute] = useState(parsed.minute)
@@ -126,16 +129,16 @@ export function TimePicker({
         >
           <Clock3 className="size-4 shrink-0 opacity-70" />
           <span className="truncate text-left text-sm tabular-nums">
-            {displayValue || placeholder}
+            {displayValue || resolvedPlaceholder}
           </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-64 p-3">
         <div className="flex flex-col gap-3">
-          <p className="text-sm font-medium">Horário</p>
+          <p className="text-sm font-medium">{t("ui.timePicker.title")}</p>
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs text-muted-foreground">Hora</span>
+              <span className="text-xs text-muted-foreground">{t("ui.timePicker.hour")}</span>
               <Select
                 value={hour}
                 onValueChange={(nextHour) => {
@@ -156,7 +159,7 @@ export function TimePicker({
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs text-muted-foreground">Minuto</span>
+              <span className="text-xs text-muted-foreground">{t("ui.timePicker.minute")}</span>
               <Select
                 value={minute}
                 onValueChange={(nextMinute) => {
@@ -183,7 +186,7 @@ export function TimePicker({
             className="self-end"
             onClick={() => setOpen(false)}
           >
-            Concluir
+            {t("ui.timePicker.done")}
           </Button>
         </div>
       </PopoverContent>

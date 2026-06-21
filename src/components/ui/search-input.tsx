@@ -3,6 +3,7 @@ import { Search, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useTranslation } from "@/context/locale-provider"
 import { cn } from "@/lib/utils"
 
 type SearchInputProps = Omit<React.ComponentProps<typeof Input>, "type"> & {
@@ -17,6 +18,7 @@ function SearchInput({
   onChange,
   ...props
 }: SearchInputProps) {
+  const { t } = useTranslation()
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [uncontrolledValue, setUncontrolledValue] = React.useState(
     String(defaultValue ?? "")
@@ -68,7 +70,7 @@ function SearchInput({
           size="icon-xs"
           className="absolute top-1/2 right-1.5 -translate-y-1/2 text-muted-foreground hover:bg-primary/12 hover:text-primary"
           onClick={handleClear}
-          aria-label="Limpar busca"
+          aria-label={t("common.clearSearch")}
           tabIndex={-1}
         >
           <X />

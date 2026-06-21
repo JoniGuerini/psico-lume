@@ -4,6 +4,7 @@ import { buildCalendarEvents } from "@/data/calendar"
 import { buildClinicalRecords } from "@/data/clinical-records"
 import { buildInboxEmails } from "@/data/inbox"
 import { buildNotifications } from "@/data/notifications"
+import { useTranslation } from "@/context/locale-provider"
 import { useToast } from "@/context/toast-provider"
 import {
   formatNextSession,
@@ -194,7 +195,6 @@ function createDemoInitialState() {
       buildCalendarEvents(mockPatients),
       mockPatients
     ),
-    notifications: buildNotifications(mockPatients),
   }
 }
 
@@ -209,6 +209,7 @@ export function ClinicDataProvider({
   children: React.ReactNode
   mode?: ClinicDataMode
 }) {
+  const { t, locale } = useTranslation()
   const initialState = useMemo(
     () =>
       mode === "guest" ? createGuestInitialState() : createDemoInitialState(),
@@ -219,10 +220,23 @@ export function ClinicDataProvider({
     initialState.sessionNotes
   )
   const [events, setEvents] = useState<CalendarEvent[]>(initialState.events)
-  const [notifications, setNotifications] = useState<Notification[]>(
-    initialState.notifications
+  const [notifications, setNotifications] = useState<Notification[]>(() =>
+    mode === "guest"
+      ? (loadGuestClinicSnapshot()?.notifications ?? [])
+      : []
   )
   const { toast } = useToast()
+
+  useEffect(() => {
+    if (mode !== "demo") return
+    setNotifications((current) => {
+      const readById = new Map(current.map((item) => [item.id, item.read]))
+      return buildNotifications(patients, { t, locale }).map((item) => ({
+        ...item,
+        read: readById.get(item.id) ?? item.read,
+      }))
+    })
+  }, [mode, patients, t, locale])
 
   useEffect(() => {
     if (mode !== "guest") return
@@ -233,7 +247,10 @@ export function ClinicDataProvider({
       notifications,
     })
   }, [mode, patients, events, sessionNotes, notifications])
-  const emails = useMemo(() => buildInboxEmails(patients), [patients])
+  const emails = useMemo(
+    () => buildInboxEmails(patients, { t, locale }),
+    [patients, t, locale]
+  )
 
   const activeCount = useMemo(() => getActivePatients(patients).length, [patients])
   const scheduledCount = useMemo(
@@ -300,7 +317,7 @@ export function ClinicDataProvider({
           mode,
           setNotifications,
           toast,
-          notificationForNewPatient(patient)
+          notificationForNewPatient(patient, { t, locale })
         )
       },
       updatePatient: (patient) => {
@@ -315,7 +332,7 @@ export function ClinicDataProvider({
           mode,
           setNotifications,
           toast,
-          notificationForUpdatedPatient(patient)
+          notificationForUpdatedPatient(patient, { t, locale })
         )
       },
       setPatientPaymentOverdueManual: (patientId, manual) => {
@@ -334,7 +351,7 @@ export function ClinicDataProvider({
             mode,
             setNotifications,
             toast,
-            notificationForPaymentOverdueOverride(patient, manual)
+            notificationForPaymentOverdueOverride(patient, manual, { t, locale })
           )
         }
       },
@@ -350,7 +367,7 @@ export function ClinicDataProvider({
             mode,
             setNotifications,
             toast,
-            notificationForSessionNote(patient, note)
+            notificationForSessionNote(patient, note, { t, locale })
           )
         }
       },
@@ -372,7 +389,7 @@ export function ClinicDataProvider({
             mode,
             setNotifications,
             toast,
-            notificationForUpdatedSessionNote(patient, updated)
+            notificationForUpdatedSessionNote(patient, updated, { t, locale })
           )
         }
       },
@@ -399,7 +416,7 @@ export function ClinicDataProvider({
             mode,
             setNotifications,
             toast,
-            notificationForDeletedSessionNote(patient, target)
+            notificationForDeletedSessionNote(patient, target, { t, locale })
           )
         }
       },
@@ -425,7 +442,7 @@ export function ClinicDataProvider({
             mode,
             setNotifications,
             toast,
-            notificationForDeletedPatient(patient)
+            notificationForDeletedPatient(patient, { t, locale })
           )
         }
       },
@@ -450,12 +467,16 @@ export function ClinicDataProvider({
             mode,
             setNotifications,
             toast,
-            notificationForScheduledSession(patient, {
-              date: event.date,
-              start: event.start,
-              end: event.end,
-              title: event.title,
-            })
+            notificationForScheduledSession(
+              patient,
+              {
+                date: event.date,
+                start: event.start,
+                end: event.end,
+                title: event.title,
+              },
+              { t, locale }
+            )
           )
         }
       },
@@ -509,12 +530,17 @@ export function ClinicDataProvider({
             mode,
             setNotifications,
             toast,
-            notificationForMovedSession(patient, previous, {
-              date,
-              start: nextStart,
-              end: nextEnd,
-              status: nextStatus,
-            })
+            notificationForMovedSession(
+              patient,
+              previous,
+              {
+                date,
+                start: nextStart,
+                end: nextEnd,
+                status: nextStatus,
+              },
+              { t, locale }
+            )
           )
         }
       },
@@ -554,7 +580,10 @@ export function ClinicDataProvider({
             mode,
             setNotifications,
             toast,
-            notificationForUpdatedSession(patient, merged, previous)
+            notificationForUpdatedSession(patient, merged, previous, {
+              t,
+              locale,
+            })
           )
         }
       },
@@ -580,7 +609,7 @@ export function ClinicDataProvider({
             mode,
             setNotifications,
             toast,
-            notificationForDeletedSession(patient, previous)
+            notificationForDeletedSession(patient, previous, { t, locale })
           )
         }
       },
@@ -616,7 +645,8 @@ export function ClinicDataProvider({
               patient,
               merged,
               status,
-              previous.status ?? "agendada"
+              previous.status ?? "agendada",
+              { t, locale }
             )
           )
         }
@@ -639,7 +669,7 @@ export function ClinicDataProvider({
             mode,
             setNotifications,
             toast,
-            notificationForEventPayment(patient, merged, paid)
+            notificationForEventPayment(patient, merged, paid, { t, locale })
           )
         }
       },
@@ -668,7 +698,7 @@ export function ClinicDataProvider({
           mode,
           setNotifications,
           toast,
-          notificationForBulkEventPayment(targets.length, total)
+          notificationForBulkEventPayment(targets.length, total, { t, locale })
         )
       },
       markNotificationAsRead: (id) =>
@@ -688,6 +718,8 @@ export function ClinicDataProvider({
     [
       mode,
       toast,
+      t,
+      locale,
       patients,
       events,
       notifications,

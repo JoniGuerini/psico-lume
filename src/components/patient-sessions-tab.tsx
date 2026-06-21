@@ -6,15 +6,15 @@ import {
   History,
 } from "lucide-react"
 
+import { SessionStatusBadge } from "@/components/session-status-control"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { useClinicData } from "@/context/clinic-data-provider"
+import { useTranslation } from "@/context/locale-provider"
 import { getEventsForPatientProfile } from "@/data/calendar"
 import type { CalendarEvent, Patient, RescheduledFrom } from "@/data/types"
-import {
-  getEventStatus,
-  sessionStatusConfig,
-} from "@/lib/session-status"
+import { formatLocaleDate } from "@/lib/i18n-helpers"
+import { getEventStatus, sessionStatusConfig } from "@/lib/session-status"
 import { cn } from "@/lib/utils"
 
 type PatientSessionsTabProps = {
@@ -32,14 +32,34 @@ function Stat({ label, value }: { label: string; value: string }) {
   )
 }
 
-function formatSessionDate(date: Date) {
-  const raw = date.toLocaleDateString("pt-BR", {
+function SessionTimeRow({
+  date,
+  start,
+  end,
+  locale,
+}: {
+  date: Date
+  start: string
+  end: string
+  locale: "pt-BR" | "en"
+}) {
+  const formatted = formatLocaleDate(date, locale, {
     weekday: "long",
     day: "2-digit",
     month: "long",
     year: "numeric",
   })
-  return raw.charAt(0).toUpperCase() + raw.slice(1)
+  const label = formatted.charAt(0).toUpperCase() + formatted.slice(1)
+
+  return (
+    <>
+      <span className="text-sm font-medium">{label}</span>
+      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+        <Clock className="size-3 shrink-0" />
+        {start} – {end}
+      </span>
+    </>
+  )
 }
 
 const statusAccent: Record<
@@ -53,29 +73,9 @@ const statusAccent: Record<
   cancelada: "border-l-muted-foreground",
 }
 
-function SessionTimeRow({
-  date,
-  start,
-  end,
-}: {
-  date: Date
-  start: string
-  end: string
-}) {
-  return (
-    <>
-      <span className="text-sm font-medium">{formatSessionDate(date)}</span>
-      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-        <Clock className="size-3 shrink-0" />
-        {start} – {end}
-      </span>
-    </>
-  )
-}
-
 function SessionHistoryCard({ event }: { event: CalendarEvent }) {
+  const { locale } = useTranslation()
   const status = getEventStatus(event)
-  const statusLabel = sessionStatusConfig[status].label
 
   return (
     <Card
@@ -90,24 +90,17 @@ function SessionHistoryCard({ event }: { event: CalendarEvent }) {
             date={event.date}
             start={event.start}
             end={event.end}
+            locale={locale}
           />
         </div>
-        <Badge
-          variant="outline"
-          className={cn("font-normal", sessionStatusConfig[status].badge)}
-        >
-          {statusLabel}
-        </Badge>
+        <SessionStatusBadge status={status} />
       </div>
     </Card>
   )
 }
 
 function RescheduledSessionGroup({ event }: { event: CalendarEvent }) {
-  const original = event.rescheduledFrom
-  if (!original) {
-    return <SessionHistoryCard event={event} />
-  }
+  const { t, locale } = useTranslation()
 
   return (
     <div className="overflow-hidden rounded-2xl border border-primary/25 bg-card shadow-sm">
@@ -118,7 +111,9 @@ function RescheduledSessionGroup({ event }: { event: CalendarEvent }) {
         )}
       >
         <div className="mb-1">
-          <span className="text-xs font-medium text-primary">Nova sessão</span>
+          <span className="text-xs font-medium text-primary">
+            {t("patients.sessions.newSession")}
+          </span>
         </div>
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="flex min-w-0 flex-col gap-1">
@@ -126,6 +121,7 @@ function RescheduledSessionGroup({ event }: { event: CalendarEvent }) {
               date={event.date}
               start={event.start}
               end={event.end}
+              locale={locale}
             />
           </div>
           <Badge
@@ -135,7 +131,7 @@ function RescheduledSessionGroup({ event }: { event: CalendarEvent }) {
               sessionStatusConfig.remarcada.badge
             )}
           >
-            Remarcada
+            {t("enums.sessionStatus.remarcada")}
           </Badge>
         </div>
       </div>
@@ -143,21 +139,29 @@ function RescheduledSessionGroup({ event }: { event: CalendarEvent }) {
       <div className="flex items-center justify-center gap-2 border-b border-border bg-primary/5 px-4 py-2">
         <ArrowDown className="size-3.5 text-primary" />
         <span className="text-xs font-medium text-primary">
-          Reagendada a partir do horário original
+          {t("patients.sessions.rescheduledFrom")}
         </span>
       </div>
 
-      <OriginalSessionCard original={original} />
+      <OriginalSessionCard original={event.rescheduledFrom!} locale={locale} />
     </div>
   )
 }
 
-function OriginalSessionCard({ original }: { original: RescheduledFrom }) {
+function OriginalSessionCard({
+  original,
+  locale,
+}: {
+  original: RescheduledFrom
+  locale: "pt-BR" | "en"
+}) {
+  const { t } = useTranslation()
+
   return (
     <div className="border-l-4 border-l-muted-foreground/40 bg-muted/30 p-4">
       <div className="mb-1">
         <span className="text-xs font-medium text-muted-foreground">
-          Horário original
+          {t("patients.sessions.originalSlot")}
         </span>
       </div>
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -166,13 +170,14 @@ function OriginalSessionCard({ original }: { original: RescheduledFrom }) {
             date={original.date}
             start={original.start}
             end={original.end}
+            locale={locale}
           />
         </div>
         <Badge
           variant="outline"
           className="border-border bg-background/60 font-normal text-muted-foreground"
         >
-          Substituído
+          {t("patients.sessions.replaced")}
         </Badge>
       </div>
     </div>
@@ -187,6 +192,7 @@ function SessionHistoryItem({ event }: { event: CalendarEvent }) {
 }
 
 export function PatientSessionsTab({ patient }: PatientSessionsTabProps) {
+  const { t } = useTranslation()
   const { events } = useClinicData()
 
   const sessions = useMemo(
@@ -230,31 +236,47 @@ export function PatientSessionsTab({ patient }: PatientSessionsTabProps) {
             <History className="size-5 text-sidebar-primary" />
           </div>
           <div className="flex flex-col gap-1">
-            <h3 className="font-heading text-lg font-semibold text-primary-foreground">
-              Histórico de sessões
+            <h3 className="font-heading text-lg font-semibold text-surface-navy-heading">
+              {t("patients.sessions.title")}
             </h3>
             <p className="text-sm text-sidebar-foreground/75">
-              Sessões passadas e agendadas até 1 mês à frente de {patient.name}.
+              {t("patients.sessions.subtitle", { name: patient.name })}
             </p>
           </div>
         </div>
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Total no período" value={String(stats.total)} />
-        <Stat label="Realizadas" value={String(stats.realizadas)} />
-        <Stat label="Próximas" value={String(stats.proximas)} />
-        <Stat label="Faltas / canceladas" value={String(stats.faltas)} />
+        <Stat
+          label={t("patients.sessions.stats.total")}
+          value={String(stats.total)}
+        />
+        <Stat
+          label={t("patients.sessions.stats.completed")}
+          value={String(stats.realizadas)}
+        />
+        <Stat
+          label={t("patients.sessions.stats.upcoming")}
+          value={String(stats.proximas)}
+        />
+        <Stat
+          label={t("patients.sessions.stats.absences")}
+          value={String(stats.faltas)}
+        />
       </div>
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
           <h4 className="font-heading text-base font-semibold">
-            Sessões recentes e próximas
+            {t("patients.sessions.listTitle")}
           </h4>
           <span className="text-sm text-muted-foreground">
-            {sessions.length}{" "}
-            {sessions.length === 1 ? "registro" : "registros"}
+            {t(
+              sessions.length === 1
+                ? "patients.sessions.record_one"
+                : "patients.sessions.record_other",
+              { count: sessions.length }
+            )}
           </span>
         </div>
 
@@ -264,9 +286,9 @@ export function PatientSessionsTab({ patient }: PatientSessionsTabProps) {
               <CalendarDays className="size-5 text-muted-foreground" />
             </div>
             <div className="flex flex-col gap-1">
-              <p className="font-medium">Nenhuma sessão na agenda</p>
+              <p className="font-medium">{t("patients.sessions.emptyTitle")}</p>
               <p className="text-sm text-muted-foreground">
-                Agende uma sessão pelo botão no topo do perfil.
+                {t("patients.sessions.emptyDescription")}
               </p>
             </div>
           </Card>

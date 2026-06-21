@@ -15,6 +15,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useTranslation } from "@/context/locale-provider"
 
 type NavUserProps = {
   user: {
@@ -37,6 +38,7 @@ function getInitials(name: string) {
 
 export function NavUser({ user, onOpenAccount, onLogout }: NavUserProps) {
   const { isMobile } = useSidebar()
+  const { t } = useTranslation()
   const initials = getInitials(user.name)
 
   return (
@@ -97,12 +99,12 @@ export function NavUser({ user, onOpenAccount, onLogout }: NavUserProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onOpenAccount}>
               <BadgeCheck />
-              Conta
+              {t("common.account")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onLogout}>
               <LogOut />
-              Sair
+              {t("common.signOut")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

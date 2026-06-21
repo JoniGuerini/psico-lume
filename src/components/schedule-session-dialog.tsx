@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { useTranslation } from "@/context/locale-provider"
 import type { CalendarEvent, Patient } from "@/data/types"
 import { buildSessionDefaults } from "@/lib/session-scheduling"
 
@@ -26,6 +27,7 @@ export function ScheduleSessionDialog({
   patients = [],
   onSchedule,
 }: ScheduleSessionDialogProps) {
+  const { t } = useTranslation()
   const [selectOpen, setSelectOpen] = useState(false)
   const defaults = useMemo(() => buildSessionDefaults(patient), [patient])
 
@@ -49,10 +51,11 @@ export function ScheduleSessionDialog({
         }}
       >
         <DialogHeader className="border-b border-border px-6 py-4">
-          <DialogTitle className="text-lg">Agendar sessão</DialogTitle>
+          <DialogTitle className="text-lg">
+            {t("sessionForm.schedule")}
+          </DialogTitle>
           <DialogDescription>
-            Nova sessão para {patient.name}. Horário recorrente sugerido
-            automaticamente.
+            {t("sessionForm.scheduleFor", { name: patient.name })}
           </DialogDescription>
         </DialogHeader>
 
@@ -63,7 +66,7 @@ export function ScheduleSessionDialog({
           lockedPatient={{ id: patient.id, name: patient.name }}
           patients={patients.length > 0 ? patients : [patient]}
           defaults={defaults}
-          submitLabel="Agendar sessão"
+          submitLabel={t("sessionForm.schedule")}
           onSubmit={(event) => {
             onSchedule(event)
             onOpenChange(false)

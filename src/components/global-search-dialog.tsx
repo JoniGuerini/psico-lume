@@ -18,9 +18,10 @@ import {
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useClinicData } from "@/context/clinic-data-provider"
+import { useTranslation } from "@/context/locale-provider"
 import {
   buildGlobalSearchItems,
-  globalSearchQuickActions,
+  buildGlobalSearchQuickActions,
   groupSearchItems,
   type GlobalSearchAction,
 } from "@/lib/global-search"
@@ -39,6 +40,9 @@ export function GlobalSearchDialog({
 }: GlobalSearchDialogProps) {
   const { patients, events, emails, notifications, markNotificationAsRead } =
     useClinicData()
+  const { t, locale } = useTranslation()
+
+  const quickActions = useMemo(() => buildGlobalSearchQuickActions(t), [t])
 
   const items = useMemo(() => {
     if (!open) return []
@@ -48,8 +52,10 @@ export function GlobalSearchDialog({
       events,
       emails,
       notifications,
+      t,
+      locale,
     })
-  }, [open, patients, events, emails, notifications])
+  }, [open, patients, events, emails, notifications, t, locale])
 
   const groupedItems = useMemo(() => groupSearchItems(items), [items])
 
@@ -85,25 +91,24 @@ export function GlobalSearchDialog({
           )}
         >
           <DialogHeader className="shrink-0 gap-1 border-b border-border px-6 py-4 pr-14">
-            <DialogTitle className="text-lg leading-snug">Busca global</DialogTitle>
+            <DialogTitle className="text-lg leading-snug">
+              {t("search.title")}
+            </DialogTitle>
             <DialogDescription className="leading-relaxed">
-              Encontre pacientes, sessões, e-mails e notificações em um só lugar.
+              {t("search.description")}
             </DialogDescription>
           </DialogHeader>
 
           <Command className="flex min-h-0 flex-1 flex-col bg-transparent">
             <div className="shrink-0 px-4 pt-4">
               <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                <CommandInput
-                  placeholder="Buscar pacientes, sessões, e-mails..."
-                  autoFocus
-                />
+                <CommandInput placeholder={t("search.placeholder")} autoFocus />
               </div>
             </div>
 
             <div className="shrink-0 px-4 pt-3">
               <div className="grid grid-cols-2 gap-2">
-                {globalSearchQuickActions.map((action) => (
+                {quickActions.map((action) => (
                   <button
                     key={action.id}
                     type="button"
@@ -131,7 +136,7 @@ export function GlobalSearchDialog({
                 <ScrollArea className="h-[min(18rem,40vh)]">
                   <CommandList className="overflow-visible px-1.5 py-2">
                     <CommandEmpty className="py-12 text-center text-sm text-muted-foreground">
-                      Nenhum resultado encontrado.
+                      {t("search.empty")}
                     </CommandEmpty>
                     {groupedItems.map(([group, groupItems], index) => (
                       <div key={group}>
@@ -183,19 +188,19 @@ export function GlobalSearchDialog({
               <kbd className="rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] leading-none">
                 ↑↓
               </kbd>
-              navegar
+              {t("search.navigate")}
             </span>
             <span className="flex items-center justify-center gap-1.5">
               <kbd className="rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] leading-none">
                 ↵
               </kbd>
-              abrir
+              {t("search.open")}
             </span>
             <span className="flex items-center justify-center gap-1.5">
               <kbd className="rounded-md border border-border bg-card px-1.5 py-0.5 font-mono text-[10px] leading-none">
                 esc
               </kbd>
-              fechar
+              {t("search.close")}
             </span>
           </div>
         </DialogContent>

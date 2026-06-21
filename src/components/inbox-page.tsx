@@ -17,9 +17,10 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useClinicData } from "@/context/clinic-data-provider"
 import { getInitials } from "@/data/patients"
-import { APP_PAGE } from "@/lib/app-pages"
-import { cn } from "@/lib/utils"
 import type { InboxEmail } from "@/data/types"
+import { APP_PAGE_ID } from "@/lib/app-pages"
+import { cn } from "@/lib/utils"
+import { useTranslation } from "@/context/locale-provider"
 
 export function InboxPage({
   initialEmailId = null,
@@ -27,6 +28,7 @@ export function InboxPage({
   initialEmailId?: string | null
 } = {}) {
   const { emails } = useClinicData()
+  const { t, pageLabel } = useTranslation()
   const [selectedId, setSelectedId] = useState(emails[0]?.id ?? "")
   const [tab, setTab] = useState("todos")
   const [query, setQuery] = useState("")
@@ -58,7 +60,7 @@ export function InboxPage({
   if (!selected) {
     return (
       <Card className="flex h-full items-center justify-center p-8">
-        <p className="text-sm text-muted-foreground">Nenhum e-mail disponível.</p>
+        <p className="text-sm text-muted-foreground">{t("inbox.noEmails")}</p>
       </Card>
     )
   }
@@ -69,22 +71,24 @@ export function InboxPage({
         <div className="flex flex-col gap-4 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">{APP_PAGE.caixaEntrada}</h2>
+              <h2 className="text-lg font-semibold">
+                {pageLabel(APP_PAGE_ID.caixaEntrada)}
+              </h2>
               <Badge variant="outline" className="border-border bg-background/40">
-                {unreadCount} não lidos
+                {t("inbox.unread", { count: unreadCount })}
               </Badge>
             </div>
             <Tabs value={tab} onValueChange={setTab}>
               <TabsList className="border border-border bg-background/40">
-                <TabsTrigger value="todos">Todos</TabsTrigger>
-                <TabsTrigger value="nao-lidos">Não lidos</TabsTrigger>
+                <TabsTrigger value="todos">{t("inbox.tabs.all")}</TabsTrigger>
+                <TabsTrigger value="nao-lidos">{t("inbox.tabs.unread")}</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
           <SearchInput
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Buscar e-mails..."
+            placeholder={t("inbox.searchPlaceholder")}
             className="border-border bg-background/40 hover:bg-accent/50"
           />
         </div>
@@ -93,7 +97,7 @@ export function InboxPage({
           <div className="flex flex-col gap-2 p-3">
             {filtered.length === 0 ? (
               <p className="p-4 text-center text-sm text-muted-foreground">
-                Nenhum e-mail encontrado.
+                {t("inbox.noResults")}
               </p>
             ) : null}
             {filtered.map((email) => (
@@ -153,7 +157,7 @@ export function InboxPage({
             variant="ghost"
             size="icon"
             className="hover:bg-accent/50"
-            aria-label="Arquivar"
+            aria-label={t("inbox.archive")}
           >
             <Archive />
           </Button>
@@ -161,7 +165,7 @@ export function InboxPage({
             variant="ghost"
             size="icon"
             className="hover:bg-accent/50"
-            aria-label="Excluir"
+            aria-label={t("inbox.delete")}
           >
             <Trash2 />
           </Button>
@@ -169,7 +173,7 @@ export function InboxPage({
             variant="ghost"
             size="icon"
             className="hover:bg-accent/50"
-            aria-label="Favoritar"
+            aria-label={t("inbox.favorite")}
           >
             <Star />
           </Button>
@@ -180,7 +184,7 @@ export function InboxPage({
               className="border-border bg-background/40 hover:bg-accent/50"
             >
               <Reply />
-              Responder
+              {t("inbox.reply")}
             </Button>
             <Button
               variant="outline"
@@ -188,7 +192,7 @@ export function InboxPage({
               className="border-border bg-background/40 hover:bg-accent/50"
             >
               <Forward />
-              Encaminhar
+              {t("inbox.forward")}
             </Button>
           </div>
         </div>

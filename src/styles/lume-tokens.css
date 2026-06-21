@@ -41,6 +41,28 @@
   --lume-sheet-pause: #fef3c7;
   --lume-sheet-waitlist: #e0f2fe;
 
+  /* Status de sessão — agenda, legenda e badges */
+  --session-agendada-bg: #f8f6f0;
+  --session-agendada-border: #e5e0d5;
+  --session-agendada-fg: #1c3351;
+  --session-agendada-fg-muted: #5e6b7e;
+  --session-realizada-bg: #eaf5ef;
+  --session-realizada-border: #8fb9a0;
+  --session-realizada-fg: #184032;
+  --session-realizada-fg-muted: #3d6b52;
+  --session-faltou-bg: #fee2e2;
+  --session-faltou-border: #f87171;
+  --session-faltou-fg: #991b1b;
+  --session-faltou-fg-muted: #b91c1c;
+  --session-remarcada-bg: #e8eef5;
+  --session-remarcada-border: #7ba3d4;
+  --session-remarcada-fg: #1e3a5f;
+  --session-remarcada-fg-muted: #4a6fa5;
+  --session-cancelada-bg: #f3f4f6;
+  --session-cancelada-border: #d1d5db;
+  --session-cancelada-fg: #6b7280;
+  --session-cancelada-fg-muted: #9ca3af;
+
   /* Refúgio — primitivos extras */
   --refugio-slate-900: #2d3a4a;
   --refugio-slate-800: #2a3544;
@@ -55,21 +77,61 @@
   --refugio-slate-alpha-25: #3d516640;
   --refugio-slate-alpha-44: #3d516670;
 
-  --coral-accent: #e8927c;
+  /* Forja — carvão quente + brasa âmbar */
+  --forja-accent: #c47a35;
+  --forja-accent-bright: #f0a65c;
+  --forja-accent-soft: #e09550;
+  --forja-surface: #383736;
+  --forja-surface-raised: #41403f;
+  --forja-surface-overlay: #4a4947;
+  --forja-surface-deep: #2a2928;
+  --forja-foreground: #e8e6df;
+  --forja-foreground-muted: #a8aaa3;
+  --forja-foreground-subtle: #8e9089;
+  --forja-dialog: #3c3b39;
+  --forja-foreground-alpha-10: #e8e6df1a;
+  --forja-foreground-alpha-12: #e8e6df1f;
+  --forja-foreground-alpha-14: #e8e6df24;
+  --forja-foreground-alpha-20: #e8e6df33;
+  --forja-foreground-alpha-25: #e8e6df40;
+  --forja-foreground-alpha-44: #e8e6df70;
+  --forja-accent-alpha-20: #f0a65c33;
 
-  /* Coral — blush + petróleo */
-  --coral-blush-100: #faede8;
-  --coral-blush-200: #f0ddd6;
-  --coral-blush-300: #e8cfc6;
-  --coral-teal-900: #1a4844;
-  --coral-teal-800: #245550;
-  --coral-teal-700: #1f5650;
-  --coral-dialog: #fff6f3;
-  --coral-cream: #fff0eb;
-  --coral-teal-alpha-14: #1a484424;
-  --coral-teal-alpha-20: #1a484433;
-  --coral-teal-alpha-25: #1a484440;
-  --coral-teal-alpha-44: #1a484470;
+  /* Horizonte — linho quente + oceano + pôr do sol */
+  --horizonte-sky-100: #f0ebe3;
+  --horizonte-sky-200: #e8e0d6;
+  --horizonte-sky-300: #ded4c8;
+  --horizonte-ocean-900: #1e3d4d;
+  --horizonte-ocean-800: #243848;
+  --horizonte-ocean-700: #2f5568;
+  --horizonte-ocean-cream: #f5f8fa;
+  --horizonte-apricot: #e07a5f;
+  --horizonte-coral: #c9543f;
+  --horizonte-gold: #c9a86a;
+  --horizonte-dialog: #f7f4ef;
+  --horizonte-ocean-alpha-14: #2f556824;
+  --horizonte-ocean-alpha-20: #2f556833;
+  --horizonte-ocean-alpha-25: #2f556840;
+  --horizonte-ocean-alpha-44: #2f556870;
+
+  /* Entardecer — carvão quente profundo + pôr do sol */
+  --entardecer-accent: #a8523c;
+  --entardecer-accent-bright: #e07a5f;
+  --entardecer-accent-soft: #c46850;
+  --entardecer-surface: #161514;
+  --entardecer-surface-raised: #1e1d1b;
+  --entardecer-surface-overlay: #282624;
+  --entardecer-surface-deep: #0e0d0c;
+  --entardecer-foreground: #ede8e3;
+  --entardecer-foreground-muted: #a8a29e;
+  --entardecer-foreground-subtle: #8a8480;
+  --entardecer-dialog: #1a1918;
+  --entardecer-foreground-alpha-10: #ede8e31a;
+  --entardecer-foreground-alpha-12: #ede8e31f;
+  --entardecer-foreground-alpha-14: #ede8e324;
+  --entardecer-foreground-alpha-20: #ede8e333;
+  --entardecer-foreground-alpha-25: #ede8e340;
+  --entardecer-foreground-alpha-44: #ede8e370;
 
   --radius: 0.625rem;
   --density-page-gap: 1rem;
@@ -125,6 +187,7 @@
 
   --accent-brand: var(--lume-mint-400);
   --theme-logo-mark: var(--lume-mint-logo);
+  --attention: var(--lume-terracotta);
 }
 
 /* ── Tema Refúgio (padrão) — ardósia fria + terracota ── */
@@ -176,56 +239,223 @@
 
   --accent-brand: var(--lume-terracotta);
   --theme-logo-mark: var(--lume-terracotta);
+  --attention: var(--lume-terracotta);
 }
 
-/* ── Tema Coral — blush + petróleo + coral ── */
-[data-theme="coral"] {
-  --background: var(--coral-blush-100);
-  --foreground: #3a2a28;
-  --card: var(--lume-white);
-  --card-foreground: #3a2a28;
-  --popover: var(--lume-white);
-  --popover-foreground: #3a2a28;
-  --primary: var(--coral-teal-700);
-  --primary-foreground: var(--coral-cream);
-  --secondary: var(--coral-blush-200);
-  --secondary-foreground: #3a2a28;
-  --muted: var(--coral-blush-300);
-  --muted-foreground: #8a6a62;
-  --accent: #fce8e2;
-  --accent-foreground: #3a2a28;
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: var(--coral-teal-alpha-14);
-  --input: var(--coral-teal-alpha-20);
-  --ring: var(--coral-teal-700);
-  --chart-1: var(--coral-teal-700);
-  --chart-2: var(--coral-accent);
-  --chart-3: var(--lume-gold-400);
-  --chart-4: #8a6a62;
-  --chart-5: #f0b8a8;
+/* ── Tema Forja — carvão quente + brasa âmbar ── */
+[data-theme="forja"] {
+  --background: var(--forja-surface);
+  --foreground: var(--forja-foreground);
+  --card: var(--forja-surface-raised);
+  --card-foreground: var(--forja-foreground);
+  --popover: var(--forja-surface-raised);
+  --popover-foreground: var(--forja-foreground);
+  --primary: var(--forja-accent);
+  --primary-foreground: var(--forja-foreground);
+  --secondary: var(--forja-surface-overlay);
+  --secondary-foreground: var(--forja-foreground);
+  --muted: var(--forja-surface-overlay);
+  --muted-foreground: var(--forja-foreground-muted);
+  --accent: var(--forja-surface-overlay);
+  --accent-foreground: var(--forja-foreground);
+  --destructive: oklch(0.637 0.237 25.331);
+  --attention: var(--forja-accent-bright);
+  --border: var(--forja-foreground-alpha-14);
+  --input: var(--forja-foreground-alpha-20);
+  --ring: var(--forja-accent-bright);
+  --chart-1: var(--forja-accent-bright);
+  --chart-2: var(--forja-foreground);
+  --chart-3: var(--forja-accent-soft);
+  --chart-4: var(--forja-foreground-muted);
+  --chart-5: var(--forja-foreground-subtle);
 
-  --sidebar: var(--coral-teal-900);
-  --sidebar-foreground: var(--coral-cream);
+  --sidebar: var(--forja-surface-deep);
+  --sidebar-foreground: var(--forja-foreground);
+  --sidebar-primary: var(--forja-accent);
+  --sidebar-primary-foreground: var(--forja-foreground);
+  --sidebar-accent: var(--forja-foreground-alpha-10);
+  --sidebar-accent-foreground: var(--forja-foreground);
+  --sidebar-border: var(--forja-foreground-alpha-12);
+  --sidebar-ring: var(--forja-accent-bright);
+
+  --scrollbar-thumb: var(--forja-foreground-alpha-25);
+  --scrollbar-thumb-hover: var(--forja-foreground-alpha-44);
+
+  --surface-dialog: var(--forja-dialog);
+  --surface-navy: var(--forja-surface-deep);
+  --surface-navy-heading: var(--forja-foreground);
+  --surface-sheet-border: #56544f;
+  --surface-sheet-muted: #343332;
+  --surface-sheet-tab: #3d3c3a;
+  --surface-sheet-tab-active: var(--forja-surface-raised);
+
+  --accent-brand: var(--forja-accent-bright);
+  --theme-logo-mark: var(--forja-accent-bright);
+
+  --session-agendada-bg: #e8e6df;
+  --session-agendada-border: #c8c6bf;
+  --session-agendada-fg: #383736;
+  --session-agendada-fg-muted: #56544f;
+  --session-realizada-bg: #3d6b52;
+  --session-realizada-border: #4a8264;
+  --session-realizada-fg: #e8e6df;
+  --session-realizada-fg-muted: #c5c9c0;
+  --session-faltou-bg: #4a3828;
+  --session-faltou-border: var(--forja-accent-bright);
+  --session-faltou-fg: #e8e6df;
+  --session-faltou-fg-muted: #c5c9c0;
+  --session-remarcada-bg: #4a6fa5;
+  --session-remarcada-border: #5b82b8;
+  --session-remarcada-fg: #e8e6df;
+  --session-remarcada-fg-muted: #c5c9c0;
+  --session-cancelada-bg: #454744;
+  --session-cancelada-border: #565856;
+  --session-cancelada-fg: #8e9089;
+  --session-cancelada-fg-muted: #767970;
+}
+
+/* ── Tema Horizonte — linho quente + oceano + pôr do sol ── */
+[data-theme="horizonte"] {
+  --background: var(--horizonte-sky-100);
+  --foreground: var(--horizonte-ocean-800);
+  --card: var(--lume-white);
+  --card-foreground: var(--horizonte-ocean-800);
+  --popover: var(--lume-white);
+  --popover-foreground: var(--horizonte-ocean-800);
+  --primary: var(--horizonte-ocean-700);
+  --primary-foreground: var(--horizonte-ocean-cream);
+  --secondary: var(--horizonte-sky-200);
+  --secondary-foreground: var(--horizonte-ocean-800);
+  --muted: var(--horizonte-sky-300);
+  --muted-foreground: #5a6d78;
+  --accent: #e4ddd2;
+  --accent-foreground: var(--horizonte-ocean-800);
+  --destructive: oklch(0.577 0.245 27.325);
+  --attention: var(--horizonte-coral);
+  --border: var(--horizonte-ocean-alpha-14);
+  --input: var(--horizonte-ocean-alpha-20);
+  --ring: var(--horizonte-ocean-700);
+  --chart-1: var(--horizonte-ocean-700);
+  --chart-2: var(--horizonte-apricot);
+  --chart-3: var(--horizonte-gold);
+  --chart-4: #5a6d78;
+  --chart-5: #7ba3b8;
+
+  --sidebar: var(--horizonte-ocean-900);
+  --sidebar-foreground: var(--horizonte-ocean-cream);
   --sidebar-primary: var(--accent-brand);
   --sidebar-primary-foreground: #fffaf7;
   --sidebar-accent: #ffffff14;
-  --sidebar-accent-foreground: var(--coral-cream);
+  --sidebar-accent-foreground: var(--horizonte-ocean-cream);
   --sidebar-border: #ffffff1a;
   --sidebar-ring: var(--accent-brand);
 
-  --scrollbar-thumb: var(--coral-teal-alpha-25);
-  --scrollbar-thumb-hover: var(--coral-teal-alpha-44);
+  --scrollbar-thumb: var(--horizonte-ocean-alpha-25);
+  --scrollbar-thumb-hover: var(--horizonte-ocean-alpha-44);
 
-  --surface-dialog: var(--coral-dialog);
-  --surface-navy: var(--coral-teal-900);
-  --surface-navy-heading: var(--coral-cream);
-  --surface-sheet-border: #e8cfc6;
-  --surface-sheet-muted: #faf0ec;
-  --surface-sheet-tab: #f0ddd6;
+  --surface-dialog: var(--horizonte-dialog);
+  --surface-navy: var(--horizonte-ocean-900);
+  --surface-navy-heading: var(--horizonte-ocean-cream);
+  --surface-sheet-border: #d8cfc4;
+  --surface-sheet-muted: #f5f0e8;
+  --surface-sheet-tab: #ebe3d8;
   --surface-sheet-tab-active: var(--lume-white);
 
-  --accent-brand: var(--coral-accent);
-  --theme-logo-mark: var(--coral-accent);
+  --accent-brand: var(--horizonte-apricot);
+  --theme-logo-mark: var(--horizonte-apricot);
+
+  --session-agendada-bg: #f5f0e8;
+  --session-agendada-border: #d8cfc4;
+  --session-agendada-fg: var(--horizonte-ocean-800);
+  --session-agendada-fg-muted: #5a6d78;
+  --session-realizada-bg: #e4f0ec;
+  --session-realizada-border: #7eb8a8;
+  --session-realizada-fg: #1a4844;
+  --session-realizada-fg-muted: #2f6b5e;
+  --session-faltou-bg: #fce8e4;
+  --session-faltou-border: var(--horizonte-apricot);
+  --session-faltou-fg: #8f2f20;
+  --session-faltou-fg-muted: var(--horizonte-coral);
+  --session-remarcada-bg: #e0ecf4;
+  --session-remarcada-border: #6a9ec4;
+  --session-remarcada-fg: var(--horizonte-ocean-800);
+  --session-remarcada-fg-muted: var(--horizonte-ocean-700);
+  --session-cancelada-bg: #ede8e2;
+  --session-cancelada-border: #c8bfb4;
+  --session-cancelada-fg: #6a757d;
+  --session-cancelada-fg-muted: #8a949c;
+}
+
+/* ── Tema Entardecer — carvão quente profundo + pôr do sol ── */
+[data-theme="entardecer"] {
+  --background: var(--entardecer-surface);
+  --foreground: var(--entardecer-foreground);
+  --card: var(--entardecer-surface-raised);
+  --card-foreground: var(--entardecer-foreground);
+  --popover: var(--entardecer-surface-raised);
+  --popover-foreground: var(--entardecer-foreground);
+  --primary: var(--entardecer-accent);
+  --primary-foreground: var(--entardecer-foreground);
+  --secondary: var(--entardecer-surface-overlay);
+  --secondary-foreground: var(--entardecer-foreground);
+  --muted: var(--entardecer-surface-overlay);
+  --muted-foreground: var(--entardecer-foreground-muted);
+  --accent: var(--entardecer-surface-overlay);
+  --accent-foreground: var(--entardecer-foreground);
+  --destructive: oklch(0.637 0.237 25.331);
+  --attention: var(--entardecer-accent-bright);
+  --border: var(--entardecer-foreground-alpha-14);
+  --input: var(--entardecer-foreground-alpha-20);
+  --ring: var(--entardecer-accent-bright);
+  --chart-1: var(--entardecer-accent-bright);
+  --chart-2: var(--entardecer-foreground);
+  --chart-3: var(--entardecer-accent-soft);
+  --chart-4: var(--entardecer-foreground-muted);
+  --chart-5: var(--entardecer-foreground-subtle);
+
+  --sidebar: var(--entardecer-surface-deep);
+  --sidebar-foreground: var(--entardecer-foreground);
+  --sidebar-primary: var(--entardecer-accent);
+  --sidebar-primary-foreground: var(--entardecer-foreground);
+  --sidebar-accent: var(--entardecer-foreground-alpha-10);
+  --sidebar-accent-foreground: var(--entardecer-foreground);
+  --sidebar-border: var(--entardecer-foreground-alpha-12);
+  --sidebar-ring: var(--entardecer-accent-bright);
+
+  --scrollbar-thumb: var(--entardecer-foreground-alpha-25);
+  --scrollbar-thumb-hover: var(--entardecer-foreground-alpha-44);
+
+  --surface-dialog: var(--entardecer-dialog);
+  --surface-navy: var(--entardecer-surface-deep);
+  --surface-navy-heading: var(--entardecer-foreground);
+  --surface-sheet-border: #3d3a36;
+  --surface-sheet-muted: #141312;
+  --surface-sheet-tab: #1c1b19;
+  --surface-sheet-tab-active: var(--entardecer-surface-raised);
+
+  --accent-brand: var(--entardecer-accent-bright);
+  --theme-logo-mark: var(--entardecer-accent-bright);
+
+  --session-agendada-bg: #ede8e3;
+  --session-agendada-border: #c8c2bc;
+  --session-agendada-fg: #161514;
+  --session-agendada-fg-muted: #3d3a36;
+  --session-realizada-bg: #2a4034;
+  --session-realizada-border: #4a8264;
+  --session-realizada-fg: #ede8e3;
+  --session-realizada-fg-muted: #a8a29e;
+  --session-faltou-bg: #3a2820;
+  --session-faltou-border: var(--entardecer-accent-bright);
+  --session-faltou-fg: #ede8e3;
+  --session-faltou-fg-muted: #a8a29e;
+  --session-remarcada-bg: #3a3428;
+  --session-remarcada-border: #c9a86a;
+  --session-remarcada-fg: #ede8e3;
+  --session-remarcada-fg-muted: #a8a29e;
+  --session-cancelada-bg: #2a2826;
+  --session-cancelada-border: #3d3a36;
+  --session-cancelada-fg: #8a8480;
+  --session-cancelada-fg-muted: #6e6864;
 }
 
 [data-density="compact"] {

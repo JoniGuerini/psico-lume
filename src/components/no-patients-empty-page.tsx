@@ -2,6 +2,7 @@ import { UserPlus, Users } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { useTranslation } from "@/context/locale-provider"
 
 type NoPatientsEmptyPageProps = {
   onNewPatient?: () => void
@@ -11,9 +12,11 @@ type NoPatientsEmptyPageProps = {
 
 export function NoPatientsEmptyPage({
   onNewPatient,
-  title = "Nenhum paciente cadastrado",
-  description = "Cadastre seu primeiro paciente para começar o acompanhamento clínico.",
+  title,
+  description,
 }: NoPatientsEmptyPageProps) {
+  const { t } = useTranslation()
+
   return (
     <div className="flex min-h-0 flex-1 w-full flex-col">
       <Card className="flex min-h-0 w-full flex-1 flex-col overflow-hidden p-0">
@@ -23,13 +26,17 @@ export function NoPatientsEmptyPage({
               <Users className="size-5 text-muted-foreground" />
             </div>
             <div className="flex max-w-sm flex-col gap-1">
-              <p className="font-medium">{title}</p>
-              <p className="text-sm text-muted-foreground">{description}</p>
+              <p className="font-medium">
+                {title ?? t("empty.noPatients.title")}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {description ?? t("empty.noPatients.description")}
+              </p>
             </div>
             {onNewPatient ? (
               <Button size="sm" onClick={onNewPatient}>
                 <UserPlus />
-                Novo paciente
+                {t("common.newPatient")}
               </Button>
             ) : null}
           </div>

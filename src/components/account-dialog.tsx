@@ -4,6 +4,7 @@ import {
   Camera,
   Check,
   CreditCard,
+  Languages,
   Laptop,
   LogOut,
   Palette,
@@ -33,10 +34,13 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { densityPresets, themePresets } from "@/lib/design-system"
 import { useTheme } from "@/context/theme-provider"
+import { useTranslation } from "@/context/locale-provider"
+import { LOCALE_OPTIONS } from "@/lib/locale"
 import {
   toastPositionPresets,
   useToast,
 } from "@/context/toast-provider"
+import type { ToastPosition } from "@/lib/toast-preferences"
 
 type AccountDialogProps = {
   user: {
@@ -58,38 +62,16 @@ type Section = {
   icon: LucideIcon
 }
 
-const sections: Section[] = [
-  {
-    id: "perfil",
-    label: "Perfil",
-    description: "Nome, e-mail e foto no perfil.",
-    icon: User,
-  },
-  {
-    id: "seguranca",
-    label: "Segurança",
-    description: "Senha, login e dispositivos conectados.",
-    icon: ShieldCheck,
-  },
-  {
-    id: "notificacoes",
-    label: "Notificações",
-    description: "Escolha o que e como ser avisado.",
-    icon: Bell,
-  },
-  {
-    id: "aparencia",
-    label: "Aparência",
-    description: "Personalize o visual do aplicativo.",
-    icon: Palette,
-  },
-]
+const guestDeleteAccountSectionId = "excluir-conta"
 
-const guestDeleteAccountSection: Section = {
-  id: "excluir-conta",
-  label: "Excluir conta",
-  description: "Encerrar conta convidada neste navegador.",
-  icon: Trash2,
+const TOAST_POSITION_LABEL_KEYS: Record<
+  ToastPosition,
+  "topLeft" | "topRight" | "bottomLeft" | "bottomRight"
+> = {
+  "top-left": "topLeft",
+  "top-right": "topRight",
+  "bottom-left": "bottomLeft",
+  "bottom-right": "bottomRight",
 }
 
 const activeSessions = [
@@ -175,6 +157,7 @@ export function AccountDialog({
   onUpdateGuestProfile,
   onDeleteGuestProfile,
 }: AccountDialogProps) {
+  const { t, locale, setLocale } = useTranslation()
   const [section, setSection] = useState("perfil")
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
@@ -200,9 +183,55 @@ export function AccountDialog({
   const { toast, position: toastPosition, setPosition: setToastPosition } =
     useToast()
 
+  const sections = useMemo<Section[]>(
+    () => [
+      {
+        id: "perfil",
+        label: t("account.sections.perfil.label"),
+        description: t("account.sections.perfil.description"),
+        icon: User,
+      },
+      {
+        id: "seguranca",
+        label: t("account.sections.seguranca.label"),
+        description: t("account.sections.seguranca.description"),
+        icon: ShieldCheck,
+      },
+      {
+        id: "notificacoes",
+        label: t("account.sections.notificacoes.label"),
+        description: t("account.sections.notificacoes.description"),
+        icon: Bell,
+      },
+      {
+        id: "preferencias",
+        label: t("account.sections.preferencias.label"),
+        description: t("account.sections.preferencias.description"),
+        icon: Languages,
+      },
+      {
+        id: "aparencia",
+        label: t("account.sections.aparencia.label"),
+        description: t("account.sections.aparencia.description"),
+        icon: Palette,
+      },
+    ],
+    [t]
+  )
+
+  const guestDeleteAccountSection = useMemo<Section>(
+    () => ({
+      id: guestDeleteAccountSectionId,
+      label: t("account.sections.excluirConta.label"),
+      description: t("account.sections.excluirConta.description"),
+      icon: Trash2,
+    }),
+    [t]
+  )
+
   const visibleSections = useMemo(
     () => (isGuest ? [...sections, guestDeleteAccountSection] : sections),
-    [isGuest]
+    [isGuest, sections, guestDeleteAccountSection]
   )
 
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -222,7 +251,7 @@ export function AccountDialog({
   }, [open, user.name, user.email, user.avatar])
 
   useEffect(() => {
-    if (!isGuest && section === guestDeleteAccountSection.id) {
+    if (!isGuest && section === guestDeleteAccountSectionId) {
       setSection("perfil")
     }
   }, [isGuest, section])
@@ -269,8 +298,8 @@ export function AccountDialog({
     if (isGuest) {
       if (!canSaveGuestProfile) return
       onUpdateGuestProfile?.(trimmedName)
-      toast("Dados salvos", {
-        description: "Seu nome foi atualizado neste navegador e na tela de entrada.",
+      toast(t("account.profile.saved"), {
+        description: t("account.profile.savedDescription"),
       })
       return
     }
@@ -278,9 +307,9 @@ export function AccountDialog({
 
   function handleToastPositionChange(position: typeof toastPosition) {
     setToastPosition(position)
-    toast("Posição dos toasts atualizada", {
+    toast(t("account.toastUpdated"), {
       variant: "info",
-      description: "As próximas confirmações aparecerão no canto escolhido.",
+      description: t("account.toastUpdatedDescription"),
     })
   }
 
@@ -297,10 +326,10 @@ export function AccountDialog({
         <aside className="flex shrink-0 flex-col gap-1 p-3 md:w-64 md:p-4">
           <DialogHeader className="gap-1 px-2 pt-1 pb-3 text-left sm:text-left">
             <DialogTitle className="font-heading text-xl text-sidebar-foreground">
-              Conta
+              {t("account.title")}
             </DialogTitle>
             <DialogDescription className="text-sidebar-foreground/70">
-              Gerencie suas informações e preferências.
+              {t("account.subtitle")}
             </DialogDescription>
           </DialogHeader>
           <nav className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
@@ -332,8 +361,8 @@ export function AccountDialog({
             {section === "perfil" ? (
               <div className="flex flex-col gap-6">
                 <SectionHeading
-                  title="Perfil"
-                  description="Dados da sua conta — visíveis só para você no Lume."
+                  title={t("account.profile.heading")}
+                  description={t("account.profile.description")}
                 />
 
                 <div className="flex flex-col gap-5 rounded-3xl bg-sidebar p-6 text-sidebar-foreground sm:flex-row sm:items-center">
@@ -360,7 +389,7 @@ export function AccountDialog({
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        aria-label="Alterar foto"
+                        aria-label={t("account.profile.changePhoto")}
                         className="absolute -right-2 -bottom-2 flex size-8 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-sm transition-colors hover:bg-accent"
                       >
                         <Camera className="size-4" />
@@ -368,7 +397,7 @@ export function AccountDialog({
                     ) : null}
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <h4 className="font-heading text-xl font-semibold text-primary-foreground">
+                    <h4 className="font-heading text-xl font-semibold text-surface-navy-heading">
                       {name}
                     </h4>
                     <p className="truncate text-sm text-sidebar-foreground/70">
@@ -380,29 +409,32 @@ export function AccountDialog({
                 <Panel>
                   <div className="grid gap-5 sm:grid-cols-2">
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="account-name">Nome completo</Label>
+                      <Label htmlFor="account-name">
+                        {t("account.profile.fullName")}
+                      </Label>
                       <Input
                         id="account-name"
                         value={name}
                         onChange={(event) => setName(event.target.value)}
-                        placeholder="Seu nome"
+                        placeholder={t("account.profile.namePlaceholder")}
                         maxLength={80}
                       />
                       {isGuest ? (
                         <p className="text-xs text-muted-foreground">
-                          Mínimo de 2 caracteres. Atualiza seu nome no app e na
-                          tela de entrada.
+                          {t("account.profile.guestNameHint")}
                         </p>
                       ) : null}
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="account-email">E-mail de login</Label>
+                      <Label htmlFor="account-email">
+                        {t("account.profile.loginEmail")}
+                      </Label>
                       <Input
                         id="account-email"
                         type="email"
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
-                        placeholder="voce@example.com"
+                        placeholder={t("account.profile.emailPlaceholder")}
                         readOnly={isGuest}
                         disabled={isGuest}
                         className={isGuest ? "opacity-70" : undefined}
@@ -415,14 +447,14 @@ export function AccountDialog({
                       variant="ghost"
                       onClick={handleResetProfile}
                     >
-                      Cancelar
+                      {t("common.cancel")}
                     </Button>
                     <Button
                       type="button"
                       disabled={isGuest && !canSaveGuestProfile}
                       onClick={handleSaveProfile}
                     >
-                      Salvar alterações
+                      {t("account.profile.saveChanges")}
                     </Button>
                   </div>
                 </Panel>
@@ -432,22 +464,19 @@ export function AccountDialog({
             {section === "excluir-conta" && isGuest ? (
               <div className="flex flex-col gap-6">
                 <SectionHeading
-                  title="Excluir conta"
-                  description="Encerre sua conta convidada neste navegador. Esta ação apaga o perfil e tudo o que foi cadastrado."
+                  title={t("account.deleteGuest.heading")}
+                  description={t("account.deleteGuest.description")}
                 />
 
                 <Panel className="gap-4">
                   <div className="flex flex-col gap-1">
                     <h4 className="font-heading text-base font-semibold">
-                      O que será removido
+                      {t("account.deleteGuest.whatWillBeRemoved")}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      A conta de{" "}
-                      <span className="font-medium text-foreground">
-                        {user.name}
-                      </span>{" "}
-                      e todos os dados dela: pacientes, agenda, prontuários,
-                      notificações e preferências salvas localmente.
+                      {t("account.deleteGuest.whatWillBeRemovedDescription", {
+                        name: user.name,
+                      })}
                     </p>
                   </div>
                 </Panel>
@@ -455,12 +484,10 @@ export function AccountDialog({
                 <Panel className="gap-4 border-destructive/25 bg-destructive/5">
                   <div className="flex flex-col gap-1">
                     <h4 className="font-heading text-base font-semibold text-destructive">
-                      Zona de perigo
+                      {t("account.deleteGuest.dangerZone")}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      Esta ação é permanente e não pode ser desfeita. Você será
-                      desconectado e precisará criar uma nova conta convidada
-                      para usar o Lume de novo neste navegador.
+                      {t("account.deleteGuest.dangerZoneDescription")}
                     </p>
                   </div>
                   <div className="flex justify-end">
@@ -470,7 +497,7 @@ export function AccountDialog({
                       onClick={() => setDeleteConfirmOpen(true)}
                     >
                       <Trash2 />
-                      Excluir conta
+                      {t("account.deleteGuest.deleteAccount")}
                     </Button>
                   </div>
                 </Panel>
@@ -480,23 +507,24 @@ export function AccountDialog({
             {section === "seguranca" ? (
               <div className="flex flex-col gap-6">
                 <SectionHeading
-                  title="Segurança"
-                  description="Mantenha sua conta protegida."
+                  title={t("account.security.heading")}
+                  description={t("account.security.description")}
                 />
 
                 <Panel>
                   <div className="flex flex-col gap-1">
                     <h4 className="font-heading text-base font-semibold">
-                      Alterar senha
+                      {t("account.security.changePassword")}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      Use uma senha forte e única que você não usa em outros
-                      sites.
+                      {t("account.security.changePasswordDescription")}
                     </p>
                   </div>
                   <div className="flex flex-col gap-5">
                     <div className="flex flex-col gap-2">
-                      <Label htmlFor="current-password">Senha atual</Label>
+                      <Label htmlFor="current-password">
+                        {t("account.security.currentPassword")}
+                      </Label>
                       <Input
                         id="current-password"
                         type="password"
@@ -509,7 +537,9 @@ export function AccountDialog({
                     </div>
                     <div className="grid gap-5 sm:grid-cols-2">
                       <div className="flex flex-col gap-2">
-                        <Label htmlFor="new-password">Nova senha</Label>
+                        <Label htmlFor="new-password">
+                          {t("account.security.newPassword")}
+                        </Label>
                         <Input
                           id="new-password"
                           type="password"
@@ -522,7 +552,7 @@ export function AccountDialog({
                       </div>
                       <div className="flex flex-col gap-2">
                         <Label htmlFor="confirm-password">
-                          Confirmar nova senha
+                          {t("account.security.confirmNewPassword")}
                         </Label>
                         <Input
                           id="confirm-password"
@@ -537,17 +567,17 @@ export function AccountDialog({
                     </div>
                   </div>
                   <div className="flex justify-end border-t border-border pt-5">
-                    <Button>Atualizar senha</Button>
+                    <Button>{t("account.security.updatePassword")}</Button>
                   </div>
                 </Panel>
 
                 <Panel className="flex-row items-center justify-between gap-4">
                   <div className="flex min-w-0 flex-col gap-0.5">
                     <h4 className="font-heading text-base font-semibold">
-                      Autenticação em duas etapas
+                      {t("account.security.twoFactor")}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      Adicione uma camada extra de proteção ao entrar.
+                      {t("account.security.twoFactorDescription")}
                     </p>
                   </div>
                   <Switch checked={twoFactor} onCheckedChange={setTwoFactor} />
@@ -556,10 +586,10 @@ export function AccountDialog({
                 <Panel className="gap-2">
                   <div className="flex flex-col gap-1 pb-2">
                     <h4 className="font-heading text-base font-semibold">
-                      Dispositivos conectados
+                      {t("account.security.connectedDevices")}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      Sessões atualmente conectadas à sua conta.
+                      {t("account.security.connectedDevicesDescription")}
                     </p>
                   </div>
                   {activeSessions.map((item, index) => (
@@ -579,7 +609,7 @@ export function AccountDialog({
                                 variant="outline"
                                 className="border-border bg-card text-xs"
                               >
-                                Este dispositivo
+                                {t("account.security.currentDevice")}
                               </Badge>
                             ) : null}
                           </div>
@@ -594,7 +624,7 @@ export function AccountDialog({
                             className="text-destructive hover:text-destructive"
                           >
                             <LogOut />
-                            Encerrar
+                            {t("account.security.endSession")}
                           </Button>
                         ) : null}
                       </div>
@@ -607,43 +637,51 @@ export function AccountDialog({
             {section === "notificacoes" ? (
               <div className="flex flex-col gap-6">
                 <SectionHeading
-                  title="Notificações"
-                  description="Escolha sobre o que você quer ser avisado."
+                  title={t("account.notifications.heading")}
+                  description={t("account.notifications.description")}
                 />
 
                 <Panel className="gap-0">
                   <div className="flex items-center gap-2 pb-2 text-sm font-medium text-muted-foreground">
                     <Bell className="size-4" />
-                    Clínico e agenda
+                    {t("account.notifications.clinical")}
                   </div>
                   <div className="divide-y divide-border">
                     <ToggleRow
-                      title="Status de sessão pendente"
-                      description="Quando uma sessão passou e ainda não foi marcada na agenda."
+                      title={t("account.notifications.pendingSession.title")}
+                      description={t(
+                        "account.notifications.pendingSession.description"
+                      )}
                       checked={notifications.pendingSessionStatus}
                       onCheckedChange={(value) =>
                         setNotification("pendingSessionStatus", value)
                       }
                     />
                     <ToggleRow
-                      title="Lembretes do dia"
-                      description="Atendimentos de hoje para você registrar após a sessão."
+                      title={t("account.notifications.sessionReminder.title")}
+                      description={t(
+                        "account.notifications.sessionReminder.description"
+                      )}
                       checked={notifications.sessionReminder}
                       onCheckedChange={(value) =>
                         setNotification("sessionReminder", value)
                       }
                     />
                     <ToggleRow
-                      title="Evolução clínica pendente"
-                      description="Sessão realizada sem registro no prontuário."
+                      title={t("account.notifications.pendingEvolution.title")}
+                      description={t(
+                        "account.notifications.pendingEvolution.description"
+                      )}
                       checked={notifications.pendingEvolution}
                       onCheckedChange={(value) =>
                         setNotification("pendingEvolution", value)
                       }
                     />
                     <ToggleRow
-                      title="Lista de espera e pausas"
-                      description="Pacientes que precisam de revisão no cadastro."
+                      title={t("account.notifications.waitingList.title")}
+                      description={t(
+                        "account.notifications.waitingList.description"
+                      )}
                       checked={notifications.waitingListReview}
                       onCheckedChange={(value) =>
                         setNotification("waitingListReview", value)
@@ -655,28 +693,34 @@ export function AccountDialog({
                 <Panel className="gap-0">
                   <div className="flex items-center gap-2 pb-2 text-sm font-medium text-muted-foreground">
                     <CreditCard className="size-4" />
-                    Financeiro e resumos
+                    {t("account.notifications.financial")}
                   </div>
                   <div className="divide-y divide-border">
                     <ToggleRow
-                      title="Inadimplência e conciliação"
-                      description="Pagamentos em aberto e sessões ainda não refletidas no financeiro."
+                      title={t("account.notifications.overduePayment.title")}
+                      description={t(
+                        "account.notifications.overduePayment.description"
+                      )}
                       checked={notifications.overduePayment}
                       onCheckedChange={(value) =>
                         setNotification("overduePayment", value)
                       }
                     />
                     <ToggleRow
-                      title="Resumo semanal"
-                      description="Panorama da semana com pendências de agenda e financeiro."
+                      title={t("account.notifications.weeklySummary.title")}
+                      description={t(
+                        "account.notifications.weeklySummary.description"
+                      )}
                       checked={notifications.weeklySummary}
                       onCheckedChange={(value) =>
                         setNotification("weeklySummary", value)
                       }
                     />
                     <ToggleRow
-                      title="Novidades do Lume"
-                      description="Dicas e novidades de produto (ocasional)."
+                      title={t("account.notifications.productUpdates.title")}
+                      description={t(
+                        "account.notifications.productUpdates.description"
+                      )}
                       checked={notifications.productUpdates}
                       onCheckedChange={(value) =>
                         setNotification("productUpdates", value)
@@ -687,20 +731,65 @@ export function AccountDialog({
               </div>
             ) : null}
 
-            {section === "aparencia" ? (
+            {section === "preferencias" ? (
               <div className="flex flex-col gap-6">
                 <SectionHeading
-                  title="Aparência"
-                  description="Personalize o visual do aplicativo."
+                  title={t("account.preferences.heading")}
+                  description={t("account.preferences.description")}
                 />
 
                 <Panel className="gap-4">
                   <div className="flex flex-col gap-1">
                     <h4 className="font-heading text-base font-semibold">
-                      Tema do aplicativo
+                      {t("account.preferences.language.title")}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      Cores do shell, fundo e destaques em todo o app.
+                      {t("account.preferences.language.description")}
+                    </p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {LOCALE_OPTIONS.map((option) => {
+                      const isActive = locale === option.id
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => setLocale(option.id)}
+                          className={cn(
+                            "flex flex-col items-start gap-1 rounded-xl border p-4 text-left transition-colors",
+                            isActive
+                              ? "border-primary bg-accent/50"
+                              : "border-border hover:bg-accent/50"
+                          )}
+                        >
+                          <span className="flex w-full items-center justify-between text-sm font-medium">
+                            {t(option.labelKey)}
+                            {isActive ? (
+                              <Check className="size-4 text-primary" />
+                            ) : null}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </Panel>
+              </div>
+            ) : null}
+
+            {section === "aparencia" ? (
+              <div className="flex flex-col gap-6">
+                <SectionHeading
+                  title={t("account.appearance.heading")}
+                  description={t("account.appearance.description")}
+                />
+
+                <Panel className="gap-4">
+                  <div className="flex flex-col gap-1">
+                    <h4 className="font-heading text-base font-semibold">
+                      {t("account.appearance.theme.title")}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {t("account.appearance.theme.description")}
                     </p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -736,13 +825,13 @@ export function AccountDialog({
                             />
                           </div>
                           <span className="flex w-full items-center justify-between text-sm font-medium">
-                            {preset.label}
+                            {t(`account.themes.${preset.id}.label`)}
                             {isActive ? (
                               <Check className="size-4 text-primary" />
                             ) : null}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            {preset.description}
+                            {t(`account.themes.${preset.id}.description`)}
                           </span>
                         </button>
                       )
@@ -753,10 +842,10 @@ export function AccountDialog({
                 <Panel className="gap-4">
                   <div className="flex flex-col gap-1">
                     <h4 className="font-heading text-base font-semibold">
-                      Densidade
+                      {t("account.appearance.density.title")}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      Ajuste o espaçamento das listas e tabelas.
+                      {t("account.appearance.density.description")}
                     </p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -775,13 +864,13 @@ export function AccountDialog({
                           )}
                         >
                           <span className="flex w-full items-center justify-between text-sm font-medium">
-                            {option.label}
+                            {t(`account.density.${option.id}.label`)}
                             {isActive ? (
                               <Check className="size-4 text-primary" />
                             ) : null}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            {option.description}
+                            {t(`account.density.${option.id}.description`)}
                           </span>
                         </button>
                       )
@@ -792,16 +881,16 @@ export function AccountDialog({
                 <Panel className="gap-4">
                   <div className="flex flex-col gap-1">
                     <h4 className="font-heading text-base font-semibold">
-                      Posição dos toasts
+                      {t("account.appearance.toastPosition.title")}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      Escolha em qual canto da tela aparecem as confirmações
-                      rápidas, como &quot;Dados salvos&quot;.
+                      {t("account.appearance.toastPosition.description")}
                     </p>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     {toastPositionPresets.map((preset) => {
                       const isActive = toastPosition === preset.id
+                      const labelKey = TOAST_POSITION_LABEL_KEYS[preset.id]
                       return (
                         <button
                           key={preset.id}
@@ -827,13 +916,13 @@ export function AccountDialog({
                             />
                           </span>
                           <span className="flex w-full items-center justify-between text-sm font-medium">
-                            {preset.label}
+                            {t(`account.toastPositions.${labelKey}.label`)}
                             {isActive ? (
                               <Check className="size-4 text-primary" />
                             ) : null}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            {preset.description}
+                            {t(`account.toastPositions.${labelKey}.description`)}
                           </span>
                         </button>
                       )
@@ -851,13 +940,11 @@ export function AccountDialog({
     <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
       <DialogContent className="gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md">
         <DialogHeader className="border-b border-border px-6 py-4">
-          <DialogTitle className="text-lg">Excluir conta convidada?</DialogTitle>
+          <DialogTitle className="text-lg">
+            {t("account.deleteGuest.confirmTitle")}
+          </DialogTitle>
           <DialogDescription>
-            A conta de{" "}
-            <span className="font-medium text-foreground">{user.name}</span> e
-            todos os dados associados serão apagados deste navegador. Você
-            precisará criar uma nova conta convidada para voltar a usar o Lume
-            aqui.
+            {t("account.deleteGuest.confirmDescription", { name: user.name })}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="border-t border-border px-6 py-4">
@@ -866,7 +953,7 @@ export function AccountDialog({
             variant="ghost"
             onClick={() => setDeleteConfirmOpen(false)}
           >
-            Cancelar
+            {t("common.cancel")}
           </Button>
           <Button
             type="button"
@@ -874,7 +961,7 @@ export function AccountDialog({
             onClick={handleConfirmDeleteGuestProfile}
           >
             <Trash2 />
-            Excluir conta
+            {t("account.deleteGuest.deleteAccount")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -28,21 +28,25 @@ export function ShellLeftRail({ children }: ShellLeftRailProps) {
   )
 }
 
+import { useTranslation } from "@/context/locale-provider"
+
 export function LoginHeroSlot() {
+  const { t } = useTranslation()
+
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center text-sidebar-foreground">
       <div className="flex flex-col items-center gap-6">
         <LumeMark className="size-28 shrink-0 drop-shadow-lg" />
         <span className="font-heading text-6xl font-semibold tracking-tight">
-          Lume
+          {t("nav.brand")}
         </span>
         <p className="max-w-xs text-balance text-sidebar-foreground/75">
-          Sua clínica em foco, do agendamento ao acompanhamento.
+          {t("login.heroTagline")}
         </p>
       </div>
 
       <p className="absolute bottom-12 text-xs text-sidebar-foreground/60">
-        © {new Date().getFullYear()} Lume
+        © {new Date().getFullYear()} {t("nav.brand")}
       </p>
     </div>
   )

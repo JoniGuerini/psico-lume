@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useTranslation } from "@/context/locale-provider"
 
 type GuestLoginDialogProps = {
   open: boolean
@@ -24,6 +25,7 @@ export function GuestLoginDialog({
   onOpenChange,
   onConfirm,
 }: GuestLoginDialogProps) {
+  const { t } = useTranslation()
   const inputRef = useRef<HTMLInputElement>(null)
   const [name, setName] = useState("")
   const [loading, setLoading] = useState(false)
@@ -57,16 +59,13 @@ export function GuestLoginDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md">
         <DialogHeader className="border-b border-border px-6 py-4">
-          <DialogTitle className="text-lg">Modo convidado</DialogTitle>
-          <DialogDescription>
-            Use o Lume localmente neste navegador. Seus pacientes, agenda e
-            prontuários ficam salvos aqui — sem conta na nuvem.
-          </DialogDescription>
+          <DialogTitle className="text-lg">{t("login.guest.title")}</DialogTitle>
+          <DialogDescription>{t("login.guest.description")}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-6">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="guest-name">Como podemos te chamar?</Label>
+            <Label htmlFor="guest-name">{t("login.guest.nameLabel")}</Label>
             <div className="relative">
               <UserRound className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -74,15 +73,12 @@ export function GuestLoginDialog({
                 id="guest-name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Seu nome"
+                placeholder={t("login.guest.namePlaceholder")}
                 autoComplete="name"
                 maxLength={80}
                 className="border-border bg-background/40 pl-9 hover:bg-accent/50 focus-visible:bg-card"
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Mínimo de 2 caracteres. Você pode trocar depois em Conta.
-            </p>
           </div>
 
           <DialogFooter className="gap-2 sm:justify-end">
@@ -91,17 +87,17 @@ export function GuestLoginDialog({
               variant="ghost"
               onClick={() => onOpenChange(false)}
             >
-              Voltar
+              {t("common.back")}
             </Button>
             <Button type="submit" disabled={!canSubmit || loading}>
               {loading ? (
                 <>
                   <Loader2 className="animate-spin" />
-                  Entrando...
+                  {t("login.guest.starting")}
                 </>
               ) : (
                 <>
-                  Começar
+                  {t("login.guest.start")}
                   <ArrowRight />
                 </>
               )}

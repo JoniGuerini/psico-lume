@@ -67,15 +67,17 @@ export function getMonthlyFinanceSummary(
 export function getMonthlyRevenueHistory(
   events: CalendarEvent[],
   patients: Patient[],
-  months = 12
+  months = 12,
+  locale = "pt-BR"
 ) {
+  const intl = locale === "en" ? "en-US" : "pt-BR"
   const now = new Date()
   const patientMap = patientByIdMap(patients)
 
   return Array.from({ length: months }, (_, index) => {
     const date = new Date(now.getFullYear(), now.getMonth() - (months - 1 - index), 1)
     const label = date
-      .toLocaleDateString("pt-BR", { month: "short" })
+      .toLocaleDateString(intl, { month: "short" })
       .replace(".", "")
     const monthEvents = events.filter(
       (event) => isBillableSession(event) && isSameMonth(event.date, date)

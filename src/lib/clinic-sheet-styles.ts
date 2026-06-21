@@ -26,8 +26,8 @@ export type SheetCellStyle = {
   textDecoration?: "line-through"
 }
 
-export function getSheetHeaders(rows: ExportRow[]) {
-  if (rows.length === 0) return ["Nenhum registro"]
+export function getSheetHeaders(rows: ExportRow[], emptyLabel = "Nenhum registro") {
+  if (rows.length === 0) return [emptyLabel]
   return Object.keys(rows[0]).filter((key) => !key.startsWith("_"))
 }
 
@@ -62,7 +62,8 @@ export function resolveRowStyle(
 
   if (
     config.overdueColumn &&
-    String(row[config.overdueColumn] ?? "").toLowerCase() === "sim"
+    config.yesLabel &&
+    String(row[config.overdueColumn] ?? "") === config.yesLabel
   ) {
     return baseCellStyle(
       SHEET_COLORS.overdue,
@@ -96,7 +97,7 @@ export function resolveCellStyle(
     }
   }
 
-  if (config.name === "Resumo" && header === "Métrica") {
+  if (config.sheetKey === "summary" && header === config.metricColumn) {
     return {
       ...rowStyle,
       color: SHEET_COLORS.metricLabel,
@@ -104,10 +105,7 @@ export function resolveCellStyle(
     }
   }
 
-  if (
-    config.name === "Resumo" &&
-    String(row.Métrica ?? "").toLowerCase().includes("atraso")
-  ) {
+  if (config.sheetKey === "summary" && row._summaryOverdue) {
     return baseCellStyle(
       SHEET_COLORS.overdue,
       SHEET_COLORS.overdueText,
@@ -124,6 +122,6 @@ export function isNumericColumn(header: string, rows: ExportRow[]) {
   return typeof sample?.[header] === "number"
 }
 
-export function isWrapColumn(header: string) {
-  return header === "Evolução" || header === "Resumo" || header === "Plano"
+export function isWrapColumn(header: string, wrapColumns?: string[]) {
+  return wrapColumns?.includes(header) ?? false
 }

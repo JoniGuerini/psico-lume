@@ -20,7 +20,7 @@ export function CalendarEventListItem({
   className,
 }: CalendarEventListItemProps) {
   const status = resolveEventStatus(event)
-  const statusStyle = sessionStatusConfig[status].block
+  const statusStyle = sessionStatusConfig[status]
 
   return (
     <button
@@ -28,7 +28,7 @@ export function CalendarEventListItem({
       onClick={onClick}
       className={cn(
         "flex w-full flex-col gap-2 rounded-2xl border p-3 text-left shadow-sm transition-shadow hover:shadow-md",
-        statusStyle,
+        statusStyle.block,
         className
       )}
     >
@@ -36,23 +36,29 @@ export function CalendarEventListItem({
         <span
           className={cn(
             "truncate text-sm font-medium",
-            (status === "faltou" || status === "cancelada") &&
-              "text-muted-foreground line-through"
+            (status === "faltou" || status === "cancelada") && "line-through"
           )}
         >
           {event.title}
         </span>
-        <span className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+        <span
+          className={cn(
+            "mt-1 flex items-center gap-1 text-xs",
+            statusStyle.blockMuted
+          )}
+        >
           <Clock className="size-3 shrink-0" />
           {event.start} – {event.end}
         </span>
       </div>
       {event.rescheduledFrom ? (
-        <span className="text-xs text-muted-foreground">
+        <span className={cn("text-xs", statusStyle.blockMuted)}>
           Original: {formatRescheduledFromLabel(event.rescheduledFrom)}
         </span>
       ) : null}
-      <span className="text-xs text-muted-foreground">Clique para editar</span>
+      <span className={cn("text-xs", statusStyle.blockMuted)}>
+        Clique para editar
+      </span>
     </button>
   )
 }

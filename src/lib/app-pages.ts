@@ -1,27 +1,29 @@
-/** Rótulos de páginas exibidos na navegação e no shell (pt-BR). */
-export const APP_PAGE = {
-  inicio: "Início",
-  caixaEntrada: "Caixa de entrada",
-  agenda: "Agenda",
-  pacientes: "Pacientes",
-  financeiro: "Financeiro",
-  aReceber: "A receber",
-  relatorios: "Relatórios",
-  notificacoes: "Notificações",
-  dados: "Dados",
-  roteiro: "Roteiro",
+/** IDs estáveis de páginas — independentes do idioma. */
+export const APP_PAGE_ID = {
+  inicio: "inicio",
+  caixaEntrada: "caixaEntrada",
+  agenda: "agenda",
+  pacientes: "pacientes",
+  financeiro: "financeiro",
+  aReceber: "aReceber",
+  relatorios: "relatorios",
+  notificacoes: "notificacoes",
+  dados: "dados",
+  roteiro: "roteiro",
 } as const
 
-export type AppPage = (typeof APP_PAGE)[keyof typeof APP_PAGE]
+export type AppPageId = (typeof APP_PAGE_ID)[keyof typeof APP_PAGE_ID]
 
-export const FILL_VIEWPORT_PAGES = new Set<string>([
-  APP_PAGE.inicio,
-  APP_PAGE.caixaEntrada,
-  APP_PAGE.agenda,
-  APP_PAGE.pacientes,
-  APP_PAGE.financeiro,
-  APP_PAGE.aReceber,
-  APP_PAGE.relatorios,
-  APP_PAGE.notificacoes,
-  APP_PAGE.dados,
+export const APP_PAGE_IDS = Object.values(APP_PAGE_ID) as AppPageId[]
+
+export const FILL_VIEWPORT_PAGE_IDS = new Set<AppPageId>([
+  APP_PAGE_ID.inicio,
+  APP_PAGE_ID.caixaEntrada,
+  APP_PAGE_ID.agenda,
+  APP_PAGE_ID.pacientes,
+  APP_PAGE_ID.financeiro,
+  APP_PAGE_ID.aReceber,
+  APP_PAGE_ID.relatorios,
+  APP_PAGE_ID.notificacoes,
+  APP_PAGE_ID.dados,
 ])

@@ -12,12 +12,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useClinicData } from "@/context/clinic-data-provider"
+import { useTranslation } from "@/context/locale-provider"
 import type { CalendarEvent, Patient } from "@/data/types"
 import {
+  formatLocaleDate,
   formatRescheduledFromLabel,
-  getEventStatus,
-  sessionStatusConfig,
-} from "@/lib/session-status"
+  getSessionStatusLabel,
+} from "@/lib/i18n-helpers"
+import { getEventStatus } from "@/lib/session-status"
 
 type EditSessionDialogProps = {
   open: boolean
@@ -38,6 +40,7 @@ export function EditSessionDialog({
   onSave,
   onDelete,
 }: EditSessionDialogProps) {
+  const { t, locale } = useTranslation()
   const { markEventPaid } = useClinicData()
   const [selectOpen, setSelectOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
@@ -58,7 +61,7 @@ export function EditSessionDialog({
   if (!event) return null
 
   const status = getEventStatus(event)
-  const statusLabel = sessionStatusConfig[status].label
+  const statusLabel = getSessionStatusLabel(t, status)
 
   return (
     <>
@@ -76,12 +79,19 @@ export function EditSessionDialog({
           }}
         >
           <DialogHeader className="border-b border-border px-6 py-4">
-            <DialogTitle className="text-lg">Editar sessão</DialogTitle>
+            <DialogTitle className="text-lg">
+              {t("sessionForm.editTitle")}
+            </DialogTitle>
             <DialogDescription>
               {event.title} · {statusLabel}.
               {event.rescheduledFrom
-                ? ` Reagendada de ${formatRescheduledFromLabel(event.rescheduledFrom)}.`
-                : " Ajuste horário, data ou comparecimento."}
+                ? t("sessionForm.editRescheduled", {
+                    from: formatRescheduledFromLabel(
+                      event.rescheduledFrom,
+                      locale
+                    ),
+                  })
+                : t("sessionForm.editDefault")}
             </DialogDescription>
           </DialogHeader>
 
@@ -105,11 +115,15 @@ export function EditSessionDialog({
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <DialogContent className="gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md">
           <DialogHeader className="border-b border-border px-6 py-4">
-            <DialogTitle className="text-lg">Excluir sessão?</DialogTitle>
+            <DialogTitle className="text-lg">
+              {t("sessionForm.deleteTitle")}
+            </DialogTitle>
             <DialogDescription>
-              A sessão de <span className="font-medium text-foreground">{event.title}</span>{" "}
-              em {event.date.toLocaleDateString("pt-BR")} às {event.start} será
-              removida da agenda permanentemente.
+              {t("sessionForm.deleteDescription", {
+                title: event.title,
+                date: formatLocaleDate(event.date, locale),
+                time: event.start,
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="border-t border-border px-6 py-4">
@@ -118,7 +132,7 @@ export function EditSessionDialog({
               variant="ghost"
               onClick={() => setDeleteConfirmOpen(false)}
             >
-              Cancelar
+              {t("common.cancel")}
             </Button>
             <Button
               type="button"
@@ -126,7 +140,7 @@ export function EditSessionDialog({
               onClick={handleConfirmDelete}
             >
               <Trash2 />
-              Excluir sessão
+              {t("sessionForm.deleteConfirm")}
             </Button>
           </DialogFooter>
         </DialogContent>

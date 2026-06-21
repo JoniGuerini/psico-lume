@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { FileSpreadsheet } from "lucide-react"
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { useClinicData } from "@/context/clinic-data-provider"
+import { useTranslation } from "@/context/locale-provider"
 import { buildClinicSheets } from "@/lib/clinic-export"
-import type { StyledSheetConfig } from "@/lib/clinic-export-xlsx"
+import type { ExportSheetKey, StyledSheetConfig } from "@/lib/clinic-export-xlsx"
 import {
   getSheetHeaders,
   isNumericColumn,
@@ -22,19 +23,19 @@ function SheetTabs({
   onChange,
 }: {
   sheets: StyledSheetConfig[]
-  active: string
-  onChange: (name: string) => void
+  active: ExportSheetKey
+  onChange: (key: ExportSheetKey) => void
 }) {
   return (
     <div className={lumeSurfaces.sheetTabBar}>
       <div className="flex min-w-max items-end px-1 pt-1">
         {sheets.map((sheet) => {
-          const selected = sheet.name === active
+          const selected = sheet.sheetKey === active
           return (
             <button
-              key={sheet.name}
+              key={sheet.sheetKey}
               type="button"
-              onClick={() => onChange(sheet.name)}
+              onClick={() => onChange(sheet.sheetKey)}
               className={cn(
                 "relative shrink-0 rounded-t-md border border-b-0 px-3 py-1.5 text-xs font-medium transition-colors",
                 selected ? lumeSurfaces.sheetTabActive : lumeSurfaces.sheetTabIdle
@@ -49,8 +50,14 @@ function SheetTabs({
   )
 }
 
-function SheetTable({ config }: { config: StyledSheetConfig }) {
-  const headers = getSheetHeaders(config.rows)
+function SheetTable({
+  config,
+  emptyLabel,
+}: {
+  config: StyledSheetConfig
+  emptyLabel: string
+}) {
+  const headers = getSheetHeaders(config.rows, emptyLabel)
 
   return (
     <ScrollArea className="min-h-0 min-w-0 flex-1">
@@ -76,7 +83,7 @@ function SheetTable({ config }: { config: StyledSheetConfig }) {
                 colSpan={headers.length}
                 className="border border-surface-sheet-border px-4 py-8 text-center text-muted-foreground"
               >
-                Nenhum registro
+                {emptyLabel}
               </td>
             </tr>
           ) : (
@@ -100,7 +107,7 @@ function SheetTable({ config }: { config: StyledSheetConfig }) {
                         className={cn(
                           "border border-surface-sheet-border px-2.5 py-1.5 align-top",
                           numeric && "text-right tabular-nums",
-                          isWrapColumn(header)
+                          isWrapColumn(header, config.wrapColumns)
                             ? "max-w-xs whitespace-normal"
                             : "whitespace-nowrap"
                         )}
@@ -130,18 +137,33 @@ function SheetTable({ config }: { config: StyledSheetConfig }) {
 
 export function ClinicSheetsPage() {
   const { patients, events, sessionNotes } = useClinicData()
+  const { t, locale } = useTranslation()
+  const context = useMemo(() => ({ t, locale }), [t, locale])
   const sheets = useMemo(
-    () => buildClinicSheets({ patients, events, sessionNotes }),
-    [patients, events, sessionNotes]
+    () => buildClinicSheets({ patients, events, sessionNotes }, context),
+    [patients, events, sessionNotes, context]
   )
-  const [activeSheet, setActiveSheet] = useState(sheets[0]?.name ?? "Resumo")
+  const [activeSheetKey, setActiveSheetKey] = useState<ExportSheetKey>("summary")
+
+  useEffect(() => {
+    if (!sheets.some((sheet) => sheet.sheetKey === activeSheetKey)) {
+      setActiveSheetKey(sheets[0]?.sheetKey ?? "summary")
+    }
+  }, [sheets, activeSheetKey])
 
   const activeConfig = useMemo(
-    () => sheets.find((sheet) => sheet.name === activeSheet) ?? sheets[0],
-    [activeSheet, sheets]
+    () =>
+      sheets.find((sheet) => sheet.sheetKey === activeSheetKey) ?? sheets[0],
+    [activeSheetKey, sheets]
   )
 
   if (!activeConfig) return null
+
+  const rowCount = activeConfig.rows.length
+  const rowLabel =
+    rowCount === 1
+      ? t("export.sheetsView.rows_one", { count: rowCount })
+      : t("export.sheetsView.rows_other", { count: rowCount })
 
   return (
     <div className={lumeSurfaces.sheetRoot}>
@@ -151,22 +173,23 @@ export function ClinicSheetsPage() {
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-heading text-sm font-semibold text-foreground">
-            Visão em planilha
+            {t("export.sheetsView.title")}
           </p>
           <p className="text-xs text-muted-foreground">
-            {activeConfig.rows.length}{" "}
-            {activeConfig.rows.length === 1 ? "linha" : "linhas"} · mesmas abas
-            e cores do export XLSX
+            {rowLabel} · {t("export.sheetsView.subtitle")}
           </p>
         </div>
       </div>
 
       <SheetTabs
         sheets={sheets}
-        active={activeSheet}
-        onChange={setActiveSheet}
+        active={activeSheetKey}
+        onChange={setActiveSheetKey}
       />
-      <SheetTable config={activeConfig} />
+      <SheetTable
+        config={activeConfig}
+        emptyLabel={t("export.sheetsView.empty")}
+      />
     </div>
   )
 }

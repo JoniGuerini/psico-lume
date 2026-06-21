@@ -4,6 +4,7 @@ import { SearchIcon, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "@/context/locale-provider"
 import {
   Dialog,
   DialogContent,
@@ -29,8 +30,8 @@ function Command({
 }
 
 function CommandDialog({
-  title = "Busca global",
-  description = "Encontre pacientes, sessões, e-mails e notificações.",
+  title,
+  description,
   children,
   className,
   showCloseButton = true,
@@ -41,11 +42,15 @@ function CommandDialog({
   className?: string
   showCloseButton?: boolean
 }) {
+  const { t } = useTranslation()
+  const resolvedTitle = title ?? t("search.title")
+  const resolvedDescription = description ?? t("search.description")
+
   return (
     <Dialog {...props}>
       <DialogHeader className="sr-only">
-        <DialogTitle>{title}</DialogTitle>
-        <DialogDescription>{description}</DialogDescription>
+        <DialogTitle>{resolvedTitle}</DialogTitle>
+        <DialogDescription>{resolvedDescription}</DialogDescription>
       </DialogHeader>
       <DialogContent
         className={cn("overflow-hidden bg-surface-dialog p-0 sm:max-w-lg", className)}
@@ -65,6 +70,7 @@ function CommandInput({
   onValueChange,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Input>) {
+  const { t } = useTranslation()
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [internalValue, setInternalValue] = React.useState("")
   const isControlled = value !== undefined
@@ -109,7 +115,7 @@ function CommandInput({
           size="icon-xs"
           className="shrink-0 text-muted-foreground hover:bg-primary/12 hover:text-primary"
           onClick={handleClear}
-          aria-label="Limpar busca"
+          aria-label={t("common.clearSearch")}
           tabIndex={-1}
         >
           <X />

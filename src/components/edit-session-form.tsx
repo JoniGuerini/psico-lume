@@ -15,8 +15,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { TimePicker } from "@/components/ui/time-picker"
+import { useTranslation } from "@/context/locale-provider"
 import type { CalendarEvent, Patient, SessionStatus } from "@/data/types"
 import { parsePrice } from "@/data/patients"
+import {
+  formatLocaleCurrency,
+  formatRescheduledFromLabel,
+} from "@/lib/i18n-helpers"
 import {
   durationOptions,
   fromDateInput,
@@ -32,7 +37,7 @@ import {
   isSessionPaid,
   parseAmountInput,
 } from "@/lib/session-payment"
-import { getEventStatus, formatRescheduledFromLabel } from "@/lib/session-status"
+import { getEventStatus } from "@/lib/session-status"
 import { cn } from "@/lib/utils"
 
 type EditSessionFormProps = {
@@ -56,6 +61,8 @@ export function EditSessionForm({
   onMarkPaid,
   onSelectOpenChange,
 }: EditSessionFormProps) {
+  const { t, locale } = useTranslation()
+
   const lockedPatient = useMemo(() => {
     if (!event.patientId) return null
     const patient = patients.find((item) => item.id === event.patientId)
@@ -150,7 +157,7 @@ export function EditSessionForm({
         <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-session-patient" className="text-xs">
-              Paciente
+              {t("sessionForm.patient")}
             </Label>
             {lockedPatient ? (
               <Input
@@ -169,7 +176,7 @@ export function EditSessionForm({
                   id="edit-session-patient"
                   className={cn("w-full", sessionFieldClass)}
                 >
-                  <SelectValue placeholder="Selecione o paciente" />
+                  <SelectValue placeholder={t("sessionForm.selectPatient")} />
                 </SelectTrigger>
                 <SelectContent>
                   {patientNames.map((name) => (
@@ -184,13 +191,13 @@ export function EditSessionForm({
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-session-date" className="text-xs">
-              Data
+              {t("sessionForm.date")}
             </Label>
             <DatePicker
               id="edit-session-date"
               value={date}
               onChange={setDate}
-              placeholder="Selecionar data"
+              placeholder={t("sessionForm.selectDate")}
               className={sessionFieldClass}
             />
           </div>
@@ -198,13 +205,13 @@ export function EditSessionForm({
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="edit-session-start" className="text-xs">
-                Início
+                {t("sessionForm.start")}
               </Label>
               <TimePicker
                 id="edit-session-start"
                 value={start}
                 onChange={setStart}
-                placeholder="Selecionar horário"
+                placeholder={t("sessionForm.selectTime")}
                 startHour={6}
                 endHour={22}
                 onOpenChange={onSelectOpenChange}
@@ -213,7 +220,7 @@ export function EditSessionForm({
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="edit-session-duration" className="text-xs">
-                Duração
+                {t("sessionForm.duration")}
               </Label>
               <Select
                 value={duration}
@@ -229,7 +236,7 @@ export function EditSessionForm({
                 <SelectContent>
                   {durationOptions.map((option) => (
                     <SelectItem key={option} value={String(option)}>
-                      {option} min
+                      {t("sessionForm.durationMinutes", { count: option })}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -239,7 +246,7 @@ export function EditSessionForm({
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-session-amount" className="text-xs">
-              Valor da sessão
+              {t("sessionForm.amount")}
             </Label>
             <div className="relative">
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
@@ -255,14 +262,19 @@ export function EditSessionForm({
             </div>
             {selectedPatient ? (
               <p className="text-xs text-muted-foreground">
-                Padrão do paciente: R$ {selectedPatient.price}
+                {t("sessionForm.patientDefault", {
+                  price: formatLocaleCurrency(
+                    parsePrice(selectedPatient.price),
+                    locale
+                  ),
+                })}
               </p>
             ) : null}
           </div>
         </section>
 
         <section className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm">
-          <Label className="text-xs">Status da sessão</Label>
+          <Label className="text-xs">{t("sessionForm.sessionStatus")}</Label>
           <SessionStatusControl value={status} onChange={setStatus} compact />
         </section>
 
@@ -270,10 +282,10 @@ export function EditSessionForm({
           <section className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
             <div className="flex flex-col gap-0.5">
               <Label htmlFor="edit-session-notice" className="text-xs">
-                Houve aviso prévio?
+                {t("sessionForm.absenceNoticeQuestion")}
               </Label>
               <p className="text-xs text-muted-foreground">
-                Com aviso, a sessão não é cobrada.
+                {t("sessionForm.absenceNoticeNoCharge")}
               </p>
             </div>
             <Switch
@@ -287,11 +299,11 @@ export function EditSessionForm({
         {billablePreview && onMarkPaid ? (
           <section className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
             <div className="flex flex-col gap-0.5">
-              <Label className="text-xs">Pagamento</Label>
+              <Label className="text-xs">{t("sessionForm.payment")}</Label>
               <p className="text-xs text-muted-foreground">
                 {isSessionPaid(event)
-                  ? "Esta sessão está marcada como paga."
-                  : "Sessão pendente de recebimento."}
+                  ? t("sessionForm.paid")
+                  : t("sessionForm.unpaid")}
               </p>
             </div>
             <Button
@@ -301,11 +313,11 @@ export function EditSessionForm({
               onClick={() => onMarkPaid(event.id, !isSessionPaid(event))}
             >
               {isSessionPaid(event) ? (
-                "Desfazer pagamento"
+                t("sessionForm.undoPayment")
               ) : (
                 <>
                   <CheckCircle2 className="size-3.5" />
-                  Marcar como paga
+                  {t("sessionForm.markPaid")}
                 </>
               )}
             </Button>
@@ -314,9 +326,9 @@ export function EditSessionForm({
 
         {event.rescheduledFrom ? (
           <section className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm">
-            <Label className="text-xs">Sessão original</Label>
+            <Label className="text-xs">{t("sessionForm.originalSession")}</Label>
             <p className="text-sm font-medium">
-              {formatRescheduledFromLabel(event.rescheduledFrom)}
+              {formatRescheduledFromLabel(event.rescheduledFrom, locale)}
             </p>
           </section>
         ) : null}
@@ -331,7 +343,7 @@ export function EditSessionForm({
               onClick={onDeleteRequest}
             >
               <Trash2 />
-              Excluir sessão
+              {t("sessionForm.deleteConfirm")}
             </Button>
           ) : (
             <span aria-hidden />
@@ -344,14 +356,14 @@ export function EditSessionForm({
               className="hover:bg-accent/50"
               onClick={onCancel}
             >
-              Cancelar
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"
               size="sm"
               disabled={!(lockedPatient?.name ?? patient) || !start}
             >
-              Salvar alterações
+              {t("sessionForm.saveChanges")}
             </Button>
           </div>
         </div>

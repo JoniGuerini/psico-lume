@@ -12,7 +12,8 @@ import {
 } from "lucide-react"
 
 import { NavUser } from "@/components/nav-user"
-import { APP_PAGE, type AppPage } from "@/lib/app-pages"
+import { useTranslation } from "@/context/locale-provider"
+import { APP_PAGE_ID, type AppPageId } from "@/lib/app-pages"
 import {
   Sidebar,
   SidebarContent,
@@ -27,51 +28,50 @@ import {
 } from "@/components/ui/sidebar"
 
 type NavItem = {
-  title: AppPage
-  url: string
+  id: AppPageId
   icon: LucideIcon
 }
 
 type NavGroup = {
-  label: string
+  labelKey: "nav.groups.geral" | "nav.groups.atendimento" | "nav.groups.financeiro" | "nav.groups.gestao"
   items: NavItem[]
 }
 
 const navGroups: NavGroup[] = [
   {
-    label: "Geral",
+    labelKey: "nav.groups.geral",
     items: [
-      { title: APP_PAGE.inicio, url: "#", icon: Home },
-      { title: APP_PAGE.caixaEntrada, url: "#", icon: Inbox },
+      { id: APP_PAGE_ID.inicio, icon: Home },
+      { id: APP_PAGE_ID.caixaEntrada, icon: Inbox },
     ],
   },
   {
-    label: "Atendimento",
+    labelKey: "nav.groups.atendimento",
     items: [
-      { title: APP_PAGE.agenda, url: "#", icon: Calendar },
-      { title: APP_PAGE.pacientes, url: "#", icon: Users },
+      { id: APP_PAGE_ID.agenda, icon: Calendar },
+      { id: APP_PAGE_ID.pacientes, icon: Users },
     ],
   },
   {
-    label: "Financeiro",
+    labelKey: "nav.groups.financeiro",
     items: [
-      { title: APP_PAGE.aReceber, url: "#", icon: CircleDollarSign },
-      { title: APP_PAGE.financeiro, url: "#", icon: Wallet },
-      { title: APP_PAGE.relatorios, url: "#", icon: BarChart3 },
+      { id: APP_PAGE_ID.aReceber, icon: CircleDollarSign },
+      { id: APP_PAGE_ID.financeiro, icon: Wallet },
+      { id: APP_PAGE_ID.relatorios, icon: BarChart3 },
     ],
   },
   {
-    label: "Gestão",
+    labelKey: "nav.groups.gestao",
     items: [
-      { title: APP_PAGE.dados, url: "#", icon: FileSpreadsheet },
-      { title: APP_PAGE.roteiro, url: "#", icon: Map },
+      { id: APP_PAGE_ID.dados, icon: FileSpreadsheet },
+      { id: APP_PAGE_ID.roteiro, icon: Map },
     ],
   },
 ]
 
 type AppSidebarProps = {
-  activeItem: AppPage
-  onSelect: (title: AppPage) => void
+  activeItem: AppPageId
+  onSelect: (pageId: AppPageId) => void
   onOpenAccount: () => void
   onLogout: () => void
   user: {
@@ -84,24 +84,26 @@ type AppSidebarProps = {
 function SidebarNavItem({
   item,
   isActive,
+  title,
   onSelect,
 }: {
   item: NavItem
   isActive: boolean
-  onSelect: (title: AppPage) => void
+  title: string
+  onSelect: (pageId: AppPageId) => void
 }) {
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild tooltip={item.title} isActive={isActive}>
+      <SidebarMenuButton asChild tooltip={title} isActive={isActive}>
         <a
-          href={item.url}
+          href="#"
           onClick={(event) => {
             event.preventDefault()
-            onSelect(item.title)
+            onSelect(item.id)
           }}
         >
           <item.icon />
-          <span>{item.title}</span>
+          <span>{title}</span>
         </a>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -115,6 +117,8 @@ export function AppSidebar({
   onLogout,
   user,
 }: AppSidebarProps) {
+  const { t, pageLabel } = useTranslation()
+
   return (
     <Sidebar variant="inset" collapsible="icon">
       <SidebarHeader>
@@ -122,9 +126,9 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              tooltip="Lume"
+              tooltip={t("nav.brand")}
               className="h-14 gap-2 px-3 data-[active=true]:bg-transparent data-[active=true]:text-sidebar-foreground group-data-[collapsible=icon]:!size-auto group-data-[collapsible=icon]:!h-auto group-data-[collapsible=icon]:!min-h-0 group-data-[collapsible=icon]:!w-full group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:overflow-visible group-data-[collapsible=icon]:justify-center [&_svg]:!size-9"
-              onClick={() => onSelect(APP_PAGE.inicio)}
+              onClick={() => onSelect(APP_PAGE_ID.inicio)}
             >
               <span className="inline-flex shrink-0 items-center justify-center">
                 <svg
@@ -146,7 +150,7 @@ export function AppSidebar({
                 </svg>
               </span>
               <span className="truncate font-heading text-lg font-semibold group-data-[collapsible=icon]:hidden">
-                Lume
+                {t("nav.brand")}
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -155,15 +159,16 @@ export function AppSidebar({
 
       <SidebarContent>
         {navGroups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+          <SidebarGroup key={group.labelKey}>
+            <SidebarGroupLabel>{t(group.labelKey)}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu className="gap-1">
                 {group.items.map((item) => (
                   <SidebarNavItem
-                    key={item.title}
+                    key={item.id}
                     item={item}
-                    isActive={activeItem === item.title}
+                    title={pageLabel(item.id)}
+                    isActive={activeItem === item.id}
                     onSelect={onSelect}
                   />
                 ))}

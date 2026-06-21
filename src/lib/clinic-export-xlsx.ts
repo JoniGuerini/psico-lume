@@ -40,16 +40,35 @@ export const patientStatusExcelFill: Record<PatientStatus, string> =
 
 export type ExportRow = Record<string, string | number | boolean | undefined>
 
+export type ExportSheetKey =
+  | "summary"
+  | "patients"
+  | "schedules"
+  | "agenda"
+  | "records"
+  | "financePatients"
+  | "financeSessions"
+  | "reportHistory"
+  | "reportCurrentMonth"
+
 export type StyledSheetConfig = {
   name: string
+  sheetKey: ExportSheetKey
   rows: ExportRow[]
   /** Coluna com label de status de sessão para pintar a linha inteira. */
   sessionStatusKey?: "_sessionStatus"
-  /** Coluna Inadimplente — destaca linha quando "Sim". */
+  /** Coluna Inadimplente — destaca linha quando igual a yesLabel. */
   overdueColumn?: string
+  yesLabel?: string
   /** Coluna Status do paciente — pinta célula do status. */
   patientStatusColumn?: string
   patientStatusKey?: "_patientStatus"
+  /** Cabeçalho da coluna de métrica (aba Resumo). */
+  metricColumn?: string
+  /** Colunas com quebra de linha no XLSX. */
+  wrapColumns?: string[]
+  /** Texto exibido quando a aba não tem linhas. */
+  emptyLabel?: string
 }
 
 const thinBorder: Partial<ExcelJS.Borders> = {
@@ -59,8 +78,8 @@ const thinBorder: Partial<ExcelJS.Borders> = {
   right: { style: "thin", color: { argb: EXPORT_COLORS.border } },
 }
 
-function getHeaders(rows: ExportRow[]) {
-  if (rows.length === 0) return ["Nenhum registro"]
+function getHeaders(rows: ExportRow[], emptyLabel = "Nenhum registro") {
+  if (rows.length === 0) return [emptyLabel]
   return Object.keys(rows[0]).filter((key) => !key.startsWith("_"))
 }
 
@@ -86,7 +105,8 @@ function resolveRowFill(
 
   if (
     config.overdueColumn &&
-    String(row[config.overdueColumn] ?? "").toLowerCase() === "sim"
+    config.yesLabel &&
+    String(row[config.overdueColumn] ?? "") === config.yesLabel
   ) {
     return {
       fill: EXPORT_COLORS.overdue,
@@ -105,7 +125,7 @@ function addStyledSheet(
     views: [{ state: "frozen", ySplit: 1 }],
   })
 
-  const headers = getHeaders(config.rows)
+  const headers = getHeaders(config.rows, config.emptyLabel)
   const headerRow = worksheet.addRow(headers)
 
   headerRow.eachCell((cell) => {
@@ -125,7 +145,7 @@ function addStyledSheet(
   headerRow.height = 22
 
   if (config.rows.length === 0) {
-    const emptyRow = worksheet.addRow(["Nenhum registro"])
+    const emptyRow = worksheet.addRow([config.emptyLabel ?? "Nenhum registro"])
     emptyRow.getCell(1).alignment = { horizontal: "center" }
     worksheet.mergeCells(1, 1, 1, Math.max(headers.length, 1))
     return
@@ -154,7 +174,7 @@ function addStyledSheet(
         }
       }
 
-      if (config.name === "Resumo" && colNumber === 1) {
+      if (config.sheetKey === "summary" && header === config.metricColumn) {
         cellFont = {
           ...cellFont,
           bold: true,
@@ -162,10 +182,7 @@ function addStyledSheet(
         }
       }
 
-      if (
-        config.name === "Resumo" &&
-        String(row.Métrica ?? "").includes("atraso")
-      ) {
+      if (config.sheetKey === "summary" && row._summaryOverdue) {
         cellFill = EXPORT_COLORS.overdue
         cellFont = {
           ...cellFont,
@@ -184,8 +201,7 @@ function addStyledSheet(
       cell.alignment = {
         vertical: "top",
         horizontal: typeof cell.value === "number" ? "right" : "left",
-        wrapText:
-          header === "Evolução" || header === "Resumo" || header === "Plano",
+        wrapText: config.wrapColumns?.includes(header) ?? false,
       }
     })
   })

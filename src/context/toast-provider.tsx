@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "@/context/locale-provider"
 import {
   DEFAULT_TOAST_POSITION,
   persistToastPosition,
@@ -87,6 +88,7 @@ function Toaster({
   position: ToastPosition
   onDismiss: (id: string) => void
 }) {
+  const { t } = useTranslation()
   if (toasts.length === 0) return null
 
   return (
@@ -127,7 +129,7 @@ function Toaster({
                 variant="ghost"
                 size="icon-sm"
                 className="size-7 shrink-0 opacity-70 hover:opacity-100"
-                aria-label="Fechar"
+                aria-label={t("common.close")}
                 onClick={() => onDismiss(item.id)}
               >
                 <X className="size-3.5" />

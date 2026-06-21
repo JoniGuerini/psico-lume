@@ -20,7 +20,6 @@ import {
 } from "recharts"
 
 import { NoPatientsEmptyPage } from "@/components/no-patients-empty-page"
-import { modalityLabel } from "@/components/patients-page"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import {
@@ -37,7 +36,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useClinicData } from "@/context/clinic-data-provider"
+import { useTranslation } from "@/context/locale-provider"
 import type { PatientModality, SessionStatus } from "@/data/types"
+import {
+  formatLocaleCurrency,
+  getModalityLabel,
+  getSessionStatusLabel,
+} from "@/lib/i18n-helpers"
 import {
   getAttendanceByModality,
   getAttendanceHistory,
@@ -47,13 +52,7 @@ import {
   getSessionOutcomeBreakdown,
   parseReportMonth,
 } from "@/lib/report-metrics"
-import { sessionStatusConfig } from "@/lib/session-status"
 import { cn } from "@/lib/utils"
-
-const brl = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-})
 
 const modalityColor: Record<PatientModality, string> = {
   presencial: "var(--chart-1)",
@@ -61,34 +60,62 @@ const modalityColor: Record<PatientModality, string> = {
   hibrido: "var(--chart-3)",
 }
 
-const attendanceTrendConfig = {
-  taxa: { label: "Comparecimento", color: "var(--chart-1)" },
-} satisfies ChartConfig
-
-const modalityAttendanceConfig = {
-  taxa: { label: "Taxa", color: "var(--chart-2)" },
-} satisfies ChartConfig
-
-const modalityRevenueConfig = {
-  value: { label: "Receita" },
-  presencial: { label: "Presencial", color: "var(--chart-1)" },
-  online: { label: "Remoto", color: "var(--chart-2)" },
-  hibrido: { label: "Híbrido", color: "var(--chart-3)" },
-} satisfies ChartConfig
-
 const outcomeColors: Record<SessionStatus, string> = {
   agendada: "var(--muted-foreground)",
   realizada: "var(--sidebar-primary)",
-  faltou: "var(--destructive)",
+  faltou: "var(--attention)",
   remarcada: "var(--primary)",
   cancelada: "var(--muted-foreground)",
 }
 
 export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}) {
+  const { t, locale } = useTranslation()
   const { events, patients } = useClinicData()
-  const monthOptions = useMemo(() => getReportMonthOptions(), [])
+  const monthOptions = useMemo(
+    () => getReportMonthOptions(12, new Date(), locale),
+    [locale]
+  )
   const [monthValue, setMonthValue] = useState(monthOptions[0]?.value ?? "")
   const [historyRange, setHistoryRange] = useState("12")
+
+  const attendanceTrendConfig = useMemo(
+    () =>
+      ({
+        taxa: {
+          label: t("reports.chartLabels.attendance"),
+          color: "var(--chart-1)",
+        },
+      }) satisfies ChartConfig,
+    [t]
+  )
+
+  const modalityAttendanceConfig = useMemo(
+    () =>
+      ({
+        taxa: { label: t("reports.chartLabels.rate"), color: "var(--chart-2)" },
+      }) satisfies ChartConfig,
+    [t]
+  )
+
+  const modalityRevenueConfig = useMemo(
+    () =>
+      ({
+        value: { label: t("reports.chartLabels.revenue") },
+        presencial: {
+          label: getModalityLabel(t, "presencial"),
+          color: "var(--chart-1)",
+        },
+        online: {
+          label: getModalityLabel(t, "online"),
+          color: "var(--chart-2)",
+        },
+        hibrido: {
+          label: getModalityLabel(t, "hibrido"),
+          color: "var(--chart-3)",
+        },
+      }) satisfies ChartConfig,
+    [t]
+  )
 
   const selectedMonth = useMemo(
     () => parseReportMonth(monthValue),
@@ -108,17 +135,20 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
   const modalityRevenue = useMemo(() => {
     return getRevenueByModality(events, patients, selectedMonth).map((item) => ({
       key: item.modality as PatientModality,
-      label: modalityLabel[item.modality as PatientModality],
+      label: getModalityLabel(t, item.modality as PatientModality),
       value: item.value,
     }))
-  }, [events, patients, selectedMonth])
+  }, [events, patients, selectedMonth, t])
 
   const modalityRevenueTotal = modalityRevenue.reduce(
     (sum, item) => sum + item.value,
     0
   )
 
-  const history = useMemo(() => getAttendanceHistory(events), [events])
+  const history = useMemo(
+    () => getAttendanceHistory(events, 12, new Date(), locale),
+    [events, locale]
+  )
   const historySlice = useMemo(
     () => history.slice(-Number(historyRange)),
     [history, historyRange]
@@ -137,42 +167,48 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
     return last - prev
   }, [history])
 
-  const kpis = [
-    {
-      label: "Taxa de comparecimento",
-      value: summary.evaluated ? `${summary.rate}%` : "—",
-      hint: summary.evaluated
-        ? `${summary.realizada} de ${summary.evaluated} sessões`
-        : "Sem sessões avaliadas no mês",
-      delta: summary.evaluated ? deltaPct : undefined,
-      icon: UserCheck,
-    },
-    {
-      label: "Sessões realizadas",
-      value: String(summary.realizada),
-      hint: "Comparecimentos confirmados",
-      icon: UserCheck,
-    },
-    {
-      label: "Faltas",
-      value: String(summary.faltou),
-      hint: "Ausências registradas",
-      tone: summary.faltou > 0 ? ("destructive" as const) : undefined,
-      icon: UserX,
-    },
-    {
-      label: "Receita cobrável",
-      value: brl.format(modalityRevenueTotal),
-      hint: "Por modalidade no mês",
-      icon: BarChart3,
-    },
-  ]
+  const kpis = useMemo(
+    () => [
+      {
+        label: t("reports.kpis.attendanceRate"),
+        value: summary.evaluated ? `${summary.rate}%` : "—",
+        hint: summary.evaluated
+          ? t("reports.kpis.sessionsOf", {
+              done: summary.realizada,
+              total: summary.evaluated,
+            })
+          : t("reports.kpis.noEvaluated"),
+        delta: summary.evaluated ? deltaPct : undefined,
+        icon: UserCheck,
+      },
+      {
+        label: t("reports.kpis.completed"),
+        value: String(summary.realizada),
+        hint: t("reports.kpis.completedHint"),
+        icon: UserCheck,
+      },
+      {
+        label: t("reports.kpis.absences"),
+        value: String(summary.faltou),
+        hint: t("reports.kpis.absencesHint"),
+        tone: summary.faltou > 0 ? ("attention" as const) : undefined,
+        icon: UserX,
+      },
+      {
+        label: t("reports.kpis.billableRevenue"),
+        value: formatLocaleCurrency(modalityRevenueTotal, locale),
+        hint: t("reports.kpis.billableRevenueHint"),
+        icon: BarChart3,
+      },
+    ],
+    [deltaPct, locale, modalityRevenueTotal, summary, t]
+  )
 
   if (patients.length === 0) {
     return (
       <NoPatientsEmptyPage
         onNewPatient={onNewPatient}
-        description="Cadastre pacientes e registre sessões para visualizar comparecimento e receita nos relatórios."
+        description={t("reports.emptyDescription")}
       />
     )
   }
@@ -181,15 +217,15 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
     <div className="flex w-full flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h2 className="text-lg font-semibold">Relatórios</h2>
+          <h2 className="text-lg font-semibold">{t("reports.title")}</h2>
           <p className="text-sm text-muted-foreground">
-            Comparecimento e receita por modalidade com base nas sessões passadas.
+            {t("reports.subtitleDetail")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select value={monthValue} onValueChange={setMonthValue}>
             <SelectTrigger className="border-border bg-card shadow-sm hover:bg-accent sm:w-52">
-              <SelectValue placeholder="Mês" />
+              <SelectValue placeholder={t("reports.monthPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
               {monthOptions.map((option) => (
@@ -204,9 +240,9 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="3">Tendência 3 meses</SelectItem>
-              <SelectItem value="6">Tendência 6 meses</SelectItem>
-              <SelectItem value="12">Tendência 12 meses</SelectItem>
+              <SelectItem value="3">{t("reports.trendRange.months3")}</SelectItem>
+              <SelectItem value="6">{t("reports.trendRange.months6")}</SelectItem>
+              <SelectItem value="12">{t("reports.trendRange.months12")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -222,7 +258,7 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
             <span
               className={cn(
                 "font-heading text-2xl font-semibold tracking-tight tabular-nums",
-                kpi.tone === "destructive" && "text-destructive"
+                kpi.tone === "attention" && "text-attention"
               )}
             >
               {kpi.value}
@@ -240,7 +276,7 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
                   ) : (
                     <ArrowDownRight className="size-3.5" />
                   )}
-                  {Math.abs(kpi.delta).toFixed(0)} p.p.
+                  {Math.abs(kpi.delta).toFixed(0)} {t("reports.deltaPoints")}
                 </span>
               ) : null}
               <span className="text-muted-foreground">{kpi.hint}</span>
@@ -253,14 +289,16 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-col">
             <h3 className="font-heading text-base font-semibold">
-              Evolução do comparecimento
+              {t("reports.charts.attendanceTrend")}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Taxa mensal de sessões realizadas sobre realizadas + faltas
+              {t("reports.charts.attendanceTrendHint")}
             </p>
           </div>
           <Badge variant="outline" className="border-border bg-background/40">
-            {summary.evaluated ? `${summary.rate}%` : "—"} no mês selecionado
+            {t("reports.charts.selectedMonth", {
+              rate: summary.evaluated ? `${summary.rate}%` : "—",
+            })}
           </Badge>
         </div>
         <ChartContainer
@@ -293,8 +331,12 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
                       faltas: number
                     }
                     return [
-                      `${value}% (${payload.realizadas} realizadas · ${payload.faltas} faltas)`,
-                      "Comparecimento",
+                      t("reports.charts.tooltipAttendance", {
+                        rate: Number(value ?? 0),
+                        done: payload.realizadas,
+                        missed: payload.faltas,
+                      }),
+                      t("reports.chartLabels.attendance"),
                     ]
                   }}
                 />
@@ -315,10 +357,10 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
         <Card className="gap-4 p-6">
           <div className="flex flex-col">
             <h3 className="font-heading text-base font-semibold">
-              Comparecimento por modalidade
+              {t("reports.charts.attendanceByModality")}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Taxa de presença no mês por tipo de atendimento
+              {t("reports.charts.attendanceByModalityHint")}
             </p>
           </div>
           {modalityAttendance.length > 0 ? (
@@ -328,7 +370,7 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
             >
               <BarChart
                 data={modalityAttendance.map((row) => ({
-                  modality: modalityLabel[row.modality],
+                  modality: getModalityLabel(t, row.modality),
                   taxa: row.rate,
                   realizada: row.realizada,
                   faltou: row.faltou,
@@ -360,8 +402,12 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
                           faltou: number
                         }
                         return [
-                          `${value}% · ${payload.realizada} realizadas · ${payload.faltou} faltas`,
-                          "Taxa",
+                          t("reports.charts.tooltipRate", {
+                            rate: Number(value ?? 0),
+                            done: payload.realizada,
+                            missed: payload.faltou,
+                          }),
+                          t("reports.chartLabels.rate"),
                         ]
                       }}
                     />
@@ -372,7 +418,7 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
             </ChartContainer>
           ) : (
             <p className="py-10 text-center text-sm text-muted-foreground">
-              Nenhuma sessão passada com status realizado ou falta neste mês.
+              {t("reports.empty.noPastSessions")}
             </p>
           )}
         </Card>
@@ -380,10 +426,10 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
         <Card className="gap-4 p-6">
           <div className="flex flex-col">
             <h3 className="font-heading text-base font-semibold">
-              Receita por modalidade
+              {t("reports.charts.revenueByModality")}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Sessões cobráveis do mês por tipo de atendimento
+              {t("reports.charts.revenueByModalityHint")}
             </p>
           </div>
           {modalityRevenue.length > 0 ? (
@@ -423,7 +469,7 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
                       />
                       <span className="flex-1 text-sm">{item.label}</span>
                       <span className="text-sm font-medium tabular-nums">
-                        {brl.format(item.value)}
+                        {formatLocaleCurrency(item.value, locale)}
                       </span>
                       <span className="w-9 text-right text-xs text-muted-foreground tabular-nums">
                         {pct}%
@@ -435,7 +481,7 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
             </div>
           ) : (
             <p className="py-10 text-center text-sm text-muted-foreground">
-              Nenhuma receita cobrável registrada neste mês.
+              {t("reports.empty.noBillableRevenue")}
             </p>
           )}
         </Card>
@@ -444,10 +490,10 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
       <Card className="gap-0 p-6">
         <div className="flex flex-col pb-4">
           <h3 className="font-heading text-base font-semibold">
-            Desfecho das sessões
+            {t("reports.charts.sessionOutcomes")}
           </h3>
           <p className="text-sm text-muted-foreground">
-            Distribuição de status nas sessões já ocorridas no mês
+            {t("reports.charts.sessionOutcomesHint")}
           </p>
         </div>
         {outcomes.length > 0 ? (
@@ -463,10 +509,13 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
                 />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="text-sm font-medium">
-                    {sessionStatusConfig[row.status].label}
+                    {getSessionStatusLabel(t, row.status)}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {row.count} sessões · {row.pct}%
+                    {t("reports.charts.outcomeRow", {
+                      count: row.count,
+                      pct: row.pct,
+                    })}
                   </span>
                 </div>
               </div>
@@ -474,7 +523,7 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
           </div>
         ) : (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            Nenhuma sessão passada registrada neste mês.
+            {t("reports.empty.noPastSessionsMonth")}
           </p>
         )}
       </Card>

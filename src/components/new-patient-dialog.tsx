@@ -46,6 +46,15 @@ import {
 } from "@/lib/viacep"
 import { formatCpf } from "@/lib/cpf"
 import { formatPhone } from "@/lib/phone"
+import { useTranslation } from "@/context/locale-provider"
+import type { TranslateFn } from "@/i18n/translate"
+import {
+  formatLocaleDate,
+  getModalityLabel,
+  getPatientStatusLabel,
+  getSessionFrequencyLabel,
+} from "@/lib/i18n-helpers"
+import type { Locale } from "@/lib/locale"
 
 type NewPatientDialogProps = {
   open: boolean
@@ -78,21 +87,28 @@ const patientTypes = ["Primeira entrevista", "Recorrente"]
 
 const durations = [30, 45, 50, 60, 75, 90, 120]
 
-const modalityOptions: { value: PatientModality; label: string }[] = [
-  { value: "presencial", label: "Presencial" },
-  { value: "online", label: "Remoto" },
-  { value: "hibrido", label: "Híbrido" },
+const modalityValues: PatientModality[] = ["presencial", "online", "hibrido"]
+
+const weekdayValues = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
+
+const patientStatusValues: PatientStatus[] = [
+  "ativo",
+  "em-pausa",
+  "lista-espera",
+  "alta",
 ]
 
-const weekdays = [
-  { value: "Seg", label: "Segunda-feira" },
-  { value: "Ter", label: "Terça-feira" },
-  { value: "Qua", label: "Quarta-feira" },
-  { value: "Qui", label: "Quinta-feira" },
-  { value: "Sex", label: "Sexta-feira" },
-  { value: "Sáb", label: "Sábado" },
-  { value: "Dom", label: "Domingo" },
-]
+function getStoredOptionLabel(
+  t: TranslateFn,
+  category: "gender" | "referral" | "patientType",
+  value: string
+) {
+  return t(`patientForm.options.${category}.${value}`)
+}
+
+function getWeekdayLabel(t: TranslateFn, value: string) {
+  return t(`patientForm.options.weekdays.${value}`)
+}
 
 const OTHER = "__outro"
 
@@ -133,8 +149,8 @@ function emptySchedule(): PatientSchedule {
   return { weekday: "Seg", time: "", duration: "50", modality: "" }
 }
 
-function currentMonthLabel() {
-  const label = new Date().toLocaleDateString("pt-BR", {
+function currentMonthLabel(locale: Locale) {
+  const label = formatLocaleDate(new Date(), locale, {
     month: "short",
     year: "numeric",
   })
@@ -246,6 +262,7 @@ function patientSchedules(patient: Patient) {
 function buildPatientPayload(
   form: typeof emptyForm,
   schedules: PatientSchedule[],
+  locale: Locale,
   base?: Patient
 ): Patient {
   const first = schedules.find((row) => row.time !== "") ?? schedules[0]
@@ -277,7 +294,7 @@ function buildPatientPayload(
     sessionDuration,
     nextSession,
     sessions: base?.sessions ?? 0,
-    since: base?.since ?? currentMonthLabel(),
+    since: base?.since ?? currentMonthLabel(locale),
     sessionFrequency: form.sessionFrequency,
     paymentOverdueManual: base?.paymentOverdueManual,
     birthDate: inputToBrDate(form.birthDate) || undefined,
@@ -356,6 +373,7 @@ export function NewPatientDialog({
   onCreate,
   onUpdate,
 }: NewPatientDialogProps) {
+  const { t, locale } = useTranslation()
   const isEditing = patient != null
   const [form, setForm] = useState(emptyForm)
   const [schedules, setSchedules] = useState<PatientSchedule[]>([])
@@ -429,7 +447,7 @@ export function NewPatientDialog({
       setCepLookup({
         status: "error",
         message:
-          error instanceof Error ? error.message : "CEP não encontrado",
+          error instanceof Error ? error.message : t("patientForm.cepNotFound"),
       })
     }
   }
@@ -486,7 +504,12 @@ export function NewPatientDialog({
     event.preventDefault()
     if (!canSubmit) return
 
-    const payload = buildPatientPayload(form, schedules, patient ?? undefined)
+    const payload = buildPatientPayload(
+      form,
+      schedules,
+      locale,
+      patient ?? undefined
+    )
 
     if (isEditing) {
       onUpdate?.(payload)
@@ -505,12 +528,10 @@ export function NewPatientDialog({
       >
         <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
           <DialogTitle className="text-lg">
-            {isEditing ? "Editar paciente" : "Novo paciente"}
+            {isEditing ? t("patientForm.titleEdit") : t("patientForm.titleNew")}
           </DialogTitle>
           <DialogDescription>
-            {isEditing
-              ? "Atualize os dados cadastrais e clínicos do paciente."
-              : "Cadastre um novo paciente. Apenas o nome é obrigatório."}
+            {isEditing ? t("patientForm.descEdit") : t("patientForm.descNew")}
           </DialogDescription>
         </DialogHeader>
 
@@ -521,10 +542,10 @@ export function NewPatientDialog({
           <ScrollArea className="h-[calc(92vh-10rem)] shrink-0">
             <div className="flex flex-col gap-4 p-6">
               <div className="grid gap-4 lg:grid-cols-2">
-                <FormSection title="Dados pessoais">
+                <FormSection title={t("patientForm.sections.personal")}>
                   <div className="grid grid-cols-12 gap-3">
                     <Field
-                      label="Nome completo"
+                      label={t("patientForm.fields.fullName")}
                       htmlFor="patient-name"
                       required
                       className="col-span-12"
@@ -533,13 +554,13 @@ export function NewPatientDialog({
                         id="patient-name"
                         value={form.name}
                         onChange={(event) => update("name", event.target.value)}
-                        placeholder="Ex.: Maria Silva"
+                        placeholder={t("patientForm.placeholders.fullName")}
                         className={fieldClass}
                         autoFocus
                       />
                     </Field>
                     <Field
-                      label="Data de nascimento"
+                      label={t("patientForm.fields.birthDate")}
                       htmlFor="patient-birth"
                       className="col-span-12 sm:col-span-4"
                     >
@@ -547,13 +568,13 @@ export function NewPatientDialog({
                         id="patient-birth"
                         value={form.birthDate}
                         onChange={(next) => update("birthDate", next)}
-                        placeholder="Selecionar data de nascimento"
+                        placeholder={t("patientForm.placeholders.birthDate")}
                         maxDate={new Date()}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
-                      label="CPF"
+                      label={t("patientForm.fields.cpf")}
                       htmlFor="patient-cpf"
                       className="col-span-12 sm:col-span-4"
                     >
@@ -563,14 +584,14 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           handleCpfChange(event.target.value)
                         }
-                        placeholder="Ex.: 123.456.789-00"
+                        placeholder={t("patientForm.placeholders.cpf")}
                         inputMode="numeric"
                         maxLength={14}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
-                      label="Gênero"
+                      label={t("patientForm.fields.gender")}
                       htmlFor="patient-gender"
                       className="col-span-12 sm:col-span-4"
                     >
@@ -582,23 +603,23 @@ export function NewPatientDialog({
                           id="patient-gender"
                           className={cn("w-full", fieldClass)}
                         >
-                          <SelectValue placeholder="Selecione…" />
+                          <SelectValue placeholder={t("patientForm.selectPlaceholder")} />
                         </SelectTrigger>
                         <SelectContent>
                           {genderOptions.map((option) => (
                             <SelectItem key={option} value={option}>
-                              {option}
+                              {getStoredOptionLabel(t, "gender", option)}
                             </SelectItem>
                           ))}
                           <SelectItem value={OTHER}>
-                            Outro (especificar)
+                            {t("patientForm.otherSpecify")}
                           </SelectItem>
                         </SelectContent>
                       </Select>
                     </Field>
                     {form.gender === OTHER ? (
                       <Field
-                        label="Especifique o gênero"
+                        label={t("patientForm.fields.genderOther")}
                         htmlFor="patient-gender-other"
                         className="col-span-12"
                       >
@@ -608,7 +629,7 @@ export function NewPatientDialog({
                           onChange={(event) =>
                             update("genderOther", event.target.value)
                           }
-                          placeholder="Digite o gênero"
+                          placeholder={t("patientForm.genderOtherPlaceholder")}
                           className={fieldClass}
                         />
                       </Field>
@@ -616,10 +637,10 @@ export function NewPatientDialog({
                   </div>
                 </FormSection>
 
-                <FormSection title="Endereço">
+                <FormSection title={t("patientForm.sections.address")}>
                   <div className="grid grid-cols-12 gap-3">
                     <Field
-                      label="CEP"
+                      label={t("patientForm.fields.cep")}
                       htmlFor="patient-cep"
                       className="col-span-4 sm:col-span-3"
                     >
@@ -635,7 +656,7 @@ export function NewPatientDialog({
                               void lookupCep(form.cep)
                             }
                           }}
-                          placeholder="Digite o CEP"
+                          placeholder={t("patientForm.placeholders.cep")}
                           inputMode="numeric"
                           maxLength={9}
                           aria-busy={cepLookup.status === "loading"}
@@ -654,12 +675,12 @@ export function NewPatientDialog({
                       </div>
                       {cepLookup.status === "error" ? (
                         <p className="text-xs text-destructive">
-                          {cepLookup.message ?? "CEP não encontrado"}
+                          {cepLookup.message ?? t("patientForm.cepNotFound")}
                         </p>
                       ) : null}
                     </Field>
                     <Field
-                      label="Rua / Logradouro"
+                      label={t("patientForm.fields.street")}
                       htmlFor="patient-street"
                       className="col-span-8 sm:col-span-9"
                     >
@@ -669,12 +690,12 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           update("street", event.target.value)
                         }
-                        placeholder="Ex.: Rua das Flores, 100"
+                        placeholder={t("patientForm.placeholders.street")}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
-                      label="Número"
+                      label={t("patientForm.fields.number")}
                       htmlFor="patient-number"
                       className="col-span-4 sm:col-span-2"
                     >
@@ -684,12 +705,12 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           update("number", event.target.value)
                         }
-                        placeholder="Número"
+                        placeholder={t("patientForm.placeholders.number")}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
-                      label="Complemento"
+                      label={t("patientForm.fields.complement")}
                       htmlFor="patient-complement"
                       className="col-span-8 sm:col-span-4"
                     >
@@ -699,12 +720,12 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           update("complement", event.target.value)
                         }
-                        placeholder="Apto, bloco…"
+                        placeholder={t("patientForm.placeholders.complement")}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
-                      label="Bairro"
+                      label={t("patientForm.fields.neighborhood")}
                       htmlFor="patient-neighborhood"
                       className="col-span-12 sm:col-span-6"
                     >
@@ -714,12 +735,12 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           update("neighborhood", event.target.value)
                         }
-                        placeholder="Bairro"
+                        placeholder={t("patientForm.placeholders.neighborhood")}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
-                      label="Cidade"
+                      label={t("patientForm.fields.city")}
                       htmlFor="patient-city"
                       className="col-span-8 sm:col-span-9"
                     >
@@ -727,12 +748,12 @@ export function NewPatientDialog({
                         id="patient-city"
                         value={form.city}
                         onChange={(event) => update("city", event.target.value)}
-                        placeholder="Cidade"
+                        placeholder={t("patientForm.placeholders.city")}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
-                      label="UF"
+                      label={t("patientForm.fields.state")}
                       htmlFor="patient-state"
                       className="col-span-4 sm:col-span-3"
                     >
@@ -745,7 +766,7 @@ export function NewPatientDialog({
                             event.target.value.toUpperCase().replace(/[^A-Z]/g, "")
                           )
                         }
-                        placeholder="SP"
+                        placeholder={t("patientForm.placeholders.state")}
                         maxLength={2}
                         className={fieldClass}
                       />
@@ -753,10 +774,10 @@ export function NewPatientDialog({
                   </div>
                 </FormSection>
 
-                <FormSection title="Contato" className="lg:col-span-1">
+                <FormSection title={t("patientForm.sections.contact")} className="lg:col-span-1">
                   <div className="grid grid-cols-12 gap-3">
                     <Field
-                      label="Celular"
+                      label={t("patientForm.fields.mobile")}
                       htmlFor="patient-phone"
                       className="col-span-12 sm:col-span-5"
                     >
@@ -767,14 +788,14 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           handlePhoneChange("phone", event.target.value)
                         }
-                        placeholder="Ex.: (11) 98765-4321"
+                        placeholder={t("patientForm.placeholders.mobile")}
                         inputMode="numeric"
                         maxLength={15}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
-                      label="E-mail"
+                      label={t("patientForm.fields.email")}
                       htmlFor="patient-email"
                       className="col-span-12 sm:col-span-7"
                     >
@@ -783,12 +804,12 @@ export function NewPatientDialog({
                         type="email"
                         value={form.email}
                         onChange={(event) => update("email", event.target.value)}
-                        placeholder="nome@email.com"
+                        placeholder={t("patientForm.placeholders.email")}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
-                      label="Contato próximo · Nome"
+                      label={t("patientForm.fields.contactName")}
                       htmlFor="patient-contact-name"
                       className="col-span-12 sm:col-span-5"
                     >
@@ -798,12 +819,12 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           update("contactName", event.target.value)
                         }
-                        placeholder="Opcional"
+                        placeholder={t("patientForm.placeholders.optional")}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
-                      label="Contato próximo · Telefone"
+                      label={t("patientForm.fields.contactPhone")}
                       htmlFor="patient-contact-phone"
                       className="col-span-12 sm:col-span-4"
                     >
@@ -814,14 +835,14 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           handlePhoneChange("contactPhone", event.target.value)
                         }
-                        placeholder="Ex.: (11) 98765-4321"
+                        placeholder={t("patientForm.placeholders.mobile")}
                         inputMode="numeric"
                         maxLength={15}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
-                      label="Relação"
+                      label={t("patientForm.fields.contactRelation")}
                       htmlFor="patient-contact-relation"
                       className="col-span-12 sm:col-span-3"
                     >
@@ -831,17 +852,17 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           update("contactRelation", event.target.value)
                         }
-                        placeholder="Mãe, irmão…"
+                        placeholder={t("patientForm.placeholders.contactRelation")}
                         className={fieldClass}
                       />
                     </Field>
                   </div>
                 </FormSection>
 
-                <FormSection title="Informações da terapia" className="lg:col-span-1">
+                <FormSection title={t("patientForm.sections.therapy")} className="lg:col-span-1">
                   <div className="grid grid-cols-12 gap-3">
                     <Field
-                      label="Queixa principal"
+                      label={t("patientForm.fields.complaint")}
                       htmlFor="patient-complaint"
                       className="col-span-12 sm:col-span-6"
                     >
@@ -851,12 +872,12 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           update("complaint", event.target.value)
                         }
-                        placeholder="Ansiedade, luto, relacionamento…"
+                        placeholder={t("patientForm.placeholders.complaint")}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
-                      label="Abordagem"
+                      label={t("patientForm.fields.approach")}
                       htmlFor="patient-approach"
                       className="col-span-12 sm:col-span-6"
                     >
@@ -866,12 +887,12 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           update("approach", event.target.value)
                         }
-                        placeholder="TCC, Psicanálise, Humanista…"
+                        placeholder={t("patientForm.placeholders.approach")}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
-                      label="Tipo de paciente"
+                      label={t("patientForm.fields.patientType")}
                       htmlFor="patient-type"
                       className="col-span-12 sm:col-span-6"
                     >
@@ -883,19 +904,19 @@ export function NewPatientDialog({
                           id="patient-type"
                           className={cn("w-full", fieldClass)}
                         >
-                          <SelectValue placeholder="Selecione…" />
+                          <SelectValue placeholder={t("patientForm.selectPlaceholder")} />
                         </SelectTrigger>
                         <SelectContent>
                           {patientTypes.map((type) => (
                             <SelectItem key={type} value={type}>
-                              {type}
+                              {getStoredOptionLabel(t, "patientType", type)}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </Field>
                     <Field
-                      label="Status"
+                      label={t("patientForm.fields.status")}
                       htmlFor="patient-status"
                       className="col-span-12 sm:col-span-6"
                     >
@@ -909,20 +930,19 @@ export function NewPatientDialog({
                           id="patient-status"
                           className={cn("w-full", fieldClass)}
                         >
-                          <SelectValue placeholder="Selecione…" />
+                          <SelectValue placeholder={t("patientForm.selectPlaceholder")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="ativo">Ativo</SelectItem>
-                          <SelectItem value="em-pausa">Em pausa</SelectItem>
-                          <SelectItem value="lista-espera">
-                            Lista de espera
-                          </SelectItem>
-                          <SelectItem value="alta">Alta</SelectItem>
+                          {patientStatusValues.map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {getPatientStatusLabel(t, status)}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </Field>
                     <Field
-                      label="Início da terapia"
+                      label={t("patientForm.fields.therapyStart")}
                       htmlFor="patient-therapy-start"
                       className="col-span-12 sm:col-span-4"
                     >
@@ -930,12 +950,12 @@ export function NewPatientDialog({
                         id="patient-therapy-start"
                         value={form.therapyStart}
                         onChange={(next) => update("therapyStart", next)}
-                        placeholder="Selecionar início da terapia"
+                        placeholder={t("patientForm.placeholders.therapyStart")}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
-                      label="Valor da sessão"
+                      label={t("patientForm.fields.sessionPrice")}
                       htmlFor="patient-price"
                       className="col-span-12 sm:col-span-4"
                     >
@@ -949,14 +969,14 @@ export function NewPatientDialog({
                           onChange={(event) =>
                             update("price", event.target.value)
                           }
-                          placeholder="Ex.: 200,00"
+                          placeholder={t("patientForm.placeholders.sessionPrice")}
                           inputMode="decimal"
                           className={cn("pl-9", fieldClass)}
                         />
                       </div>
                     </Field>
                     <Field
-                      label="Modalidade"
+                      label={t("patientForm.fields.modality")}
                       htmlFor="patient-modality"
                       className="col-span-12 sm:col-span-4"
                     >
@@ -970,19 +990,19 @@ export function NewPatientDialog({
                           id="patient-modality"
                           className={cn("w-full", fieldClass)}
                         >
-                          <SelectValue placeholder="Selecione…" />
+                          <SelectValue placeholder={t("patientForm.selectPlaceholder")} />
                         </SelectTrigger>
                         <SelectContent>
-                          {modalityOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
+                          {modalityValues.map((value) => (
+                            <SelectItem key={value} value={value}>
+                              {getModalityLabel(t, value)}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </Field>
                     <Field
-                      label="Indicação"
+                      label={t("patientForm.fields.referral")}
                       htmlFor="patient-referral"
                       className="col-span-12"
                     >
@@ -994,23 +1014,23 @@ export function NewPatientDialog({
                           id="patient-referral"
                           className={cn("w-full", fieldClass)}
                         >
-                          <SelectValue placeholder="Como chegou ao tratamento?" />
+                          <SelectValue placeholder={t("patientForm.referralPlaceholder")} />
                         </SelectTrigger>
                         <SelectContent>
                           {referralOptions.map((option) => (
                             <SelectItem key={option} value={option}>
-                              {option}
+                              {getStoredOptionLabel(t, "referral", option)}
                             </SelectItem>
                           ))}
                           <SelectItem value={OTHER}>
-                            Outro (especificar)
+                            {t("patientForm.otherSpecify")}
                           </SelectItem>
                         </SelectContent>
                       </Select>
                     </Field>
                     {form.referral === OTHER ? (
                       <Field
-                        label="Especifique a indicação"
+                        label={t("patientForm.fields.referralOther")}
                         htmlFor="patient-referral-other"
                         className="col-span-12"
                       >
@@ -1020,7 +1040,7 @@ export function NewPatientDialog({
                           onChange={(event) =>
                             update("referralOther", event.target.value)
                           }
-                          placeholder="De onde veio a indicação?"
+                          placeholder={t("patientForm.referralOtherPlaceholder")}
                           className={fieldClass}
                         />
                       </Field>
@@ -1029,9 +1049,9 @@ export function NewPatientDialog({
                 </FormSection>
               </div>
 
-              <FormSection title="Horários recorrentes">
+              <FormSection title={t("patientForm.sections.schedules")}>
                 <Field
-                  label="Frequência do atendimento"
+                  label={t("patientForm.fields.sessionFrequency")}
                   htmlFor="patient-session-frequency"
                   className="max-w-md"
                 >
@@ -1045,12 +1065,13 @@ export function NewPatientDialog({
                       id="patient-session-frequency"
                       className={cn("w-full", fieldClass)}
                     >
-                      <SelectValue placeholder="Selecione a frequência" />
+                      <SelectValue placeholder={t("patientForm.frequencyPlaceholder")} />
                     </SelectTrigger>
                     <SelectContent>
                       {sessionFrequencyOptions.map((option) => (
                         <SelectItem key={option.value} value={option.value}>
-                          {option.label} · {option.description}
+                          {getSessionFrequencyLabel(t, option.value)} ·{" "}
+                          {t(`patientForm.frequencyDescriptions.${option.value}`)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1059,8 +1080,7 @@ export function NewPatientDialog({
 
                 {schedules.length === 0 ? (
                   <p className="rounded-xl border border-dashed border-border bg-background/40 px-4 py-5 text-sm text-muted-foreground">
-                    Nenhum horário cadastrado. Adicione o dia e horário do
-                    atendimento recorrente.
+                    {t("patientForm.noSchedules")}
                   </p>
                 ) : (
                   <div className="flex flex-col gap-2">
@@ -1069,7 +1089,7 @@ export function NewPatientDialog({
                         key={index}
                         className="grid grid-cols-1 items-end gap-3 rounded-xl border border-border bg-background/40 p-3 sm:grid-cols-[1.4fr_1fr_1fr_1.2fr_auto]"
                       >
-                        <Field label="Dia da semana">
+                        <Field label={t("patientForm.fields.weekday")}>
                           <Select
                             value={row.weekday}
                             onValueChange={(value) =>
@@ -1077,30 +1097,30 @@ export function NewPatientDialog({
                             }
                           >
                             <SelectTrigger className={cn("w-full", fieldClass)}>
-                              <SelectValue placeholder="Selecione o dia" />
+                              <SelectValue placeholder={t("patientForm.weekdayPlaceholder")} />
                             </SelectTrigger>
                             <SelectContent>
-                              {weekdays.map((day) => (
-                                <SelectItem key={day.value} value={day.value}>
-                                  {day.label}
+                              {weekdayValues.map((value) => (
+                                <SelectItem key={value} value={value}>
+                                  {getWeekdayLabel(t, value)}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </Field>
-                        <Field label="Horário">
+                        <Field label={t("patientForm.fields.time")}>
                           <TimePicker
                             value={row.time}
                             onChange={(next) =>
                               updateSchedule(index, "time", next)
                             }
-                            placeholder="Selecionar horário"
+                            placeholder={t("patientForm.placeholders.time")}
                             startHour={6}
                             endHour={22}
                             className={fieldClass}
                           />
                         </Field>
-                        <Field label="Duração">
+                        <Field label={t("patientForm.fields.duration")}>
                           <Select
                             value={row.duration}
                             onValueChange={(value) =>
@@ -1108,7 +1128,7 @@ export function NewPatientDialog({
                             }
                           >
                             <SelectTrigger className={cn("w-full", fieldClass)}>
-                              <SelectValue placeholder="Duração" />
+                              <SelectValue placeholder={t("patientForm.placeholders.duration")} />
                             </SelectTrigger>
                             <SelectContent>
                               {durations.map((duration) => (
@@ -1116,13 +1136,15 @@ export function NewPatientDialog({
                                   key={duration}
                                   value={String(duration)}
                                 >
-                                  {duration} min
+                                  {t("patientForm.durationMinutes", {
+                                    count: duration,
+                                  })}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </Field>
-                        <Field label="Modalidade">
+                        <Field label={t("patientForm.fields.modality")}>
                           <Select
                             value={row.modality}
                             onValueChange={(value) =>
@@ -1134,15 +1156,12 @@ export function NewPatientDialog({
                             }
                           >
                             <SelectTrigger className={cn("w-full", fieldClass)}>
-                              <SelectValue placeholder="Selecione…" />
+                              <SelectValue placeholder={t("patientForm.selectPlaceholder")} />
                             </SelectTrigger>
                             <SelectContent>
-                              {modalityOptions.map((option) => (
-                                <SelectItem
-                                  key={option.value}
-                                  value={option.value}
-                                >
-                                  {option.label}
+                              {modalityValues.map((value) => (
+                                <SelectItem key={value} value={value}>
+                                  {getModalityLabel(t, value)}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -1154,7 +1173,7 @@ export function NewPatientDialog({
                           size="icon-sm"
                           className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                           onClick={() => removeSchedule(index)}
-                          aria-label="Remover horário"
+                          aria-label={t("patientForm.removeSchedule")}
                         >
                           <Trash2 />
                         </Button>
@@ -1170,16 +1189,16 @@ export function NewPatientDialog({
                   onClick={addSchedule}
                 >
                   <Plus />
-                  Adicionar horário
+                  {t("patientForm.addSchedule")}
                 </Button>
               </FormSection>
 
-              <FormSection title="Observações">
+              <FormSection title={t("patientForm.sections.notes")}>
                 <Textarea
                   id="patient-notes"
                   value={form.notes}
                   onChange={(event) => update("notes", event.target.value)}
-                  placeholder="Anotações adicionais (opcional)"
+                  placeholder={t("patientForm.placeholders.notes")}
                   className={cn("min-h-24 resize-none", fieldClass)}
                   rows={3}
                 />
@@ -1194,18 +1213,18 @@ export function NewPatientDialog({
               className="hover:bg-accent/50"
               onClick={() => handleOpenChange(false)}
             >
-              Cancelar
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={!canSubmit}>
               {isEditing ? (
                 <>
                   <Save />
-                  Salvar alterações
+                  {t("patientForm.saveChanges")}
                 </>
               ) : (
                 <>
                   <UserPlus />
-                  Adicionar paciente
+                  {t("patientForm.addPatient")}
                 </>
               )}
             </Button>

@@ -12,7 +12,6 @@ import {
 } from "lucide-react"
 
 import { NewSessionNoteDialog } from "@/components/new-session-note-dialog"
-import { modalityLabel } from "@/components/patients-page"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -26,8 +25,10 @@ import {
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { useClinicData } from "@/context/clinic-data-provider"
+import { useTranslation } from "@/context/locale-provider"
 import { getLatestRecord, getRecordsForPatient } from "@/data/clinical-records"
 import type { Patient, SessionNote } from "@/data/types"
+import { getModalityLabel, getMoodLabel } from "@/lib/i18n-helpers"
 
 type PatientRecordsTabProps = {
   patient: Patient
@@ -53,6 +54,7 @@ function NoteCard({
   onEdit: (note: SessionNote) => void
   onDelete: (note: SessionNote) => void
 }) {
+  const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
 
   return (
@@ -69,7 +71,9 @@ function NoteCard({
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-heading text-sm font-semibold">
-                Sessão {note.sessionNumber}
+                {t("patients.records.sessionNumber", {
+                  number: note.sessionNumber,
+                })}
               </span>
               <Badge
                 variant="outline"
@@ -83,7 +87,7 @@ function NoteCard({
                   variant="outline"
                   className="border-border bg-background/40 text-xs"
                 >
-                  {note.mood}
+                  {getMoodLabel(t, note.mood)}
                 </Badge>
               ) : null}
               {note.modality ? (
@@ -91,7 +95,7 @@ function NoteCard({
                   variant="outline"
                   className="border-border bg-background/40 text-xs"
                 >
-                  {modalityLabel[note.modality]}
+                  {getModalityLabel(t, note.modality)}
                 </Badge>
               ) : null}
             </div>
@@ -111,7 +115,7 @@ function NoteCard({
             variant="ghost"
             size="icon-sm"
             className="text-muted-foreground hover:text-foreground"
-            aria-label="Editar evolução"
+            aria-label={t("patients.records.editNote")}
             onClick={() => onEdit(note)}
           >
             <Pencil className="size-4" />
@@ -121,7 +125,7 @@ function NoteCard({
             variant="ghost"
             size="icon-sm"
             className="text-muted-foreground hover:text-destructive"
-            aria-label="Excluir evolução"
+            aria-label={t("patients.records.deleteNote")}
             onClick={() => onDelete(note)}
           >
             <Trash2 className="size-4" />
@@ -133,14 +137,14 @@ function NoteCard({
         <div className="flex flex-col gap-4 border-t border-border bg-background/40 px-4 py-4">
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">
-              Resumo
+              {t("patients.records.summary")}
             </span>
             <p className="text-sm leading-relaxed">{note.summary}</p>
           </div>
           <Separator />
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium text-muted-foreground">
-              Evolução clínica
+              {t("patients.records.evolution")}
             </span>
             <p className="text-sm leading-relaxed">{note.evolution}</p>
           </div>
@@ -149,7 +153,7 @@ function NoteCard({
               <Separator />
               <div className="flex flex-col gap-1.5">
                 <span className="text-xs font-medium text-muted-foreground">
-                  Plano / tarefa
+                  {t("patients.records.plan")}
                 </span>
                 <p className="text-sm leading-relaxed">{note.plan}</p>
               </div>
@@ -175,6 +179,7 @@ function NoteCard({
 }
 
 export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
+  const { t } = useTranslation()
   const {
     sessionNotes,
     addSessionNote,
@@ -232,6 +237,11 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
     setDeleteTarget(null)
   }
 
+  const recordCountLabel =
+    notes.length === 1
+      ? t("patients.sessions.record_one", { count: notes.length })
+      : t("patients.sessions.record_other", { count: notes.length })
+
   return (
     <div className="flex flex-col gap-4">
       <Card className="flex flex-col gap-4 border-transparent bg-sidebar p-5 text-sidebar-foreground sm:flex-row sm:items-center sm:justify-between">
@@ -240,11 +250,11 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
             <ClipboardList className="size-5 text-sidebar-primary" />
           </div>
           <div className="flex flex-col gap-1">
-            <h3 className="font-heading text-lg font-semibold text-primary-foreground">
-              Prontuário clínico
+            <h3 className="font-heading text-lg font-semibold text-surface-navy-heading">
+              {t("patients.records.title")}
             </h3>
             <p className="text-sm text-sidebar-foreground/75">
-              Histórico de evolução e notas de sessão de {patient.name}.
+              {t("patients.records.subtitle", { name: patient.name })}
             </p>
           </div>
         </div>
@@ -254,18 +264,27 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
           onClick={() => openCreateDialog()}
         >
           <Plus />
-          Nova evolução
+          {t("patients.records.newNote")}
         </Button>
       </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Notas registradas" value={String(notes.length)} />
         <Stat
-          label="Última sessão"
+          label={t("patients.records.stats.notes")}
+          value={String(notes.length)}
+        />
+        <Stat
+          label={t("patients.records.stats.lastSession")}
           value={latest?.date ?? "—"}
         />
-        <Stat label="Tags distintas" value={String(uniqueTags)} />
-        <Stat label="Abordagem" value={patient.approach || "—"} />
+        <Stat
+          label={t("patients.records.stats.tags")}
+          value={String(uniqueTags)}
+        />
+        <Stat
+          label={t("patients.records.stats.approach")}
+          value={patient.approach || "—"}
+        />
       </div>
 
       {latest ? (
@@ -274,14 +293,17 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
             <div className="flex items-center gap-2">
               <Sparkles className="size-4 text-muted-foreground" />
               <h4 className="font-heading text-sm font-semibold">
-                Última evolução
+                {t("patients.records.latestNote")}
               </h4>
             </div>
             <Badge
               variant="outline"
               className="ml-auto border-border bg-background/40"
             >
-              Sessão {latest.sessionNumber} · {latest.date}
+              {t("patients.records.sessionBadge", {
+                number: latest.sessionNumber,
+                date: latest.date,
+              })}
             </Badge>
           </div>
           <Separator />
@@ -290,7 +312,9 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
           </p>
           {latest.plan ? (
             <div className="rounded-2xl border border-border bg-background/40 px-4 py-3 text-sm">
-              <span className="font-medium text-foreground">Plano: </span>
+              <span className="font-medium text-foreground">
+                {t("patients.records.planPrefix")}{" "}
+              </span>
               <span className="text-muted-foreground">{latest.plan}</span>
             </div>
           ) : null}
@@ -300,12 +324,9 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
           <h4 className="font-heading text-base font-semibold">
-            Histórico de sessões
+            {t("patients.records.historyTitle")}
           </h4>
-          <span className="text-sm text-muted-foreground">
-            {notes.length}{" "}
-            {notes.length === 1 ? "registro" : "registros"}
-          </span>
+          <span className="text-sm text-muted-foreground">{recordCountLabel}</span>
         </div>
 
         {notes.length === 0 ? (
@@ -314,14 +335,14 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
               <BookOpen className="size-5 text-muted-foreground" />
             </div>
             <div className="flex flex-col gap-1">
-              <p className="font-medium">Nenhuma evolução registrada</p>
+              <p className="font-medium">{t("patients.records.emptyTitle")}</p>
               <p className="text-sm text-muted-foreground">
-                Comece registrando a primeira sessão ou entrevista inicial.
+                {t("patients.records.emptyDescription")}
               </p>
             </div>
             <Button size="sm" onClick={() => setDialogOpen(true)}>
               <Plus />
-              Nova evolução
+              {t("patients.records.newNote")}
             </Button>
           </Card>
         ) : (
@@ -356,11 +377,15 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
       >
         <DialogContent className="gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md">
           <DialogHeader className="border-b border-border px-6 py-4">
-            <DialogTitle className="text-lg">Excluir evolução?</DialogTitle>
+            <DialogTitle className="text-lg">
+              {t("patients.records.delete.title")}
+            </DialogTitle>
             <DialogDescription>
-              A nota da sessão {deleteTarget?.sessionNumber} (
-              {deleteTarget?.date}) será removida permanentemente do prontuário
-              de {patient.name}.
+              {t("patients.records.delete.description", {
+                number: deleteTarget?.sessionNumber ?? 0,
+                date: deleteTarget?.date ?? "",
+                name: patient.name,
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="border-t border-border px-6 py-4">
@@ -369,7 +394,7 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
               variant="ghost"
               onClick={() => setDeleteTarget(null)}
             >
-              Cancelar
+              {t("common.cancel")}
             </Button>
             <Button
               type="button"
@@ -377,7 +402,7 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
               onClick={handleConfirmDelete}
             >
               <Trash2 />
-              Excluir evolução
+              {t("patients.records.delete.confirm")}
             </Button>
           </DialogFooter>
         </DialogContent>

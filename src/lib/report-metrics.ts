@@ -131,14 +131,16 @@ export function getAttendanceByModality(
 export function getAttendanceHistory(
   events: CalendarEvent[],
   months = 12,
-  anchor: Date = new Date()
+  anchor: Date = new Date(),
+  locale = "pt-BR"
 ) {
+  const intl = locale === "en" ? "en-US" : "pt-BR"
   const now = new Date(anchor.getFullYear(), anchor.getMonth(), 1)
 
   return Array.from({ length: months }, (_, index) => {
     const date = new Date(now.getFullYear(), now.getMonth() - (months - 1 - index), 1)
     const label = date
-      .toLocaleDateString("pt-BR", { month: "short" })
+      .toLocaleDateString(intl, { month: "short" })
       .replace(".", "")
     const summary = getAttendanceSummary(events, date, anchor)
 
@@ -181,14 +183,15 @@ export function getSessionOutcomeBreakdown(
     .filter((row) => row.count > 0)
 }
 
-export function getReportMonthOptions(count = 12, anchor = new Date()) {
+export function getReportMonthOptions(count = 12, anchor = new Date(), locale = "pt-BR") {
+  const intl = locale === "en" ? "en-US" : "pt-BR"
   return Array.from({ length: count }, (_, index) => {
     const date = new Date(
       anchor.getFullYear(),
       anchor.getMonth() - index,
       1
     )
-    const raw = date.toLocaleDateString("pt-BR", {
+    const raw = date.toLocaleDateString(intl, {
       month: "long",
       year: "numeric",
     })

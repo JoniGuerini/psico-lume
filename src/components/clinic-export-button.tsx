@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useClinicData } from "@/context/clinic-data-provider"
+import { useTranslation } from "@/context/locale-provider"
 import { exportClinicXlsx } from "@/lib/clinic-export"
 
 type ClinicExportButtonProps = {
@@ -17,12 +18,16 @@ type ClinicExportButtonProps = {
 
 export function ClinicExportButton({ onViewSheets }: ClinicExportButtonProps) {
   const { patients, events, sessionNotes } = useClinicData()
+  const { t, locale } = useTranslation()
   const [loading, setLoading] = useState(false)
 
   async function handleExport() {
     setLoading(true)
     try {
-      await exportClinicXlsx({ patients, events, sessionNotes })
+      await exportClinicXlsx(
+        { patients, events, sessionNotes },
+        { t, locale }
+      )
     } finally {
       setLoading(false)
     }
@@ -36,7 +41,7 @@ export function ClinicExportButton({ onViewSheets }: ClinicExportButtonProps) {
           size="icon"
           className="border-border bg-card shadow-sm hover:bg-accent/50"
           disabled={loading}
-          aria-label="Dados da clínica"
+          aria-label={t("export.clinicData")}
         >
           {loading ? (
             <Loader2 className="animate-spin" />
@@ -49,12 +54,12 @@ export function ClinicExportButton({ onViewSheets }: ClinicExportButtonProps) {
         {onViewSheets ? (
           <DropdownMenuItem onClick={onViewSheets}>
             <Table2 />
-            Ver planilha
+            {t("export.viewSheet")}
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem onClick={handleExport} disabled={loading}>
           <FileSpreadsheet />
-          Baixar XLSX
+          {t("export.downloadXlsx")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

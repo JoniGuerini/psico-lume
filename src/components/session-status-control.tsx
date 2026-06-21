@@ -1,6 +1,8 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "@/context/locale-provider"
 import type { SessionStatus } from "@/data/types"
+import { getSessionStatusLabel } from "@/lib/i18n-helpers"
 import {
   sessionStatusConfig,
   sessionStatusOptions,
@@ -21,13 +23,14 @@ export function SessionStatusBadge({
   status: SessionStatus
   className?: string
 }) {
+  const { t } = useTranslation()
   const config = sessionStatusConfig[status]
   return (
     <Badge
       variant="outline"
       className={cn("font-normal", config.badge, className)}
     >
-      {config.label}
+      {getSessionStatusLabel(t, status)}
     </Badge>
   )
 }
@@ -38,6 +41,8 @@ export function SessionStatusControl({
   compact = false,
   className,
 }: SessionStatusControlProps) {
+  const { t } = useTranslation()
+
   return (
     <div
       className={cn(
@@ -47,7 +52,6 @@ export function SessionStatusControl({
       )}
     >
       {sessionStatusOptions.map((status) => {
-        const config = sessionStatusConfig[status]
         const active = value === status
         return (
           <Button
@@ -61,7 +65,7 @@ export function SessionStatusControl({
             )}
             onClick={() => onChange(status)}
           >
-            {config.label}
+            {getSessionStatusLabel(t, status)}
           </Button>
         )
       })}

@@ -1,30 +1,21 @@
 import { ArrowRight, CalendarDays, UserPlus, Users } from "lucide-react"
 import { useMemo } from "react"
 
-import { modalityLabel } from "@/components/patients-page"
 import { SessionStatusBadge } from "@/components/session-status-control"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useClinicData } from "@/context/clinic-data-provider"
+import { useTranslation } from "@/context/locale-provider"
 import { eventsOfDay } from "@/data/calendar"
-import { getWeekdayCode } from "@/data/patients"
 import { getEventStatus } from "@/lib/session-status"
+import {
+  formatLocaleCurrency,
+  formatLocaleDate,
+  getModalityLabel,
+} from "@/lib/i18n-helpers"
 import { cn } from "@/lib/utils"
 
 const SESSION_DURATION = 50
-
-const businessDayLabels: Record<string, string> = {
-  Seg: "Segunda",
-  Ter: "Terça",
-  Qua: "Quarta",
-  Qui: "Quinta",
-  Sex: "Sexta",
-}
-
-const brl = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-})
 
 type HomePageProps = {
   onViewAgenda?: () => void
@@ -43,6 +34,7 @@ export function HomePage({
   onNewPatient,
   onOpenAgendaDay,
 }: HomePageProps) {
+  const { t, locale } = useTranslation()
   const {
     patients,
     events,
@@ -54,7 +46,6 @@ export function HomePage({
   } = useClinicData()
 
   const today = new Date()
-  const todayCode = getWeekdayCode(today)
   const todaysEvents = useMemo(() => eventsOfDay(events, today), [events, today])
   const patientById = useMemo(
     () => new Map(patients.map((patient) => [patient.id, patient])),
@@ -63,47 +54,52 @@ export function HomePage({
 
   const greeting =
     today.getHours() < 12
-      ? "Bom dia"
+      ? t("home.greeting.morning")
       : today.getHours() < 18
-        ? "Boa tarde"
-        : "Boa noite"
+        ? t("home.greeting.afternoon")
+        : t("home.greeting.evening")
 
-  const rawDate = today.toLocaleDateString("pt-BR", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-  })
-  const formattedDate = rawDate.charAt(0).toUpperCase() + rawDate.slice(1)
+  const weekdayName = formatLocaleDate(today, locale, { weekday: "long" })
+  const formattedDate =
+    weekdayName.charAt(0).toUpperCase() +
+    weekdayName.slice(1) +
+    ", " +
+    formatLocaleDate(today, locale, { day: "2-digit", month: "long" })
 
   const stats: {
     label: string
     value: string
     hint: string
-    tone?: "destructive"
+    tone?: "attention"
     onClick?: () => void
   }[] = [
     {
-      label: "Total de pacientes",
+      label: t("home.stats.totalPatients"),
       value: String(patients.length),
-      hint: `${activeCount} em acompanhamento`,
+      hint: t("home.stats.inTreatmentHint", { count: activeCount }),
       onClick: onViewPatients,
     },
     {
-      label: "Atendimentos da semana",
+      label: t("home.stats.weekSessions"),
       value: String(scheduledCount),
-      hint: "Sessões recorrentes",
+      hint: t("home.stats.recurringSessions"),
       onClick: onViewAgendaWeek,
     },
     {
-      label: "Receita da semana",
-      value: brl.format(weekRevenue),
-      hint: "Prevista",
+      label: t("home.stats.weekRevenue"),
+      value: formatLocaleCurrency(weekRevenue, locale),
+      hint: t("home.stats.forecast"),
     },
     {
-      label: "Pagamentos em atraso",
-      value: brl.format(overdueValue),
-      hint: `${overdueSessionCount} ${overdueSessionCount === 1 ? "sessão" : "sessões"}`,
-      tone: "destructive",
+      label: t("home.stats.overduePayments"),
+      value: formatLocaleCurrency(overdueValue, locale),
+      hint: t(
+        overdueSessionCount === 1
+          ? "home.stats.overdueSession"
+          : "home.stats.overdueSessions",
+        { count: overdueSessionCount }
+      ),
+      tone: "attention",
       onClick: onViewReceivables,
     },
   ]
@@ -111,11 +107,16 @@ export function HomePage({
   const showAgendaEmpty =
     patients.length === 0 || todaysEvents.length === 0
 
+  const sessionsTodayLabel =
+    todaysEvents.length === 1
+      ? t("home.sessionsTodayLabel_one")
+      : t("home.sessionsTodayLabel_other")
+
   return (
     <div className="flex min-h-0 flex-1 w-full flex-col gap-4 overflow-y-auto overscroll-contain">
       <Card className="flex flex-row flex-wrap items-center justify-between gap-4 border-transparent bg-sidebar p-6 text-sidebar-foreground">
         <div className="flex flex-col gap-1">
-          <h2 className="text-2xl font-semibold tracking-tight text-primary-foreground">
+          <h2 className="text-2xl font-semibold tracking-tight text-surface-navy-heading">
             {greeting}
           </h2>
           <p className="text-sm font-medium text-sidebar-primary">
@@ -127,9 +128,7 @@ export function HomePage({
             {todaysEvents.length}
           </span>
           <span className="text-sm text-sidebar-foreground/80">
-            {todaysEvents.length === 1
-              ? "atendimento hoje"
-              : "atendimentos hoje"}
+            {sessionsTodayLabel}
           </span>
         </div>
       </Card>
@@ -160,7 +159,7 @@ export function HomePage({
             <span className="text-sm text-muted-foreground">{stat.label}</span>
             <span
               className={`font-heading text-2xl font-semibold tracking-tight ${
-                stat.tone === "destructive" ? "text-destructive" : ""
+                stat.tone === "attention" ? "text-attention" : ""
               }`}
             >
               {stat.value}
@@ -178,13 +177,13 @@ export function HomePage({
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-col">
-            <h3 className="font-semibold">Agenda de hoje</h3>
+            <h3 className="font-semibold">{t("home.todayAgenda")}</h3>
             <p className="text-sm text-muted-foreground">
-              Seus atendimentos de {businessDayLabels[todayCode] ?? "hoje"}
+              {t("home.agendaSubtitle", { day: weekdayName })}
             </p>
           </div>
           <Button size="sm" onClick={onViewAgenda}>
-            Ver agenda
+            {t("home.viewAgenda")}
             <ArrowRight />
           </Button>
         </div>
@@ -197,15 +196,16 @@ export function HomePage({
                   <Users className="size-5 text-muted-foreground" />
                 </div>
                 <div className="flex max-w-sm flex-col gap-1">
-                  <p className="text-sm font-medium">Nenhum paciente cadastrado</p>
+                  <p className="text-sm font-medium">
+                    {t("home.noPatientsTitle")}
+                  </p>
                   <p className="text-sm text-muted-foreground">
-                    Cadastre seu primeiro paciente para começar a agendar
-                    atendimentos.
+                    {t("home.noPatientsDescription")}
                   </p>
                 </div>
                 <Button size="sm" onClick={onNewPatient}>
                   <UserPlus />
-                  Novo paciente
+                  {t("common.newPatient")}
                 </Button>
               </div>
             </div>
@@ -218,9 +218,9 @@ export function HomePage({
                   <CalendarDays className="size-5 text-muted-foreground" />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium">Dia livre</p>
+                  <p className="text-sm font-medium">{t("home.freeDayTitle")}</p>
                   <p className="text-sm text-muted-foreground">
-                    Nenhum atendimento agendado para hoje.
+                    {t("home.freeDayDescription")}
                   </p>
                 </div>
               </div>
@@ -269,13 +269,13 @@ export function HomePage({
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       {patient ? (
                         <>
-                          <span>{modalityLabel[patient.modality]}</span>
+                          <span>{getModalityLabel(t, patient.modality)}</span>
                           <span>
                             {patient.sessionDuration ?? SESSION_DURATION} min
                           </span>
                         </>
                       ) : (
-                        <span>Sessão avulsa</span>
+                        <span>{t("home.walkInSession")}</span>
                       )}
                     </div>
                   </div>

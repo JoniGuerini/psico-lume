@@ -2,7 +2,6 @@ import { useMemo, useState } from "react"
 import { BellOff, Check, CheckCheck, Trash2 } from "lucide-react"
 
 import {
-  formatRelativeTime,
   useNotifications,
   type Notification,
   type NotificationCategory,
@@ -12,20 +11,31 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useTranslation } from "@/context/locale-provider"
+import { formatRelativeTimeLabel } from "@/lib/i18n-helpers"
 import { cn } from "@/lib/utils"
 
 type Filter = "todas" | "nao-lidas" | NotificationCategory
 
-const filters: { value: Filter; label: string }[] = [
-  { value: "todas", label: "Todas" },
-  { value: "nao-lidas", label: "Não lidas" },
-  { value: "sessao", label: "Sessões" },
-  { value: "paciente", label: "Pacientes" },
-  { value: "mensagem", label: "Mensagens" },
-  { value: "financeiro", label: "Pagamentos" },
+const filterConfig: {
+  value: Filter
+  labelKey:
+    | "notifications.filters.all"
+    | "notifications.filters.unread"
+    | "notifications.filters.sessions"
+    | "notifications.filters.patients"
+    | "notifications.filters.messages"
+    | "notifications.filters.payments"
+}[] = [
+  { value: "todas", labelKey: "notifications.filters.all" },
+  { value: "nao-lidas", labelKey: "notifications.filters.unread" },
+  { value: "sessao", labelKey: "notifications.filters.sessions" },
+  { value: "paciente", labelKey: "notifications.filters.patients" },
+  { value: "mensagem", labelKey: "notifications.filters.messages" },
+  { value: "financeiro", labelKey: "notifications.filters.payments" },
 ]
 
-const groupOrder = ["Hoje", "Ontem", "Esta semana", "Mais antigas"] as const
+type TimeGroupKey = "today" | "yesterday" | "thisWeek" | "older"
 
 function startOfDay(date: Date) {
   const copy = new Date(date)
@@ -33,19 +43,34 @@ function startOfDay(date: Date) {
   return copy
 }
 
-function groupLabel(date: Date) {
+function groupKey(date: Date): TimeGroupKey {
   const diffDays = Math.round(
     (startOfDay(new Date()).getTime() - startOfDay(date).getTime()) /
       86_400_000
   )
 
-  if (diffDays <= 0) return "Hoje"
-  if (diffDays === 1) return "Ontem"
-  if (diffDays < 7) return "Esta semana"
-  return "Mais antigas"
+  if (diffDays <= 0) return "today"
+  if (diffDays === 1) return "yesterday"
+  if (diffDays < 7) return "thisWeek"
+  return "older"
+}
+
+const groupOrder: TimeGroupKey[] = [
+  "today",
+  "yesterday",
+  "thisWeek",
+  "older",
+]
+
+const groupLabelKey: Record<TimeGroupKey, string> = {
+  today: "common.today",
+  yesterday: "common.yesterday",
+  thisWeek: "common.thisWeek",
+  older: "common.older",
 }
 
 export function NotificationsPage() {
+  const { t, locale } = useTranslation()
   const { notifications, unreadCount, markAsRead, markAllAsRead, remove } =
     useNotifications()
   const [filter, setFilter] = useState<Filter>("todas")
@@ -59,17 +84,17 @@ export function NotificationsPage() {
   }, [filter, notifications])
 
   const grouped = useMemo(() => {
-    const map = new Map<string, Notification[]>()
+    const map = new Map<TimeGroupKey, Notification[]>()
     for (const item of filtered) {
-      const label = groupLabel(item.date)
-      const bucket = map.get(label) ?? []
+      const key = groupKey(item.date)
+      const bucket = map.get(key) ?? []
       bucket.push(item)
-      map.set(label, bucket)
+      map.set(key, bucket)
     }
     return groupOrder
-      .filter((label) => map.has(label))
-      .map((label) => ({ label, items: map.get(label)! }))
-  }, [filtered])
+      .filter((key) => map.has(key))
+      .map((key) => ({ key, label: t(groupLabelKey[key]), items: map.get(key)! }))
+  }, [filtered, t])
 
   return (
     <div className="flex min-h-0 flex-1 w-full flex-col gap-4">
@@ -77,18 +102,18 @@ export function NotificationsPage() {
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">Notificações</h2>
+              <h2 className="text-lg font-semibold">{t("notifications.title")}</h2>
               {unreadCount > 0 ? (
                 <Badge
                   variant="outline"
                   className="border-border bg-background/40"
                 >
-                  {unreadCount} não lidas
+                  {t("notifications.unreadBadge", { count: unreadCount })}
                 </Badge>
               ) : null}
             </div>
             <p className="text-sm text-muted-foreground">
-              Acompanhe menções, mensagens e atualizações da sua conta.
+              {t("notifications.subtitle")}
             </p>
           </div>
           <Button
@@ -99,7 +124,7 @@ export function NotificationsPage() {
             disabled={unreadCount === 0}
           >
             <CheckCheck />
-            Marcar todas como lidas
+            {t("notifications.markAllRead")}
           </Button>
         </div>
 
@@ -108,9 +133,9 @@ export function NotificationsPage() {
           onValueChange={(value) => setFilter(value as Filter)}
         >
           <TabsList className="flex-wrap border border-border bg-background/40">
-            {filters.map((item) => (
+            {filterConfig.map((item) => (
               <TabsTrigger key={item.value} value={item.value}>
-                {item.label}
+                {t(item.labelKey)}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -125,16 +150,16 @@ export function NotificationsPage() {
                 <BellOff className="size-5" />
               </div>
               <div className="flex flex-col gap-1">
-                <p className="text-sm font-medium">Nada por aqui</p>
+                <p className="text-sm font-medium">{t("notifications.empty")}</p>
                 <p className="text-sm text-muted-foreground">
-                  Você não tem notificações neste filtro.
+                  {t("notifications.emptyFilter")}
                 </p>
               </div>
             </div>
           ) : (
             <div className="flex flex-col">
               {grouped.map((group, groupIndex) => (
-                <div key={group.label} className="flex flex-col">
+                <div key={group.key} className="flex flex-col">
                   <div
                     className={cn(
                       "sticky top-0 z-10 bg-card px-4 py-2 text-xs font-medium tracking-wide text-muted-foreground uppercase",
@@ -168,7 +193,7 @@ export function NotificationsPage() {
                             {item.description}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            {formatRelativeTime(item.date)}
+                            {formatRelativeTimeLabel(item.date, locale)}
                           </span>
                         </div>
                         <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
@@ -177,7 +202,7 @@ export function NotificationsPage() {
                               variant="ghost"
                               size="icon"
                               className="size-8 hover:bg-accent/50"
-                              aria-label="Marcar como lida"
+                              aria-label={t("notifications.markRead")}
                               onClick={() => markAsRead(item.id)}
                             >
                               <Check />
@@ -187,7 +212,7 @@ export function NotificationsPage() {
                             variant="ghost"
                             size="icon"
                             className="size-8 text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                            aria-label="Remover notificação"
+                            aria-label={t("notifications.remove")}
                             onClick={() => remove(item.id)}
                           >
                             <Trash2 />

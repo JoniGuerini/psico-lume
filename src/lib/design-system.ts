@@ -24,7 +24,7 @@ export const lumeSurfaces = {
   /** Card/painel navy (hero, perfil, abas de sessão). */
   navyPanel: "bg-sidebar text-sidebar-foreground",
   /** Título sobre fundo navy. */
-  navyHeading: "text-primary-foreground font-heading font-semibold",
+  navyHeading: "text-surface-navy-heading font-heading font-semibold",
   /** Container da página Dados / planilha. */
   sheetRoot:
     "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-surface-sheet-border bg-card shadow-sm",
@@ -49,9 +49,15 @@ export const lumePrimitives = {
   mint400: "#A0CFB1",
   mintLogo: "#A8D5BA",
   terracotta: "#C97B63",
-  coral: "#E8927C",
-  teal: "#1A4844",
-  blush: "#FAEDE8",
+  forgeSurface: "#383736",
+  forgeForeground: "#E8E6DF",
+  forgeAccent: "#F0A65C",
+  horizonteSky: "#F0EBE3",
+  horizonteOcean: "#1E3D4D",
+  horizonteApricot: "#E07A5F",
+  entardecerSurface: "#161514",
+  entardecerDeep: "#0E0D0C",
+  entardecerAccent: "#E07A5F",
   white: "#FFFFFF",
 } as const
 
@@ -119,13 +125,33 @@ export const themePresets: ThemePreset[] = [
     },
   },
   {
-    id: "coral",
-    label: "Coral",
-    description: "Blush rosado, petróleo e coral.",
+    id: "forja",
+    label: "Forja",
+    description: "Carvão quente com destaque âmbar de brasa.",
     preview: {
-      sidebar: lumePrimitives.teal,
-      background: lumePrimitives.blush,
-      accent: lumePrimitives.coral,
+      sidebar: "#2A2928",
+      background: lumePrimitives.forgeSurface,
+      accent: lumePrimitives.forgeAccent,
+    },
+  },
+  {
+    id: "horizonte",
+    label: "Horizonte",
+    description: "Linho quente, oceano profundo e pôr do sol.",
+    preview: {
+      sidebar: lumePrimitives.horizonteOcean,
+      background: lumePrimitives.horizonteSky,
+      accent: lumePrimitives.horizonteApricot,
+    },
+  },
+  {
+    id: "entardecer",
+    label: "Entardecer",
+    description: "Carvão quente profundo com brilho de pôr do sol.",
+    preview: {
+      sidebar: lumePrimitives.entardecerDeep,
+      background: lumePrimitives.entardecerSurface,
+      accent: lumePrimitives.entardecerAccent,
     },
   },
 ]

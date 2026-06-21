@@ -4,7 +4,9 @@ import { Dialog as DialogPrimitive } from "radix-ui"
 import { cn } from "@/lib/utils"
 import { preventDialogDismissIfNeeded, shouldPreventDialogOutsideDismiss } from "@/lib/dialog-outside-guard"
 import { Button } from "@/components/ui/button"
+import { DialogCloseLabel } from "@/components/ui/dialog-close-label"
 import { XIcon } from "lucide-react"
+import { useTranslation } from "@/context/locale-provider"
 
 function Dialog({
   ...props
@@ -104,7 +106,7 @@ function DialogContent({
             >
               <XIcon
               />
-              <span className="sr-only">Fechar</span>
+              <DialogCloseLabel />
             </Button>
           </DialogPrimitive.Close>
         )}
@@ -131,6 +133,8 @@ function DialogFooter({
 }: React.ComponentProps<"div"> & {
   showCloseButton?: boolean
 }) {
+  const { t } = useTranslation()
+
   return (
     <div
       data-slot="dialog-footer"
@@ -143,7 +147,7 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
-          <Button variant="outline">Fechar</Button>
+          <Button variant="outline">{t("common.close")}</Button>
         </DialogPrimitive.Close>
       )}
     </div>

@@ -18,14 +18,16 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useClinicData } from "@/context/clinic-data-provider"
+import { useTranslation } from "@/context/locale-provider"
 import { eventsOfDay } from "@/data/calendar"
 import { addDays, isSameDay } from "@/data/patients"
 import type { CalendarEvent, Patient } from "@/data/types"
+import { intlLocale } from "@/lib/locale"
 import { minutesToTime, toMinutes } from "@/lib/session-scheduling"
 import { resolveEventStatus, sessionStatusConfig } from "@/lib/session-status"
 import { cn } from "@/lib/utils"
 
-const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const
 
 const START_HOUR = 0
 const HOUR_HEIGHT = 56
@@ -99,6 +101,7 @@ function TimeGrid({
   onMoveEvent,
   onSelectEvent,
 }: TimeGridProps) {
+  const { t } = useTranslation()
   const scrollRef = useRef<HTMLDivElement>(null)
   const columnsRef = useRef<HTMLDivElement>(null)
   const dragMetaRef = useRef<DragMeta | null>(null)
@@ -278,7 +281,7 @@ function TimeGrid({
                 className="flex flex-col items-center gap-0.5 py-2"
               >
                 <span className="text-xs text-muted-foreground">
-                  {WEEKDAYS[day.getDay()]}
+                  {t(`calendar.weekdays.${WEEKDAY_KEYS[day.getDay()]}`)}
                 </span>
                 <span
                   className={cn(
@@ -352,7 +355,7 @@ function TimeGrid({
                       22
                     )
                     const eventStatus = resolveEventStatus(calendarEvent)
-                    const statusStyle = sessionStatusConfig[eventStatus].block
+                    const statusStyle = sessionStatusConfig[eventStatus]
                     return (
                       <div
                         key={calendarEvent.id}
@@ -363,7 +366,7 @@ function TimeGrid({
                         onClick={(event) => event.stopPropagation()}
                         className={cn(
                           "absolute right-1 left-1 touch-none overflow-hidden rounded-lg border px-2 py-1 shadow-sm transition-shadow",
-                          statusStyle,
+                          statusStyle.block,
                           calendarEvent.dragging
                             ? "z-20 cursor-grabbing opacity-90 ring-2 ring-primary"
                             : "cursor-pointer hover:shadow-md"
@@ -374,12 +377,17 @@ function TimeGrid({
                             "truncate text-xs font-medium",
                             (eventStatus === "faltou" ||
                               eventStatus === "cancelada") &&
-                              "text-muted-foreground line-through"
+                              "line-through"
                           )}
                         >
                           {calendarEvent.title}
                         </p>
-                        <p className="truncate text-[11px] text-muted-foreground">
+                        <p
+                          className={cn(
+                            "truncate text-[11px]",
+                            statusStyle.blockMuted
+                          )}
+                        >
                           {calendarEvent.start} – {calendarEvent.end}
                         </p>
                       </div>
@@ -529,6 +537,8 @@ export function CalendarPage({
   openNewSession?: boolean
   onNewSessionOpenChange?: (open: boolean) => void
 } = {}) {
+  const { t, locale } = useTranslation()
+  const intl = intlLocale(locale)
   const { patients, events, addEvent, moveEvent, updateEvent, deleteEvent } =
     useClinicData()
   const patientNames = useMemo(
@@ -610,7 +620,7 @@ export function CalendarPage({
   const title = useMemo(() => {
     if (view === "mes") {
       return capitalize(
-        currentMonth.toLocaleDateString("pt-BR", {
+        currentMonth.toLocaleDateString(intl, {
           month: "long",
           year: "numeric",
         })
@@ -619,24 +629,24 @@ export function CalendarPage({
     if (view === "semana") {
       const start = weekDays[0]
       const end = weekDays[6]
-      const startLabel = start.toLocaleDateString("pt-BR", {
+      const startLabel = start.toLocaleDateString(intl, {
         day: "2-digit",
         month: "short",
       })
-      const endLabel = end.toLocaleDateString("pt-BR", {
+      const endLabel = end.toLocaleDateString(intl, {
         day: "2-digit",
         month: "short",
       })
       return `${startLabel} – ${endLabel}`
     }
     return capitalize(
-      selectedDate.toLocaleDateString("pt-BR", {
+      selectedDate.toLocaleDateString(intl, {
         weekday: "long",
         day: "2-digit",
         month: "long",
       })
     )
-  }, [view, currentMonth, weekDays, selectedDate])
+  }, [view, currentMonth, weekDays, selectedDate, intl])
 
   function navigate(delta: number) {
     if (view === "mes") {
@@ -672,7 +682,7 @@ export function CalendarPage({
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Anterior"
+            aria-label={t("calendar.previous")}
             onClick={() => navigate(-1)}
             className="size-7 rounded-full hover:bg-accent/50"
           >
@@ -681,7 +691,7 @@ export function CalendarPage({
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Próximo"
+            aria-label={t("calendar.next")}
             onClick={() => navigate(1)}
             className="size-7 rounded-full hover:bg-accent/50"
           >
@@ -693,7 +703,7 @@ export function CalendarPage({
             onClick={goToToday}
             className="h-7 rounded-full hover:bg-accent/50"
           >
-            Hoje
+            {t("calendar.today")}
           </Button>
         </div>
         <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-6 gap-y-3">
@@ -707,9 +717,9 @@ export function CalendarPage({
               }
             >
               <TabsList className="border border-border bg-background/40">
-                <TabsTrigger value="mes">Mês</TabsTrigger>
-                <TabsTrigger value="semana">Semana</TabsTrigger>
-                <TabsTrigger value="dia">Dia</TabsTrigger>
+                <TabsTrigger value="mes">{t("calendar.views.month")}</TabsTrigger>
+                <TabsTrigger value="semana">{t("calendar.views.week")}</TabsTrigger>
+                <TabsTrigger value="dia">{t("calendar.views.day")}</TabsTrigger>
               </TabsList>
             </Tabs>
             <NewSessionPopover
@@ -723,7 +733,7 @@ export function CalendarPage({
             >
               <Button size="sm">
                 <CalendarPlus />
-                Novo atendimento
+                {t("calendar.newSession")}
               </Button>
             </NewSessionPopover>
           </div>
@@ -735,12 +745,12 @@ export function CalendarPage({
           {view === "mes" ? (
             <div className="flex min-h-0 flex-1 flex-col p-3">
               <div className="grid grid-cols-7">
-                {WEEKDAYS.map((weekday) => (
+                {WEEKDAY_KEYS.map((weekdayKey) => (
                   <div
-                    key={weekday}
+                    key={weekdayKey}
                     className="pb-2 text-center text-xs font-medium text-muted-foreground"
                   >
-                    {weekday}
+                    {t(`calendar.weekdays.${weekdayKey}`)}
                   </div>
                 ))}
               </div>
@@ -776,7 +786,11 @@ export function CalendarPage({
                             {day.events.length}
                           </span>
                           <span className="text-[10px] leading-none text-muted-foreground">
-                            {day.events.length === 1 ? "sessão" : "sessões"}
+                            {t(
+                              day.events.length === 1
+                                ? "calendar.sessionSingular"
+                                : "calendar.sessionPlural"
+                            )}
                           </span>
                         </div>
                       ) : null}
@@ -818,7 +832,7 @@ export function CalendarPage({
           <div className="flex flex-col gap-1 p-4">
             <span className="text-xs font-medium text-muted-foreground">
               {capitalize(
-                selectedDate.toLocaleDateString("pt-BR", { weekday: "long" })
+                selectedDate.toLocaleDateString(intl, { weekday: "long" })
               )}
             </span>
             <div className="flex items-baseline gap-2">
@@ -827,15 +841,19 @@ export function CalendarPage({
               </span>
               <span className="text-sm text-muted-foreground">
                 {capitalize(
-                  selectedDate.toLocaleDateString("pt-BR", { month: "long" })
+                  selectedDate.toLocaleDateString(intl, { month: "long" })
                 )}
               </span>
               <Badge
                 variant="outline"
                 className="ml-auto border-border bg-background/40"
               >
-                {selectedEvents.length}{" "}
-                {selectedEvents.length === 1 ? "evento" : "eventos"}
+                {t(
+                  selectedEvents.length === 1
+                    ? "calendar.events_one"
+                    : "calendar.events_other",
+                  { count: selectedEvents.length }
+                )}
               </Badge>
             </div>
           </div>
@@ -844,7 +862,7 @@ export function CalendarPage({
             <div className="flex flex-col gap-3 p-4">
               {selectedEvents.length === 0 ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
-                  Nenhum evento neste dia.
+                  {t("calendar.noEventsDay")}
                 </p>
               ) : (
                 selectedEvents.map((event) => (

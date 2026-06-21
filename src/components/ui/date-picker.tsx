@@ -7,11 +7,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { useTranslation } from "@/context/locale-provider"
 import { formFieldClass } from "@/lib/form-input-styles"
 import { fromDateInput, toDateInput } from "@/lib/session-scheduling"
+import { intlLocale, type Locale } from "@/lib/locale"
 import { cn } from "@/lib/utils"
 
-const weekdayLabels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const
 
 type DatePickerProps = {
   id?: string
@@ -29,17 +31,17 @@ function startOfDay(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate())
 }
 
-function formatDisplayDate(iso: string) {
+function formatDisplayDate(iso: string, locale: Locale) {
   if (!iso) return ""
-  return fromDateInput(iso).toLocaleDateString("pt-BR", {
+  return fromDateInput(iso).toLocaleDateString(intlLocale(locale), {
     day: "2-digit",
     month: "long",
     year: "numeric",
   })
 }
 
-function monthLabel(date: Date) {
-  const raw = date.toLocaleDateString("pt-BR", {
+function monthLabel(date: Date, locale: Locale) {
+  const raw = date.toLocaleDateString(intlLocale(locale), {
     month: "long",
     year: "numeric",
   })
@@ -81,18 +83,20 @@ export function DatePicker({
   id,
   value,
   onChange,
-  placeholder = "Selecionar data",
+  placeholder,
   className,
   disabled,
   minDate,
   maxDate,
   "aria-invalid": ariaInvalid,
 }: DatePickerProps) {
+  const { t, locale } = useTranslation()
   const [open, setOpen] = useState(false)
   const selectedDate = value ? fromDateInput(value) : null
   const [viewMonth, setViewMonth] = useState(
     () => selectedDate ?? new Date()
   )
+  const resolvedPlaceholder = placeholder ?? t("ui.datePicker.selectDate")
 
   useEffect(() => {
     if (selectedDate) {
@@ -114,7 +118,7 @@ export function DatePicker({
     )
   }
 
-  const displayValue = formatDisplayDate(value)
+  const displayValue = formatDisplayDate(value, locale)
 
   return (
     <Popover open={open} onOpenChange={setOpen} modal>
@@ -134,7 +138,7 @@ export function DatePicker({
         >
           <CalendarDays className="size-4 shrink-0 opacity-70" />
           <span className="truncate text-left text-sm">
-            {displayValue || placeholder}
+            {displayValue || resolvedPlaceholder}
           </span>
         </Button>
       </PopoverTrigger>
@@ -145,17 +149,17 @@ export function DatePicker({
               type="button"
               variant="ghost"
               size="icon-sm"
-              aria-label="Mês anterior"
+              aria-label={t("ui.datePicker.prevMonth")}
               onClick={() => shiftMonth(-1)}
             >
               <ChevronLeft />
             </Button>
-            <span className="text-sm font-medium">{monthLabel(viewMonth)}</span>
+            <span className="text-sm font-medium">{monthLabel(viewMonth, locale)}</span>
             <Button
               type="button"
               variant="ghost"
               size="icon-sm"
-              aria-label="Próximo mês"
+              aria-label={t("ui.datePicker.nextMonth")}
               onClick={() => shiftMonth(1)}
             >
               <ChevronRight />
@@ -163,12 +167,12 @@ export function DatePicker({
           </div>
 
           <div className="grid grid-cols-7 gap-1 text-center">
-            {weekdayLabels.map((label) => (
+            {WEEKDAY_KEYS.map((key) => (
               <span
-                key={label}
+                key={key}
                 className="py-1 text-[11px] font-medium text-muted-foreground"
               >
-                {label}
+                {t(`calendar.weekdays.${key}`)}
               </span>
             ))}
             {monthGrid.map((date, index) => {
@@ -215,7 +219,7 @@ export function DatePicker({
                 setOpen(false)
               }}
             >
-              Limpar data
+              {t("ui.datePicker.clearDate")}
             </Button>
           ) : null}
         </div>

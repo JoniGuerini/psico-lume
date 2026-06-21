@@ -1,10 +1,7 @@
 import { useMemo, useState } from "react"
 import { Bell, CheckCheck } from "lucide-react"
 
-import {
-  formatRelativeTime,
-  useNotifications,
-} from "@/components/notifications-provider"
+import { useNotifications } from "@/components/notifications-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -15,6 +12,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useTranslation } from "@/context/locale-provider"
+import { formatRelativeTimeLabel } from "@/lib/i18n-helpers"
 import { cn } from "@/lib/utils"
 
 type NotificationsBellProps = {
@@ -22,6 +21,7 @@ type NotificationsBellProps = {
 }
 
 export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
+  const { t, locale } = useTranslation()
   const { notifications, unreadCount, markAsRead, markAllAsRead } =
     useNotifications()
   const [open, setOpen] = useState(false)
@@ -47,7 +47,7 @@ export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
           variant="outline"
           size="icon"
           className="relative border-border bg-card shadow-sm hover:bg-accent/50 aria-expanded:bg-card aria-expanded:text-foreground data-[state=open]:bg-card data-[state=open]:text-foreground"
-          aria-label="Notificações"
+          aria-label={t("notifications.title")}
         >
           <Bell />
           {unreadCount > 0 ? (
@@ -60,13 +60,13 @@ export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
       <PopoverContent align="end" className="w-96 gap-0 overflow-hidden p-0">
         <div className="flex items-center justify-between gap-2 p-3">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold">Notificações</span>
+            <span className="text-sm font-semibold">{t("notifications.title")}</span>
             {unreadCount > 0 ? (
               <Badge
                 variant="outline"
                 className="border-border bg-background/40"
               >
-                {unreadCount} novas
+                {t("notifications.new", { count: unreadCount })}
               </Badge>
             ) : null}
           </div>
@@ -78,17 +78,17 @@ export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
             disabled={unreadCount === 0}
           >
             <CheckCheck />
-            Marcar todas
+            {t("notifications.markAllShort")}
           </Button>
         </div>
         <div className="px-3 pb-3">
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList className="w-full border border-border bg-background/40">
               <TabsTrigger value="todas" className="flex-1">
-                Todas
+                {t("notifications.filters.all")}
               </TabsTrigger>
               <TabsTrigger value="nao-lidas" className="flex-1">
-                Não lidas
+                {t("notifications.filters.unread")}
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -98,8 +98,8 @@ export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
           {filtered.length === 0 ? (
             <p className="px-3 py-12 text-center text-sm text-muted-foreground">
               {tab === "nao-lidas"
-                ? "Você está em dia! Nenhuma notificação não lida."
-                : "Nenhuma notificação."}
+                ? t("notifications.emptyUnread")
+                : t("notifications.emptyAll")}
             </p>
           ) : (
             <div className="flex flex-col divide-y">
@@ -127,7 +127,7 @@ export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
                       {item.description}
                     </span>
                     <span className="text-[11px] text-muted-foreground">
-                      {formatRelativeTime(item.date)}
+                      {formatRelativeTimeLabel(item.date, locale)}
                     </span>
                   </div>
                 </button>
@@ -142,7 +142,7 @@ export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
             className="w-full hover:bg-accent/50"
             onClick={handleViewAll}
           >
-            Ver todas as notificações
+            {t("notifications.viewAllNotifications")}
           </Button>
         </div>
       </PopoverContent>

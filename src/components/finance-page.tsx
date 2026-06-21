@@ -17,7 +17,6 @@ import {
 } from "recharts"
 
 import { NoPatientsEmptyPage } from "@/components/no-patients-empty-page"
-import { modalityLabel } from "@/components/patients-page"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import {
@@ -34,6 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useClinicData } from "@/context/clinic-data-provider"
+import { useTranslation } from "@/context/locale-provider"
 import { getScheduledPatients, parsePrice } from "@/data/patients"
 import type { PatientModality } from "@/data/types"
 import {
@@ -43,21 +43,14 @@ import {
   getRevenueByModality,
   getTopPatientsByRevenue,
 } from "@/lib/finance-metrics"
+import {
+  formatLocaleCurrency,
+  formatLocaleCurrencyCompact,
+  getModalityLabel,
+} from "@/lib/i18n-helpers"
 import { cn } from "@/lib/utils"
 
 const WEEKS_PER_MONTH = 4.33
-
-const brl = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-})
-
-const brlCompact = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  notation: "compact",
-  maximumFractionDigits: 1,
-})
 
 const modalityColor: Record<PatientModality, string> = {
   presencial: "var(--chart-1)",
@@ -65,24 +58,52 @@ const modalityColor: Record<PatientModality, string> = {
   hibrido: "var(--chart-3)",
 }
 
-const revenueConfig = {
-  receita: { label: "Receita", color: "var(--chart-1)" },
-} satisfies ChartConfig
-
-const approachConfig = {
-  receita: { label: "Receita", color: "var(--chart-2)" },
-} satisfies ChartConfig
-
-const modalityConfig = {
-  value: { label: "Receita" },
-  presencial: { label: "Presencial", color: "var(--chart-1)" },
-  online: { label: "Remoto", color: "var(--chart-2)" },
-  hibrido: { label: "Híbrido", color: "var(--chart-3)" },
-} satisfies ChartConfig
-
 export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}) {
+  const { t, locale } = useTranslation()
   const { patients, events } = useClinicData()
   const [range, setRange] = useState("12")
+
+  const revenueConfig = useMemo(
+    () =>
+      ({
+        receita: {
+          label: t("finance.chartLabels.revenue"),
+          color: "var(--chart-1)",
+        },
+      }) satisfies ChartConfig,
+    [t]
+  )
+
+  const approachConfig = useMemo(
+    () =>
+      ({
+        receita: {
+          label: t("finance.chartLabels.revenue"),
+          color: "var(--chart-2)",
+        },
+      }) satisfies ChartConfig,
+    [t]
+  )
+
+  const modalityConfig = useMemo(
+    () =>
+      ({
+        value: { label: t("finance.chartLabels.revenue") },
+        presencial: {
+          label: getModalityLabel(t, "presencial"),
+          color: "var(--chart-1)",
+        },
+        online: {
+          label: getModalityLabel(t, "online"),
+          color: "var(--chart-2)",
+        },
+        hibrido: {
+          label: getModalityLabel(t, "hibrido"),
+          color: "var(--chart-3)",
+        },
+      }) satisfies ChartConfig,
+    [t]
+  )
 
   const scheduled = useMemo(() => getScheduledPatients(patients), [patients])
 
@@ -104,8 +125,8 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
       : 0
 
   const history = useMemo(
-    () => getMonthlyRevenueHistory(events, patients),
-    [events, patients]
+    () => getMonthlyRevenueHistory(events, patients, 12, locale),
+    [events, patients, locale]
   )
 
   const historySlice = useMemo(
@@ -124,10 +145,10 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
   const modalityData = useMemo(() => {
     return getRevenueByModality(events, patients).map((item) => ({
       key: item.modality as PatientModality,
-      label: modalityLabel[item.modality as PatientModality],
+      label: getModalityLabel(t, item.modality as PatientModality),
       value: item.value,
     }))
-  }, [events, patients])
+  }, [events, patients, t])
 
   const modalityTotal = modalityData.reduce((sum, item) => sum + item.value, 0)
 
@@ -145,45 +166,57 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
     ? Math.round((monthlySummary.received / monthlySummary.total) * 100)
     : 0
 
-  const kpis: {
-    label: string
-    value: string
-    hint: string
-    delta?: number
-    tone?: "destructive"
-  }[] = [
-    {
-      label: "Receita do mês",
-      value: brl.format(monthlySummary.total),
-      hint: `${monthlySummary.billableCount} sessões cobráveis`,
-      delta: deltaPct,
-    },
-    {
-      label: "Recebido",
-      value: brl.format(monthlySummary.received),
-      hint: `${receivedPct}% do faturado`,
-    },
-    {
-      label: "A receber",
-      value: brl.format(monthlySummary.pending),
-      hint:
-        monthlySummary.overdue > 0
-          ? `${brl.format(monthlySummary.overdue)} em atraso`
-          : "Em dia",
-      tone: monthlySummary.overdue > 0 ? "destructive" : undefined,
-    },
-    {
-      label: "Ticket médio",
-      value: brl.format(avgTicket),
-      hint: `${Math.round(scheduled.length * WEEKS_PER_MONTH)} sessões previstas`,
-    },
-  ]
+  const kpis = useMemo(
+    () =>
+      [
+        {
+          label: t("finance.kpis.monthRevenue"),
+          value: formatLocaleCurrency(monthlySummary.total, locale),
+          hint: t("finance.kpis.billableSessions", {
+            count: monthlySummary.billableCount,
+          }),
+          delta: deltaPct,
+        },
+        {
+          label: t("finance.kpis.received"),
+          value: formatLocaleCurrency(monthlySummary.received, locale),
+          hint: t("finance.kpis.receivedPct", { pct: receivedPct }),
+        },
+        {
+          label: t("finance.kpis.pending"),
+          value: formatLocaleCurrency(monthlySummary.pending, locale),
+          hint:
+            monthlySummary.overdue > 0
+              ? t("finance.kpis.overdueAmount", {
+                  amount: formatLocaleCurrency(monthlySummary.overdue, locale),
+                })
+              : t("finance.kpis.onTrack"),
+          tone: monthlySummary.overdue > 0 ? ("attention" as const) : undefined,
+        },
+        {
+          label: t("finance.kpis.avgTicket"),
+          value: formatLocaleCurrency(avgTicket, locale),
+          hint: t("finance.kpis.forecastSessions", {
+            count: Math.round(scheduled.length * WEEKS_PER_MONTH),
+          }),
+        },
+      ] as const,
+    [
+      avgTicket,
+      deltaPct,
+      locale,
+      monthlySummary,
+      receivedPct,
+      scheduled.length,
+      t,
+    ]
+  )
 
   if (patients.length === 0) {
     return (
       <NoPatientsEmptyPage
         onNewPatient={onNewPatient}
-        description="Cadastre seu primeiro paciente para começar a acompanhar receitas e indicadores financeiros."
+        description={t("finance.emptyDescription")}
       />
     )
   }
@@ -192,19 +225,17 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
     <div className="flex w-full flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h2 className="text-lg font-semibold">Financeiro</h2>
-          <p className="text-sm text-muted-foreground">
-            Acompanhe seus ganhos, recebimentos e indicadores da clínica.
-          </p>
+          <h2 className="text-lg font-semibold">{t("finance.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("finance.subtitle")}</p>
         </div>
         <Select value={range} onValueChange={setRange}>
           <SelectTrigger className="border-border bg-card shadow-sm hover:bg-accent sm:w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="3">Últimos 3 meses</SelectItem>
-            <SelectItem value="6">Últimos 6 meses</SelectItem>
-            <SelectItem value="12">Últimos 12 meses</SelectItem>
+            <SelectItem value="3">{t("finance.range.months3")}</SelectItem>
+            <SelectItem value="6">{t("finance.range.months6")}</SelectItem>
+            <SelectItem value="12">{t("finance.range.months12")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -216,13 +247,13 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
             <span
               className={cn(
                 "font-heading text-2xl font-semibold tracking-tight tabular-nums",
-                kpi.tone === "destructive" && "text-destructive"
+                "tone" in kpi && kpi.tone === "attention" && "text-attention"
               )}
             >
               {kpi.value}
             </span>
             <div className="flex items-center gap-1.5 text-xs">
-              {kpi.delta !== undefined ? (
+              {"delta" in kpi && kpi.delta !== undefined ? (
                 <span
                   className={cn(
                     "flex items-center gap-0.5 font-medium",
@@ -247,15 +278,17 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-col">
             <h3 className="font-heading text-base font-semibold">
-              Histórico de receita
+              {t("finance.charts.revenueHistory")}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Evolução mensal dos ganhos
+              {t("finance.charts.revenueHistoryHint")}
             </p>
           </div>
           <Badge variant="outline" className="border-border bg-background/40">
             <Wallet className="size-3.5" />
-            {brl.format(monthlySummary.total)} este mês
+            {t("finance.charts.thisMonth", {
+              amount: formatLocaleCurrency(monthlySummary.total, locale),
+            })}
           </Badge>
         </div>
         <ChartContainer
@@ -292,7 +325,9 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
               content={
                 <ChartTooltipContent
                   indicator="line"
-                  formatter={(value) => brl.format(Number(value))}
+                  formatter={(value) =>
+                    formatLocaleCurrency(Number(value), locale)
+                  }
                 />
               }
             />
@@ -311,10 +346,10 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
         <Card className="gap-4 p-6">
           <div className="flex flex-col">
             <h3 className="font-heading text-base font-semibold">
-              Receita por modalidade
+              {t("finance.charts.revenueByModality")}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Distribuição mensal por tipo de atendimento
+              {t("finance.charts.revenueByModalityHint")}
             </p>
           </div>
           <div className="flex flex-col items-center gap-4 sm:flex-row">
@@ -353,7 +388,7 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
                     />
                     <span className="flex-1 text-sm">{item.label}</span>
                     <span className="text-sm font-medium tabular-nums">
-                      {brl.format(item.value)}
+                      {formatLocaleCurrency(item.value, locale)}
                     </span>
                     <span className="w-9 text-right text-xs text-muted-foreground tabular-nums">
                       {pct}%
@@ -368,10 +403,10 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
         <Card className="gap-4 p-6">
           <div className="flex flex-col">
             <h3 className="font-heading text-base font-semibold">
-              Receita por abordagem
+              {t("finance.charts.revenueByApproach")}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Quanto cada linha de trabalho representa por mês
+              {t("finance.charts.revenueByApproachHint")}
             </p>
           </div>
           <ChartContainer
@@ -391,7 +426,9 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
                 content={
                   <ChartTooltipContent
                     hideLabel
-                    formatter={(value) => brl.format(Number(value))}
+                    formatter={(value) =>
+                      formatLocaleCurrency(Number(value), locale)
+                    }
                   />
                 }
               />
@@ -404,10 +441,10 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
       <Card className="gap-0 p-6">
         <div className="flex flex-col pb-2">
           <h3 className="font-heading text-base font-semibold">
-            Faturamento por paciente
+            {t("finance.charts.topPatients")}
           </h3>
           <p className="text-sm text-muted-foreground">
-            Acompanhamentos com maior faturamento acumulado
+            {t("finance.charts.topPatientsHint")}
           </p>
         </div>
         <div className="divide-y divide-border">
@@ -421,15 +458,17 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
                   {patient.name}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {patient.sessions} sessões ·{" "}
-                  {brl.format(parsePrice(patient.price))}/sessão
+                  {t("finance.charts.sessionsPerSession", {
+                    count: patient.sessions,
+                    price: formatLocaleCurrency(parsePrice(patient.price), locale),
+                  })}
                 </span>
               </div>
               <Badge
                 variant="outline"
                 className="border-border bg-background/40 tabular-nums"
               >
-                {brlCompact.format(total)}
+                {formatLocaleCurrencyCompact(total, locale)}
               </Badge>
             </div>
           ))}

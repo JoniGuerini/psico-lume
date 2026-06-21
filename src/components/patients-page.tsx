@@ -43,9 +43,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useClinicData } from "@/context/clinic-data-provider"
+import { useTranslation } from "@/context/locale-provider"
 import { getRecordsForPatient } from "@/data/clinical-records"
 import { getInitials } from "@/data/patients"
 import type { Patient, PatientModality, PatientStatus } from "@/data/types"
+import {
+  getModalityLabel,
+  getPatientStatusLabel,
+} from "@/lib/i18n-helpers"
 import { cn } from "@/lib/utils"
 
 export type {
@@ -92,6 +97,8 @@ function PatientsListEmptyState({
   onNewPatient: () => void
   onClearFilters: () => void
 }) {
+  const { t } = useTranslation()
+
   return (
     <div className="flex h-full w-full min-h-0 flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/40 p-10 text-center">
       <div className="flex size-12 items-center justify-center rounded-full border border-border bg-background/40">
@@ -104,23 +111,23 @@ function PatientsListEmptyState({
       <div className="flex max-w-sm flex-col gap-1">
         <p className="font-medium">
           {hasPatients
-            ? "Nenhum paciente encontrado"
-            : "Nenhum paciente cadastrado"}
+            ? t("patients.notFound")
+            : t("empty.noPatients.title")}
         </p>
         <p className="text-sm text-muted-foreground">
           {hasPatients
-            ? "Ajuste a busca ou o filtro de status, ou limpe os filtros para ver todos."
-            : "Cadastre seu primeiro paciente para começar o acompanhamento clínico."}
+            ? t("patients.notFoundHint")
+            : t("empty.noPatients.description")}
         </p>
       </div>
       {hasPatients ? (
         <Button variant="outline" size="sm" onClick={onClearFilters}>
-          Limpar filtros
+          {t("patients.clearFilters")}
         </Button>
       ) : (
         <Button size="sm" onClick={onNewPatient}>
           <UserPlus />
-          Novo paciente
+          {t("common.newPatient")}
         </Button>
       )}
     </div>
@@ -138,6 +145,7 @@ export function PatientsPage({
   openNewPatient?: boolean
   onNewPatientOpenChange?: (open: boolean) => void
 } = {}) {
+  const { t } = useTranslation()
   const { patients, activeCount, addPatient, addEvent, addSessionNote, sessionNotes } =
     useClinicData()
   const [query, setQuery] = useState("")
@@ -258,18 +266,18 @@ export function PatientsPage({
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">Pacientes</h2>
+              <h2 className="text-lg font-semibold">{t("patients.title")}</h2>
               <Badge variant="outline" className="border-border bg-background/40">
-                {activeCount} ativos
+                {t("patients.activeBadge", { count: activeCount })}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              Gerencie seus pacientes, acompanhamentos e próximas sessões.
+              {t("patients.subtitle")}
             </p>
           </div>
           <Button size="sm" onClick={() => setNewPatientOpen(true)}>
             <UserPlus />
-            Novo paciente
+            {t("common.newPatient")}
           </Button>
         </div>
 
@@ -278,7 +286,7 @@ export function PatientsPage({
             containerClassName="flex-1"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Buscar por nome, e-mail, CPF ou queixa..."
+            placeholder={t("patients.searchPlaceholder")}
             className="border-border bg-background/40 hover:bg-accent/50"
           />
           <Select
@@ -288,18 +296,26 @@ export function PatientsPage({
             }
           >
             <SelectTrigger className="border-border bg-background/40 hover:bg-accent/50 sm:w-48">
-              <SelectValue placeholder="Status" />
+              <SelectValue placeholder={t("patients.statusPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="todos">Todos os status</SelectItem>
-              <SelectItem value="ativo">Ativo</SelectItem>
-              <SelectItem value="em-pausa">Em pausa</SelectItem>
-              <SelectItem value="lista-espera">Lista de espera</SelectItem>
-              <SelectItem value="alta">Alta</SelectItem>
+              <SelectItem value="todos">{t("patients.allStatuses")}</SelectItem>
+              <SelectItem value="ativo">
+                {getPatientStatusLabel(t, "ativo")}
+              </SelectItem>
+              <SelectItem value="em-pausa">
+                {getPatientStatusLabel(t, "em-pausa")}
+              </SelectItem>
+              <SelectItem value="lista-espera">
+                {getPatientStatusLabel(t, "lista-espera")}
+              </SelectItem>
+              <SelectItem value="alta">
+                {getPatientStatusLabel(t, "alta")}
+              </SelectItem>
             </SelectContent>
           </Select>
           <span className="text-sm whitespace-nowrap text-muted-foreground sm:ml-1">
-            {filtered.length} pacientes
+            {t("patients.count", { count: filtered.length })}
           </span>
         </div>
       </Card>
@@ -310,14 +326,14 @@ export function PatientsPage({
             <PatientCols />
             <TableHeader className="[&_th]:text-sidebar-foreground/75">
               <TableRow className="border-0 hover:bg-transparent">
-                <TableHead className="pl-4">Paciente</TableHead>
-                <TableHead>Queixa</TableHead>
-                <TableHead>Abordagem</TableHead>
-                <TableHead>Modalidade</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Próxima sessão</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
-                <TableHead className="text-right">Sessões</TableHead>
+                <TableHead className="pl-4">{t("patients.columns.patient")}</TableHead>
+                <TableHead>{t("patients.columns.complaint")}</TableHead>
+                <TableHead>{t("patients.columns.approach")}</TableHead>
+                <TableHead>{t("patients.columns.modality")}</TableHead>
+                <TableHead>{t("patients.columns.status")}</TableHead>
+                <TableHead>{t("patients.columns.nextSession")}</TableHead>
+                <TableHead className="text-right">{t("patients.columns.price")}</TableHead>
+                <TableHead className="text-right">{t("patients.columns.sessions")}</TableHead>
                 <TableHead className="pr-4" />
               </TableRow>
             </TableHeader>
@@ -371,7 +387,7 @@ export function PatientsPage({
                       <Badge variant="outline">{patient.approach}</Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      {modalityLabel[patient.modality]}
+                      {getModalityLabel(t, patient.modality)}
                     </TableCell>
                     <TableCell>
                       <span className="flex items-center gap-2 text-sm">
@@ -381,7 +397,7 @@ export function PatientsPage({
                             statusConfig[patient.status].dot
                           )}
                         />
-                        {statusConfig[patient.status].label}
+                        {getPatientStatusLabel(t, patient.status)}
                       </span>
                     </TableCell>
                     <TableCell className="text-sm">
@@ -409,31 +425,35 @@ export function PatientsPage({
                             variant="ghost"
                             size="icon"
                             className="size-8"
-                            aria-label={`Ações de ${patient.name}`}
+                            aria-label={t("patients.actions.menuAria", {
+                              name: patient.name,
+                            })}
                           >
                             <MoreHorizontal />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuLabel>
+                            {t("patients.actions.menu")}
+                          </DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => openProfile(patient.id, "records")}
                           >
                             <Eye />
-                            Ver prontuário
+                            {t("patients.actions.viewRecord")}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => setSchedulePatientId(patient.id)}
                           >
                             <CalendarPlus />
-                            Agendar sessão
+                            {t("patients.actions.schedule")}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => setNotePatientId(patient.id)}
                           >
                             <FileText />
-                            Nova evolução
+                            {t("patients.actions.newNote")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

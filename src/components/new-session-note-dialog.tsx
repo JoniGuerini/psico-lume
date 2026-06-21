@@ -23,24 +23,20 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
-import { modalityLabel } from "@/components/patients-page"
+import { useTranslation } from "@/context/locale-provider"
 import type { Patient, PatientModality, SessionNote } from "@/data/types"
 import { formFieldClass } from "@/lib/form-input-styles"
+import {
+  formatLocaleDate,
+  getModalityLabel,
+  getMoodLabel,
+  MOOD_KEYS,
+} from "@/lib/i18n-helpers"
+import type { Locale } from "@/lib/locale"
+import { fromDateInput, toDateInput } from "@/lib/session-scheduling"
 import { cn } from "@/lib/utils"
 
 const fieldClass = formFieldClass
-
-const moodOptions = [
-  "Ansioso(a)",
-  "Estável",
-  "Melhor",
-  "Triste",
-  "Esperançoso(a)",
-  "Exausto(a)",
-  "Emocional",
-  "Reflexivo(a)",
-  "Hipervigilante",
-]
 
 type NewSessionNoteDialogProps = {
   open: boolean
@@ -52,18 +48,20 @@ type NewSessionNoteDialogProps = {
   onUpdate?: (note: SessionNote) => void
 }
 
-function todayBr() {
-  return new Date().toLocaleDateString("pt-BR")
+function storedDateToIso(stored: string) {
+  if (stored.includes("/")) {
+    const [day, month, year] = stored.split("/")
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
+  }
+  return stored
 }
 
-function toDateInput(brDate: string) {
-  const [day, month, year] = brDate.split("/")
-  return `${year}-${month}-${day}`
-}
-
-function fromDateInput(value: string) {
-  const [year, month, day] = value.split("-")
-  return `${day}/${month}/${year}`
+function isoToStoredDate(iso: string, locale: Locale) {
+  return formatLocaleDate(fromDateInput(iso), locale, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  })
 }
 
 function FormSection({
@@ -119,7 +117,7 @@ function Field({
 
 function noteToFormState(note: SessionNote, patient: Patient) {
   return {
-    date: toDateInput(note.date),
+    date: storedDateToIso(note.date),
     summary: note.summary,
     evolution: note.evolution,
     plan: note.plan ?? "",
@@ -138,9 +136,10 @@ export function NewSessionNoteDialog({
   onCreate,
   onUpdate,
 }: NewSessionNoteDialogProps) {
+  const { t, locale } = useTranslation()
   const isEditing = note != null
   const summaryRef = useRef<HTMLTextAreaElement>(null)
-  const [date, setDate] = useState(toDateInput(todayBr()))
+  const [date, setDate] = useState(toDateInput(new Date()))
   const [summary, setSummary] = useState("")
   const [evolution, setEvolution] = useState("")
   const [plan, setPlan] = useState("")
@@ -172,7 +171,7 @@ export function NewSessionNoteDialog({
       return
     }
 
-    setDate(toDateInput(todayBr()))
+    setDate(toDateInput(new Date()))
     setSummary("")
     setEvolution("")
     setPlan("")
@@ -211,7 +210,7 @@ export function NewSessionNoteDialog({
     const payload: SessionNote = {
       id: isEditing && note ? note.id : crypto.randomUUID(),
       patientId: patient.id,
-      date: fromDateInput(date),
+      date: isoToStoredDate(date, locale),
       sessionNumber,
       summary: summary.trim(),
       evolution: evolution.trim(),
@@ -236,14 +235,12 @@ export function NewSessionNoteDialog({
       <DialogContent className="!flex max-h-[92vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-2xl">
         <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
           <DialogTitle className="text-lg">
-            {isEditing ? "Editar evolução" : "Nova evolução"}
+            {isEditing ? t("sessionNote.titleEdit") : t("sessionNote.titleNew")}
           </DialogTitle>
           <DialogDescription>
             {isEditing
-              ? "Atualize a nota da sessão de "
-              : "Registre a nota da sessão de "}
-            <span className="font-medium text-foreground">{patient.name}</span>.
-            Resumo e evolução clínica são obrigatórios.
+              ? t("sessionNote.descEdit", { name: patient.name })
+              : t("sessionNote.descCreate", { name: patient.name })}
           </DialogDescription>
         </DialogHeader>
 
@@ -254,45 +251,47 @@ export function NewSessionNoteDialog({
           <ScrollArea className="h-[calc(92vh-10rem)] shrink-0">
             <div className="flex flex-col gap-4 p-6">
               <FormSection
-                title="Identificação da sessão"
-                description="Metadados do encontro — preenchidos antes do registro clínico."
+                title={t("sessionNote.sections.identification.title")}
+                description={t("sessionNote.sections.identification.description")}
               >
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Data da sessão" htmlFor="note-date">
+                  <Field label={t("sessionNote.sessionDate")} htmlFor="note-date">
                     <DatePicker
                       id="note-date"
                       value={date}
                       onChange={setDate}
-                      placeholder="Selecionar data da sessão"
+                      placeholder={t("sessionNote.placeholders.sessionDate")}
                       className={fieldClass}
                     />
                   </Field>
-                  <Field label="Nº da sessão">
+                  <Field label={t("sessionNote.sessionNumber")}>
                     <div
                       className="flex h-9 items-center rounded-xl border border-border bg-muted/50 px-3 font-heading text-sm font-semibold tabular-nums text-foreground"
                       aria-live="polite"
                     >
-                      {sessionNumber}ª sessão
+                      {t("sessionNote.sessionNumberLabel", {
+                        number: sessionNumber,
+                      })}
                     </div>
                   </Field>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Humor / estado" htmlFor="note-mood">
+                  <Field label={t("sessionNote.mood")} htmlFor="note-mood">
                     <Select value={mood} onValueChange={setMood}>
                       <SelectTrigger id="note-mood" className={fieldClass}>
-                        <SelectValue placeholder="Selecione (opcional)" />
+                        <SelectValue placeholder={t("sessionNote.selectOptional")} />
                       </SelectTrigger>
                       <SelectContent>
-                        {moodOptions.map((option) => (
+                        {MOOD_KEYS.map((option) => (
                           <SelectItem key={option} value={option}>
-                            {option}
+                            {getMoodLabel(t, option)}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </Field>
-                  <Field label="Modalidade" htmlFor="note-modality">
+                  <Field label={t("sessionNote.modality")} htmlFor="note-modality">
                     <Select
                       value={modality}
                       onValueChange={(value) =>
@@ -305,7 +304,7 @@ export function NewSessionNoteDialog({
                       <SelectContent>
                         {(["presencial", "online"] as const).map((value) => (
                           <SelectItem key={value} value={value}>
-                            {modalityLabel[value]}
+                            {getModalityLabel(t, value)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -315,21 +314,21 @@ export function NewSessionNoteDialog({
               </FormSection>
 
               <FormSection
-                title="Registro clínico"
-                description="Conteúdo principal do prontuário desta sessão."
+                title={t("sessionNote.sections.clinical.title")}
+                description={t("sessionNote.sections.clinical.description")}
               >
                 <Field
-                  label="Resumo da sessão"
+                  label={t("sessionNote.summary")}
                   htmlFor="note-summary"
                   required
-                  hint="Temas abordados, queixas trazidas e contexto do encontro."
+                  hint={t("sessionNote.hints.summary")}
                 >
                   <Textarea
                     ref={summaryRef}
                     id="note-summary"
                     value={summary}
                     onChange={(event) => setSummary(event.target.value)}
-                    placeholder="O que foi trabalhado, queixas e contexto..."
+                    placeholder={t("sessionNote.placeholders.summary")}
                     rows={4}
                     className={cn(fieldClass, "min-h-24 resize-y")}
                     required
@@ -337,16 +336,16 @@ export function NewSessionNoteDialog({
                 </Field>
 
                 <Field
-                  label="Evolução clínica"
+                  label={t("sessionNote.evolution")}
                   htmlFor="note-evolution"
                   required
-                  hint="Progressos observados, intervenções realizadas e impressões clínicas."
+                  hint={t("sessionNote.hints.evolution")}
                 >
                   <Textarea
                     id="note-evolution"
                     value={evolution}
                     onChange={(event) => setEvolution(event.target.value)}
-                    placeholder="Observações clínicas, progressos e insights..."
+                    placeholder={t("sessionNote.placeholders.evolution")}
                     rows={5}
                     className={cn(fieldClass, "min-h-28 resize-y")}
                     required
@@ -356,30 +355,30 @@ export function NewSessionNoteDialog({
                 <Separator />
 
                 <Field
-                  label="Plano / tarefa de casa"
+                  label={t("sessionNote.plan")}
                   htmlFor="note-plan"
-                  hint="Opcional — próximos passos acordados com o paciente."
+                  hint={t("sessionNote.hints.plan")}
                 >
                   <Textarea
                     id="note-plan"
                     value={plan}
                     onChange={(event) => setPlan(event.target.value)}
-                    placeholder="Próximos passos acordados com o paciente..."
+                    placeholder={t("sessionNote.placeholders.plan")}
                     rows={3}
                     className={cn(fieldClass, "min-h-20 resize-y")}
                   />
                 </Field>
 
                 <Field
-                  label="Tags"
+                  label={t("sessionNote.tags")}
                   htmlFor="note-tags"
-                  hint="Separe por vírgula — ex.: TCC, Ansiedade, Progresso."
+                  hint={t("sessionNote.hints.tags")}
                 >
                   <Input
                     id="note-tags"
                     value={tags}
                     onChange={(event) => setTags(event.target.value)}
-                    placeholder="TCC, Ansiedade, Progresso"
+                    placeholder={t("sessionNote.placeholders.tags")}
                     className={fieldClass}
                   />
                   {parsedTags.length > 0 ? (
@@ -406,11 +405,13 @@ export function NewSessionNoteDialog({
               className="hover:bg-accent/50"
               onClick={() => handleOpenChange(false)}
             >
-              Cancelar
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={!canSubmit}>
               <Save />
-              {isEditing ? "Salvar alterações" : "Salvar evolução"}
+              {isEditing
+                ? t("sessionNote.saveChanges")
+                : t("sessionNote.save")}
             </Button>
           </DialogFooter>
         </form>
