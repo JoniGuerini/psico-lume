@@ -21,10 +21,11 @@ const weekdayFromLabel: Record<string, string> = {
   Domingo: "Dom",
 }
 
+import { formFieldClass } from "@/lib/form-input-styles"
+
 export const durationOptions = [30, 45, 50, 60, 90]
 
-export const sessionFieldClass =
-  "border-border bg-background/40 hover:bg-accent/50 focus-visible:bg-card"
+export const sessionFieldClass = formFieldClass
 
 export function toDateInput(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(

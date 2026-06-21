@@ -22,10 +22,10 @@ export function notifySelectOpenChange(open: boolean) {
     globalSelectSuppressUntil = 0
     return
   }
-  globalSelectOpenCount = Math.max(0, globalSelectOpenCount - 1)
-  if (globalSelectOpenCount === 0) {
-    globalSelectSuppressUntil = Date.now() + 120
-  }
+  globalSelectSuppressUntil = Date.now() + 500
+  queueMicrotask(() => {
+    globalSelectOpenCount = Math.max(0, globalSelectOpenCount - 1)
+  })
 }
 
 export function resetSelectDismissGuard() {
@@ -85,10 +85,10 @@ export function createSelectDismissGuard() {
         suppressUntil = 0
         return
       }
-      openCount = Math.max(0, openCount - 1)
-      if (openCount === 0) {
-        suppressUntil = Date.now() + 500
-      }
+      suppressUntil = Date.now() + 500
+      queueMicrotask(() => {
+        openCount = Math.max(0, openCount - 1)
+      })
     },
     shouldPreventDialogDismiss(target?: EventTarget | null) {
       if (shouldPreventDialogOutsideDismiss({ target: target ?? null })) {

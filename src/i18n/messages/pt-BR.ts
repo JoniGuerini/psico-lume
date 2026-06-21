@@ -82,6 +82,8 @@ export const ptBR = {
       clearDate: "Limpar data",
       prevMonth: "Mês anterior",
       nextMonth: "Próximo mês",
+      selectMonth: "Selecionar mês",
+      selectYear: "Selecionar ano",
     },
     timePicker: {
       selectTime: "Selecionar horário",

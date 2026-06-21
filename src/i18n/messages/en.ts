@@ -84,6 +84,8 @@ export const en = {
       clearDate: "Clear date",
       prevMonth: "Previous month",
       nextMonth: "Next month",
+      selectMonth: "Select month",
+      selectYear: "Select year",
     },
     timePicker: {
       selectTime: "Select time",

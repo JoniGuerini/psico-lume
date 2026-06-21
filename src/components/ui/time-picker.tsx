@@ -97,6 +97,9 @@ export function TimePicker({
   }, [value])
 
   function handleOpenChange(next: boolean) {
+    if (!next) {
+      applyTime(hour, minute)
+    }
     setOpen(next)
     onOpenChange?.(next)
     if (next && !value) {
@@ -111,6 +114,9 @@ export function TimePicker({
   }
 
   const displayValue = formatTimeLabel(value)
+  const emptyFieldClass =
+    "border border-foreground/22 bg-card text-foreground hover:border-foreground/35"
+  const filledFieldClass = "border-2 border-foreground/55 bg-card text-foreground"
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange} modal>
@@ -120,11 +126,14 @@ export function TimePicker({
           type="button"
           variant="outline"
           disabled={disabled}
+          data-filled={displayValue ? "true" : undefined}
           className={cn(
             "h-9 w-full justify-start gap-2 rounded-3xl px-3 font-normal shadow-none",
             formFieldClass,
-            !displayValue && "text-muted-foreground/55",
-            className
+            displayValue ? filledFieldClass : emptyFieldClass,
+            !displayValue && "text-muted-foreground/60",
+            className,
+            displayValue ? filledFieldClass : emptyFieldClass
           )}
         >
           <Clock3 className="size-4 shrink-0 opacity-70" />
@@ -184,7 +193,7 @@ export function TimePicker({
             type="button"
             size="sm"
             className="self-end"
-            onClick={() => setOpen(false)}
+            onClick={() => handleOpenChange(false)}
           >
             {t("ui.timePicker.done")}
           </Button>

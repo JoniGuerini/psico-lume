@@ -136,7 +136,7 @@ export function ScheduleSessionForm({
                 id={`${idPrefix}-patient`}
                 value={lockedPatient.name}
                 readOnly
-                className={cn(sessionFieldClass, "bg-background/60")}
+                className={sessionFieldClass}
               />
             ) : (
               <Select

@@ -37,7 +37,7 @@ import {
 import { formFieldClass } from "@/lib/form-input-styles"
 import { cn } from "@/lib/utils"
 import { formatNextSession } from "@/data/patients"
-import { resetSelectDismissGuard, shouldPreventDialogOutsideDismiss } from "@/lib/dialog-outside-guard"
+import { useSelectDismissGuard } from "@/lib/use-select-dismiss-guard"
 import {
   fetchAddressByCep,
   formatCep,
@@ -383,16 +383,22 @@ export function NewPatientDialog({
   }>({ status: "idle" })
   const cepLookupRequestRef = useRef(0)
   const lastFetchedCepRef = useRef("")
+  const {
+    onSelectOpenChange,
+    shouldBlockDialogClose,
+    reset: resetSelectGuard,
+    dialogContentHandlers,
+  } = useSelectDismissGuard()
 
   const canSubmit = form.name.trim() !== ""
 
   useEffect(() => {
     if (!open) {
-      resetSelectDismissGuard()
+      resetSelectGuard()
       setCepLookup({ status: "idle" })
       lastFetchedCepRef.current = ""
     }
-  }, [open])
+  }, [open, resetSelectGuard])
 
   useEffect(() => {
     if (!open) return
@@ -406,7 +412,7 @@ export function NewPatientDialog({
   }, [open, patient])
 
   function handleOpenChange(next: boolean) {
-    if (!next && shouldPreventDialogOutsideDismiss({ target: null })) return
+    if (!next && shouldBlockDialogClose(null)) return
     if (!next) resetForm()
     onOpenChange(next)
   }
@@ -524,6 +530,7 @@ export function NewPatientDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
+        {...dialogContentHandlers}
         className="!flex max-h-[92vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-[72rem]"
       >
         <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
@@ -596,6 +603,7 @@ export function NewPatientDialog({
                       className="col-span-12 sm:col-span-4"
                     >
                       <Select
+                        onOpenChange={onSelectOpenChange}
                         value={form.gender}
                         onValueChange={(value) => update("gender", value)}
                       >
@@ -897,6 +905,7 @@ export function NewPatientDialog({
                       className="col-span-12 sm:col-span-6"
                     >
                       <Select
+                        onOpenChange={onSelectOpenChange}
                         value={form.patientType}
                         onValueChange={(value) => update("patientType", value)}
                       >
@@ -921,6 +930,7 @@ export function NewPatientDialog({
                       className="col-span-12 sm:col-span-6"
                     >
                       <Select
+                        onOpenChange={onSelectOpenChange}
                         value={form.status}
                         onValueChange={(value) =>
                           update("status", value as PatientStatus)
@@ -981,6 +991,7 @@ export function NewPatientDialog({
                       className="col-span-12 sm:col-span-4"
                     >
                       <Select
+                        onOpenChange={onSelectOpenChange}
                         value={form.modality}
                         onValueChange={(value) =>
                           update("modality", value as PatientModality)
@@ -1007,6 +1018,7 @@ export function NewPatientDialog({
                       className="col-span-12"
                     >
                       <Select
+                        onOpenChange={onSelectOpenChange}
                         value={form.referral}
                         onValueChange={(value) => update("referral", value)}
                       >
@@ -1056,6 +1068,7 @@ export function NewPatientDialog({
                   className="max-w-md"
                 >
                   <Select
+                    onOpenChange={onSelectOpenChange}
                     value={form.sessionFrequency}
                     onValueChange={(value) =>
                       update("sessionFrequency", value as SessionFrequency)
@@ -1091,6 +1104,7 @@ export function NewPatientDialog({
                       >
                         <Field label={t("patientForm.fields.weekday")}>
                           <Select
+                            onOpenChange={onSelectOpenChange}
                             value={row.weekday}
                             onValueChange={(value) =>
                               updateSchedule(index, "weekday", value)
@@ -1122,6 +1136,7 @@ export function NewPatientDialog({
                         </Field>
                         <Field label={t("patientForm.fields.duration")}>
                           <Select
+                            onOpenChange={onSelectOpenChange}
                             value={row.duration}
                             onValueChange={(value) =>
                               updateSchedule(index, "duration", value)
@@ -1146,6 +1161,7 @@ export function NewPatientDialog({
                         </Field>
                         <Field label={t("patientForm.fields.modality")}>
                           <Select
+                            onOpenChange={onSelectOpenChange}
                             value={row.modality}
                             onValueChange={(value) =>
                               updateSchedule(

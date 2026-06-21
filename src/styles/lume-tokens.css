@@ -157,7 +157,7 @@
   --accent-foreground: var(--lume-navy-800);
   --destructive: oklch(0.577 0.245 27.325);
   --border: var(--lume-navy-alpha-14);
-  --input: var(--lume-navy-alpha-20);
+  --input: var(--lume-navy-alpha-25);
   --ring: var(--lume-navy-900);
   --chart-1: var(--lume-navy-900);
   --chart-2: var(--lume-mint-400);
@@ -209,7 +209,7 @@
   --accent-foreground: var(--refugio-slate-800);
   --destructive: oklch(0.577 0.245 27.325);
   --border: var(--refugio-slate-alpha-14);
-  --input: var(--refugio-slate-alpha-20);
+  --input: var(--refugio-slate-alpha-25);
   --ring: var(--refugio-slate-700);
   --chart-1: var(--refugio-slate-700);
   --chart-2: var(--lume-terracotta);
@@ -261,7 +261,7 @@
   --destructive: oklch(0.637 0.237 25.331);
   --attention: var(--forja-accent-bright);
   --border: var(--forja-foreground-alpha-14);
-  --input: var(--forja-foreground-alpha-20);
+  --input: var(--forja-foreground-alpha-25);
   --ring: var(--forja-accent-bright);
   --chart-1: var(--forja-accent-bright);
   --chart-2: var(--forja-foreground);
@@ -333,7 +333,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --attention: var(--horizonte-coral);
   --border: var(--horizonte-ocean-alpha-14);
-  --input: var(--horizonte-ocean-alpha-20);
+  --input: var(--horizonte-ocean-alpha-25);
   --ring: var(--horizonte-ocean-700);
   --chart-1: var(--horizonte-ocean-700);
   --chart-2: var(--horizonte-apricot);
@@ -405,7 +405,7 @@
   --destructive: oklch(0.637 0.237 25.331);
   --attention: var(--entardecer-accent-bright);
   --border: var(--entardecer-foreground-alpha-14);
-  --input: var(--entardecer-foreground-alpha-20);
+  --input: var(--entardecer-foreground-alpha-25);
   --ring: var(--entardecer-accent-bright);
   --chart-1: var(--entardecer-accent-bright);
   --chart-2: var(--entardecer-foreground);

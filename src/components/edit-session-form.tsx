@@ -164,7 +164,7 @@ export function EditSessionForm({
                 id="edit-session-patient"
                 value={lockedPatient.name}
                 readOnly
-                className={cn(sessionFieldClass, "bg-background/60")}
+                className={sessionFieldClass}
               />
             ) : (
               <Select

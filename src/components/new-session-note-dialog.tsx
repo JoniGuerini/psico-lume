@@ -34,6 +34,7 @@ import {
 } from "@/lib/i18n-helpers"
 import type { Locale } from "@/lib/locale"
 import { fromDateInput, toDateInput } from "@/lib/session-scheduling"
+import { useSelectDismissGuard } from "@/lib/use-select-dismiss-guard"
 import { cn } from "@/lib/utils"
 
 const fieldClass = formFieldClass
@@ -148,6 +149,12 @@ export function NewSessionNoteDialog({
   const [modality, setModality] = useState<PatientModality>(
     patient.modality === "hibrido" ? "online" : patient.modality
   )
+  const {
+    onSelectOpenChange,
+    shouldBlockDialogClose,
+    reset: resetSelectGuard,
+    dialogContentHandlers,
+  } = useSelectDismissGuard()
 
   const sessionNumber = isEditing ? note.sessionNumber : nextSessionNumber
 
@@ -183,9 +190,14 @@ export function NewSessionNoteDialog({
   }
 
   function handleOpenChange(next: boolean) {
+    if (!next && shouldBlockDialogClose(null)) return
     if (!next) resetForm()
     onOpenChange(next)
   }
+
+  useEffect(() => {
+    if (!open) resetSelectGuard()
+  }, [open, resetSelectGuard])
 
   useEffect(() => {
     if (!open) return
@@ -232,7 +244,10 @@ export function NewSessionNoteDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="!flex max-h-[92vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-2xl">
+      <DialogContent
+        {...dialogContentHandlers}
+        className="!flex max-h-[92vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-2xl"
+      >
         <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
           <DialogTitle className="text-lg">
             {isEditing ? t("sessionNote.titleEdit") : t("sessionNote.titleNew")}
@@ -278,7 +293,11 @@ export function NewSessionNoteDialog({
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label={t("sessionNote.mood")} htmlFor="note-mood">
-                    <Select value={mood} onValueChange={setMood}>
+                    <Select
+                      onOpenChange={onSelectOpenChange}
+                      value={mood}
+                      onValueChange={setMood}
+                    >
                       <SelectTrigger id="note-mood" className={fieldClass}>
                         <SelectValue placeholder={t("sessionNote.selectOptional")} />
                       </SelectTrigger>
@@ -293,6 +312,7 @@ export function NewSessionNoteDialog({
                   </Field>
                   <Field label={t("sessionNote.modality")} htmlFor="note-modality">
                     <Select
+                      onOpenChange={onSelectOpenChange}
                       value={modality}
                       onValueChange={(value) =>
                         setModality(value as PatientModality)
