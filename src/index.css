@@ -86,3 +86,12 @@
     height: 0;
     }
 }
+
+@keyframes toast-progress-shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}

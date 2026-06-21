@@ -52,7 +52,11 @@ export type Patient = {
   patientType?: string
   therapyStart?: string
   referral?: string
+  /** Anotações gerais do cadastro (não confundir com evolução clínica). */
+  notes?: string
   schedules?: PatientSchedule[]
+  /** ISO local (YYYY-MM-DD): primeira data para gerar sessões recorrentes. */
+  recurrenceFrom?: string
 }
 
 export type SessionStatus =

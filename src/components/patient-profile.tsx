@@ -11,6 +11,7 @@ import {
   MapPin,
   Pencil,
   Phone,
+  Trash2,
   User,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -27,6 +28,14 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import {
   Select,
@@ -59,6 +68,7 @@ type PatientProfileTab = "overview" | "sessions" | "records"
 type PatientProfileProps = {
   patient: Patient
   onBack: () => void
+  onPatientDeleted?: () => void
   initialTab?: PatientProfileTab
 }
 
@@ -110,11 +120,13 @@ function Stat({ label, value }: { label: string; value: string }) {
 export function PatientProfile({
   patient,
   onBack,
+  onPatientDeleted,
   initialTab = "overview",
 }: PatientProfileProps) {
   const {
     sessionNotes,
     updatePatient,
+    deletePatient,
     addEvent,
     events,
     patients,
@@ -124,6 +136,7 @@ export function PatientProfile({
   const [tab, setTab] = useState(initialTab)
   const [editOpen, setEditOpen] = useState(false)
   const [scheduleOpen, setScheduleOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const noteCount = useMemo(
     () => getRecordsForPatient(sessionNotes, patient.id).length,
     [sessionNotes, patient.id]
@@ -250,6 +263,7 @@ export function PatientProfile({
           events={events}
           onMarkPaid={markEventPaid}
           onSetPaymentOverdueManual={setPatientPaymentOverdueManual}
+          onDeleteRequest={() => setDeleteOpen(true)}
         />
       ) : tab === "sessions" ? (
         <PatientSessionsTab patient={patient} />
@@ -271,6 +285,41 @@ export function PatientProfile({
         patients={patients}
         onSchedule={addEvent}
       />
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md">
+          <DialogHeader className="border-b border-border px-6 py-4">
+            <DialogTitle className="text-lg">Excluir paciente?</DialogTitle>
+            <DialogDescription>
+              <span className="font-medium text-foreground">{patient.name}</span>{" "}
+              e todo o prontuário, agenda e histórico financeiro associados
+              serão removidos permanentemente.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="border-t border-border px-6 py-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setDeleteOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => {
+                deletePatient(patient.id)
+                setDeleteOpen(false)
+                onPatientDeleted?.()
+                onBack()
+              }}
+            >
+              <Trash2 />
+              Excluir paciente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -281,12 +330,14 @@ function PatientOverview({
   events,
   onMarkPaid,
   onSetPaymentOverdueManual,
+  onDeleteRequest,
 }: {
   patient: Patient
   address: string
   events: CalendarEvent[]
   onMarkPaid: (id: string, paid?: boolean) => void
   onSetPaymentOverdueManual: (patientId: string, manual: boolean | null) => void
+  onDeleteRequest: () => void
 }) {
   const billing = useMemo(
     () => getPatientBillableSummary(patient.id, events, patient),
@@ -358,6 +409,16 @@ function PatientOverview({
               value={patient.price ? `R$ ${patient.price}` : undefined}
             />
           </div>
+          {patient.notes ? (
+            <div className="flex flex-col gap-1.5 pt-2">
+              <span className="text-xs font-medium text-muted-foreground">
+                Observações
+              </span>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                {patient.notes}
+              </p>
+            </div>
+          ) : null}
         </Section>
 
         <Section title="Horários" icon={Clock} className="lg:col-span-2">
@@ -501,6 +562,31 @@ function PatientOverview({
             </div>
           ) : null}
         </Section>
+
+        <Card className="gap-4 border-destructive/30 p-6 lg:col-span-2">
+          <div className="flex items-center gap-2">
+            <Trash2 className="size-4 text-destructive" />
+            <h3 className="font-heading text-base font-semibold text-destructive">
+              Zona de perigo
+            </h3>
+          </div>
+          <Separator />
+          <p className="text-sm text-muted-foreground">
+            Excluir {patient.name} remove permanentemente o cadastro, prontuário,
+            sessões agendadas e registros financeiros deste paciente.
+          </p>
+          <div>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              onClick={onDeleteRequest}
+            >
+              <Trash2 />
+              Excluir paciente
+            </Button>
+          </div>
+        </Card>
       </div>
   )
 }

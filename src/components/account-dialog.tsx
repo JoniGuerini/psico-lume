@@ -33,6 +33,10 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { densityPresets, themePresets } from "@/lib/design-system"
 import { useTheme } from "@/context/theme-provider"
+import {
+  toastPositionPresets,
+  useToast,
+} from "@/context/toast-provider"
 
 type AccountDialogProps = {
   user: {
@@ -43,6 +47,7 @@ type AccountDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   isGuest?: boolean
+  onUpdateGuestProfile?: (name: string) => void
   onDeleteGuestProfile?: () => void
 }
 
@@ -167,6 +172,7 @@ export function AccountDialog({
   open,
   onOpenChange,
   isGuest = false,
+  onUpdateGuestProfile,
   onDeleteGuestProfile,
 }: AccountDialogProps) {
   const [section, setSection] = useState("perfil")
@@ -191,6 +197,8 @@ export function AccountDialog({
   })
 
   const { theme, density, setTheme, setDensity } = useTheme()
+  const { toast, position: toastPosition, setPosition: setToastPosition } =
+    useToast()
 
   const visibleSections = useMemo(
     () => (isGuest ? [...sections, guestDeleteAccountSection] : sections),
@@ -201,8 +209,17 @@ export function AccountDialog({
   const [avatarUrl, setAvatarUrl] = useState(user.avatar)
 
   useEffect(() => {
-    if (!open) setDeleteConfirmOpen(false)
+    if (!open) {
+      setDeleteConfirmOpen(false)
+    }
   }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    setName(user.name)
+    setEmail(user.email)
+    setAvatarUrl(user.avatar)
+  }, [open, user.name, user.email, user.avatar])
 
   useEffect(() => {
     if (!isGuest && section === guestDeleteAccountSection.id) {
@@ -236,6 +253,35 @@ export function AccountDialog({
 
   function setNotification(key: keyof typeof notifications, value: boolean) {
     setNotifications((current) => ({ ...current, [key]: value }))
+  }
+
+  const trimmedName = name.trim()
+  const canSaveGuestProfile =
+    isGuest && trimmedName.length >= 2 && trimmedName !== user.name
+
+  function handleResetProfile() {
+    setName(user.name)
+    setEmail(user.email)
+    setAvatarUrl(user.avatar)
+  }
+
+  function handleSaveProfile() {
+    if (isGuest) {
+      if (!canSaveGuestProfile) return
+      onUpdateGuestProfile?.(trimmedName)
+      toast("Dados salvos", {
+        description: "Seu nome foi atualizado neste navegador e na tela de entrada.",
+      })
+      return
+    }
+  }
+
+  function handleToastPositionChange(position: typeof toastPosition) {
+    setToastPosition(position)
+    toast("Posição dos toasts atualizada", {
+      variant: "info",
+      description: "As próximas confirmações aparecerão no canto escolhido.",
+    })
   }
 
   function handleConfirmDeleteGuestProfile() {
@@ -308,15 +354,18 @@ export function AccountDialog({
                       accept="image/*"
                       className="hidden"
                       onChange={handleAvatarChange}
+                      disabled={isGuest}
                     />
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      aria-label="Alterar foto"
-                      className="absolute -right-2 -bottom-2 flex size-8 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-sm transition-colors hover:bg-accent"
-                    >
-                      <Camera className="size-4" />
-                    </button>
+                    {!isGuest ? (
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        aria-label="Alterar foto"
+                        className="absolute -right-2 -bottom-2 flex size-8 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-sm transition-colors hover:bg-accent"
+                      >
+                        <Camera className="size-4" />
+                      </button>
+                    ) : null}
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <h4 className="font-heading text-xl font-semibold text-primary-foreground">
@@ -337,7 +386,14 @@ export function AccountDialog({
                         value={name}
                         onChange={(event) => setName(event.target.value)}
                         placeholder="Seu nome"
+                        maxLength={80}
                       />
+                      {isGuest ? (
+                        <p className="text-xs text-muted-foreground">
+                          Mínimo de 2 caracteres. Atualiza seu nome no app e na
+                          tela de entrada.
+                        </p>
+                      ) : null}
                     </div>
                     <div className="flex flex-col gap-2">
                       <Label htmlFor="account-email">E-mail de login</Label>
@@ -347,12 +403,27 @@ export function AccountDialog({
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
                         placeholder="voce@example.com"
+                        readOnly={isGuest}
+                        disabled={isGuest}
+                        className={isGuest ? "opacity-70" : undefined}
                       />
                     </div>
                   </div>
                   <div className="flex justify-end gap-2 border-t border-border pt-5">
-                    <Button variant="ghost">Cancelar</Button>
-                    <Button>Salvar alterações</Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={handleResetProfile}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="button"
+                      disabled={isGuest && !canSaveGuestProfile}
+                      onClick={handleSaveProfile}
+                    >
+                      Salvar alterações
+                    </Button>
                   </div>
                 </Panel>
               </div>
@@ -711,6 +782,58 @@ export function AccountDialog({
                           </span>
                           <span className="text-xs text-muted-foreground">
                             {option.description}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </Panel>
+
+                <Panel className="gap-4">
+                  <div className="flex flex-col gap-1">
+                    <h4 className="font-heading text-base font-semibold">
+                      Posição dos toasts
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Escolha em qual canto da tela aparecem as confirmações
+                      rápidas, como &quot;Dados salvos&quot;.
+                    </p>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {toastPositionPresets.map((preset) => {
+                      const isActive = toastPosition === preset.id
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => handleToastPositionChange(preset.id)}
+                          className={cn(
+                            "flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-colors",
+                            isActive
+                              ? "border-primary bg-accent/50"
+                              : "border-border hover:bg-accent/50"
+                          )}
+                        >
+                          <span className="relative h-14 w-full rounded-lg border border-border bg-background/60">
+                            <span
+                              className={cn(
+                                "absolute size-2.5 rounded-full bg-primary",
+                                preset.id === "top-left" && "top-2 left-2",
+                                preset.id === "top-right" && "top-2 right-2",
+                                preset.id === "bottom-left" && "bottom-2 left-2",
+                                preset.id === "bottom-right" && "bottom-2 right-2"
+                              )}
+                              aria-hidden
+                            />
+                          </span>
+                          <span className="flex w-full items-center justify-between text-sm font-medium">
+                            {preset.label}
+                            {isActive ? (
+                              <Check className="size-4 text-primary" />
+                            ) : null}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {preset.description}
                           </span>
                         </button>
                       )

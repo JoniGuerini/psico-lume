@@ -46,9 +46,13 @@ import {
 import { cn } from "@/lib/utils"
 
 const fillViewportPages = new Set([
+  "Home",
   "Inbox",
   "Agenda",
   "Pacientes",
+  "Financeiro",
+  "A receber",
+  "Relatórios",
   "Notifications",
   "Dados",
 ])
@@ -70,7 +74,6 @@ export function App() {
     id: string
     tab?: "overview" | "sessions" | "records"
   } | null>(null)
-  const [eventFocus, setEventFocus] = useState<string | null>(null)
   const [emailFocus, setEmailFocus] = useState<string | null>(null)
   const [openNewPatient, setOpenNewPatient] = useState(false)
   const [openNewSession, setOpenNewSession] = useState(false)
@@ -80,23 +83,25 @@ export function App() {
   const [calendarView, setCalendarView] = useState<"mes" | "semana" | "dia">(
     "mes"
   )
+  const [calendarDateFocus, setCalendarDateFocus] = useState<number | null>(
+    null
+  )
 
   useGlobalSearchShortcut(() => setSearchOpen(true))
 
   function handleNavigate(page: string) {
     setActiveItem(page)
     setPatientFocus(null)
-    setEventFocus(null)
     setEmailFocus(null)
     setOpenNewPatient(false)
     setOpenNewSession(false)
     setReceivablesFilter("todas")
     setCalendarView("mes")
+    setCalendarDateFocus(null)
   }
 
   function handleViewAgendaWeek() {
     setPatientFocus(null)
-    setEventFocus(null)
     setEmailFocus(null)
     setOpenNewPatient(false)
     setOpenNewSession(false)
@@ -107,12 +112,22 @@ export function App() {
 
   function handleViewReceivables() {
     setPatientFocus(null)
-    setEventFocus(null)
     setEmailFocus(null)
     setOpenNewPatient(false)
     setOpenNewSession(false)
     setReceivablesFilter("atraso")
     setActiveItem("A receber")
+  }
+
+  function handleOpenAgendaDay(date: Date) {
+    setPatientFocus(null)
+    setEmailFocus(null)
+    setOpenNewPatient(false)
+    setOpenNewSession(false)
+    setReceivablesFilter("todas")
+    setCalendarView("dia")
+    setCalendarDateFocus(date.getTime())
+    setActiveItem("Agenda")
   }
 
   function handleSearchSelect(action: GlobalSearchAction) {
@@ -122,31 +137,23 @@ export function App() {
         break
       case "patient":
         setPatientFocus({ id: action.patientId, tab: action.tab })
-        setEventFocus(null)
         setEmailFocus(null)
         setOpenNewPatient(false)
         setOpenNewSession(false)
         setActiveItem("Pacientes")
         break
       case "event":
-        setEventFocus(action.eventId)
-        setPatientFocus(null)
-        setEmailFocus(null)
-        setOpenNewPatient(false)
-        setOpenNewSession(false)
-        setActiveItem("Agenda")
+        handleOpenAgendaDay(new Date(action.dateTimestamp))
         break
       case "email":
         setEmailFocus(action.emailId)
         setPatientFocus(null)
-        setEventFocus(null)
         setOpenNewPatient(false)
         setOpenNewSession(false)
         setActiveItem("Inbox")
         break
       case "notification":
         setPatientFocus(null)
-        setEventFocus(null)
         setEmailFocus(null)
         setOpenNewPatient(false)
         setOpenNewSession(false)
@@ -154,7 +161,6 @@ export function App() {
         break
       case "quick":
         setPatientFocus(null)
-        setEventFocus(null)
         setEmailFocus(null)
         if (action.id === "new-patient") {
           setOpenNewSession(false)
@@ -187,10 +193,17 @@ export function App() {
     setAuthSession(null)
     setActiveItem("Home")
     setPatientFocus(null)
-    setEventFocus(null)
     setEmailFocus(null)
     setAccountOpen(false)
     setSearchOpen(false)
+  }
+
+  function handleUpdateGuestProfile(name: string) {
+    const trimmed = name.trim()
+    persistGuestProfileName(trimmed)
+    const session: AuthSession = { mode: "guest", name: trimmed }
+    persistAuthSession(session)
+    setAuthSession(session)
   }
 
   function handleDeleteGuestProfile() {
@@ -293,6 +306,11 @@ export function App() {
                           onViewPatients={() => handleNavigate("Pacientes")}
                           onViewAgendaWeek={handleViewAgendaWeek}
                           onViewReceivables={handleViewReceivables}
+                          onOpenAgendaDay={handleOpenAgendaDay}
+                          onNewPatient={() => {
+                            setOpenNewPatient(true)
+                            setActiveItem("Pacientes")
+                          }}
                         />
                       ) : null}
                       {activeItem === "Inbox" ? (
@@ -300,7 +318,7 @@ export function App() {
                       ) : null}
                       {activeItem === "Agenda" ? (
                         <CalendarPage
-                          initialEventId={eventFocus}
+                          initialSelectedDateTimestamp={calendarDateFocus}
                           initialView={calendarView}
                           openNewSession={openNewSession}
                           onNewSessionOpenChange={setOpenNewSession}
@@ -314,12 +332,30 @@ export function App() {
                           onNewPatientOpenChange={setOpenNewPatient}
                         />
                       ) : null}
-                      {activeItem === "Financeiro" ? <FinancePage /> : null}
-                      {activeItem === "Relatórios" ? <ReportsPage /> : null}
+                      {activeItem === "Financeiro" ? (
+                        <FinancePage
+                          onNewPatient={() => {
+                            setOpenNewPatient(true)
+                            setActiveItem("Pacientes")
+                          }}
+                        />
+                      ) : null}
+                      {activeItem === "Relatórios" ? (
+                        <ReportsPage
+                          onNewPatient={() => {
+                            setOpenNewPatient(true)
+                            setActiveItem("Pacientes")
+                          }}
+                        />
+                      ) : null}
                       {activeItem === "Dados" ? <ClinicSheetsPage /> : null}
                       {activeItem === "A receber" ? (
                         <UnpaidSessionsPage
                           initialFilter={receivablesFilter}
+                          onNewPatient={() => {
+                            setOpenNewPatient(true)
+                            setActiveItem("Pacientes")
+                          }}
                           onOpenPatient={(patientId) => {
                             setPatientFocus({ id: patientId })
                             setActiveItem("Pacientes")
@@ -344,6 +380,7 @@ export function App() {
                     open={accountOpen}
                     onOpenChange={setAccountOpen}
                     isGuest={authSession?.mode === "guest"}
+                    onUpdateGuestProfile={handleUpdateGuestProfile}
                     onDeleteGuestProfile={handleDeleteGuestProfile}
                   />
                 </motion.div>

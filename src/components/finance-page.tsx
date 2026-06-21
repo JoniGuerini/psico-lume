@@ -16,6 +16,7 @@ import {
   XAxis,
 } from "recharts"
 
+import { NoPatientsEmptyPage } from "@/components/no-patients-empty-page"
 import { modalityLabel } from "@/components/patients-page"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
@@ -79,7 +80,7 @@ const modalityConfig = {
   hibrido: { label: "Híbrido", color: "var(--chart-3)" },
 } satisfies ChartConfig
 
-export function FinancePage() {
+export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}) {
   const { patients, events } = useClinicData()
   const [range, setRange] = useState("12")
 
@@ -177,6 +178,15 @@ export function FinancePage() {
       hint: `${Math.round(scheduled.length * WEEKS_PER_MONTH)} sessões previstas`,
     },
   ]
+
+  if (patients.length === 0) {
+    return (
+      <NoPatientsEmptyPage
+        onNewPatient={onNewPatient}
+        description="Cadastre seu primeiro paciente para começar a acompanhar receitas e indicadores financeiros."
+      />
+    )
+  }
 
   return (
     <div className="flex w-full flex-col gap-4">

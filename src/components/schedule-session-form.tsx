@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import { CalendarPlus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -16,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { TimePicker } from "@/components/ui/time-picker"
 import type { CalendarEvent, Patient } from "@/data/types"
 import { parsePrice } from "@/data/patients"
 import {
@@ -157,11 +159,11 @@ export function ScheduleSessionForm({
             <Label htmlFor={`${idPrefix}-date`} className="text-xs">
               Data
             </Label>
-            <Input
+            <DatePicker
               id={`${idPrefix}-date`}
-              type="date"
               value={date}
-              onChange={(event) => setDate(event.target.value)}
+              onChange={setDate}
+              placeholder="Selecionar data"
               className={sessionFieldClass}
             />
           </div>
@@ -171,11 +173,14 @@ export function ScheduleSessionForm({
               <Label htmlFor={`${idPrefix}-start`} className="text-xs">
                 Início
               </Label>
-              <Input
+              <TimePicker
                 id={`${idPrefix}-start`}
-                type="time"
                 value={start}
-                onChange={(event) => setStart(event.target.value)}
+                onChange={setStart}
+                placeholder="Selecionar horário"
+                startHour={6}
+                endHour={22}
+                onOpenChange={handleSelectOpenChange}
                 className={sessionFieldClass}
               />
             </div>
@@ -192,7 +197,7 @@ export function ScheduleSessionForm({
                   id={`${idPrefix}-duration`}
                   className={cn("w-full", sessionFieldClass)}
                 >
-                  <SelectValue />
+                  <SelectValue placeholder="Duração" />
                 </SelectTrigger>
                 <SelectContent>
                   {durationOptions.map((option) => (

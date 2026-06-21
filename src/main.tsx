@@ -5,6 +5,7 @@ import "./index.css"
 import App from "./App.tsx"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { ThemeProvider } from "@/context/theme-provider"
+import { ToastProvider } from "@/context/toast-provider"
 import { bootstrapThemeFromStorage } from "@/lib/theme"
 
 bootstrapThemeFromStorage()
@@ -12,9 +13,11 @@ bootstrapThemeFromStorage()
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
-      <TooltipProvider>
-        <App />
-      </TooltipProvider>
+      <ToastProvider>
+        <TooltipProvider>
+          <App />
+        </TooltipProvider>
+      </ToastProvider>
     </ThemeProvider>
   </StrictMode>
 )

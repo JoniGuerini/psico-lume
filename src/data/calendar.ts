@@ -18,6 +18,74 @@ import { shouldIncludeRecurringDate } from "@/lib/session-frequency"
 export const CALENDAR_PAST_DAYS = 90
 export const CALENDAR_FUTURE_DAYS = 365
 
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+function parseIsoDateLocal(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim())
+  if (!match) return null
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+}
+
+function parseBrDate(value: string): Date | null {
+  const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value.trim())
+  if (!match) return null
+  return new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]))
+}
+
+const sinceMonthMap: Record<string, number> = {
+  Jan: 0,
+  Fev: 1,
+  Mar: 2,
+  Abr: 3,
+  Mai: 4,
+  Jun: 5,
+  Jul: 6,
+  Ago: 7,
+  Set: 8,
+  Out: 9,
+  Nov: 10,
+  Dez: 11,
+}
+
+function parseSinceMonthStart(since: string): Date | null {
+  if (since === "—" || !since.trim()) return null
+  const [month, year] = since.split(" ")
+  const monthIndex = sinceMonthMap[month]
+  const parsedYear = Number(year)
+  if (monthIndex === undefined || Number.isNaN(parsedYear)) return null
+  return new Date(parsedYear, monthIndex, 1)
+}
+
+/** Primeira data em que sessões recorrentes devem existir para o paciente. */
+export function getPatientRecurrenceStart(patient: Patient, anchor = new Date()) {
+  const todayStart = startOfDay(anchor)
+
+  if (patient.recurrenceFrom) {
+    const parsed = parseIsoDateLocal(patient.recurrenceFrom)
+    if (parsed) return startOfDay(parsed)
+  }
+
+  if (patient.therapyStart) {
+    const parsed = parseBrDate(patient.therapyStart)
+    if (parsed) return startOfDay(parsed)
+  }
+
+  const sinceStart = parseSinceMonthStart(patient.since)
+  if (sinceStart) {
+    if (
+      sinceStart.getFullYear() === todayStart.getFullYear() &&
+      sinceStart.getMonth() === todayStart.getMonth()
+    ) {
+      return todayStart
+    }
+    return sinceStart
+  }
+
+  return todayStart
+}
+
 function recurringEventId(patientId: string, date: Date, start: string) {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, "0")
@@ -69,21 +137,21 @@ export function buildCalendarEvents(
 
   const rangeStart = addDays(anchor, -CALENDAR_PAST_DAYS)
   const rangeEnd = addDays(anchor, CALENDAR_FUTURE_DAYS)
-  const todayStart = new Date(
-    anchor.getFullYear(),
-    anchor.getMonth(),
-    anchor.getDate()
-  )
+  const todayStart = startOfDay(anchor)
 
   for (const patient of patients) {
     const slots = getPatientRecurrenceSlots(patient)
     if (slots.length === 0) continue
 
+    const patientStart = getPatientRecurrenceStart(patient, anchor)
+    const effectiveStart =
+      patientStart.getTime() > rangeStart.getTime() ? patientStart : rangeStart
+
     for (const slot of slots) {
       const targetDay = getWeekdayIndex(slot.weekdayCode)
 
       for (
-        let cursor = new Date(rangeStart);
+        let cursor = new Date(effectiveStart);
         cursor <= rangeEnd;
         cursor = addDays(cursor, 1)
       ) {

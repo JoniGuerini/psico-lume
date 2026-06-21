@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { Save } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
   Dialog,
   DialogContent,
@@ -24,10 +25,10 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { modalityLabel } from "@/components/patients-page"
 import type { Patient, PatientModality, SessionNote } from "@/data/types"
+import { formFieldClass } from "@/lib/form-input-styles"
 import { cn } from "@/lib/utils"
 
-const fieldClass =
-  "border-border bg-background/40 hover:bg-accent/50 focus-visible:bg-card"
+const fieldClass = formFieldClass
 
 const moodOptions = [
   "Ansioso(a)",
@@ -46,7 +47,9 @@ type NewSessionNoteDialogProps = {
   onOpenChange: (open: boolean) => void
   patient: Patient
   nextSessionNumber: number
+  note?: SessionNote | null
   onCreate: (note: SessionNote) => void
+  onUpdate?: (note: SessionNote) => void
 }
 
 function todayBr() {
@@ -114,13 +117,28 @@ function Field({
   )
 }
 
+function noteToFormState(note: SessionNote, patient: Patient) {
+  return {
+    date: toDateInput(note.date),
+    summary: note.summary,
+    evolution: note.evolution,
+    plan: note.plan ?? "",
+    tags: note.tags?.join(", ") ?? "",
+    mood: note.mood ?? "",
+    modality: note.modality ?? (patient.modality === "hibrido" ? "online" : patient.modality),
+  }
+}
+
 export function NewSessionNoteDialog({
   open,
   onOpenChange,
   patient,
   nextSessionNumber,
+  note = null,
   onCreate,
+  onUpdate,
 }: NewSessionNoteDialogProps) {
+  const isEditing = note != null
   const summaryRef = useRef<HTMLTextAreaElement>(null)
   const [date, setDate] = useState(toDateInput(todayBr()))
   const [summary, setSummary] = useState("")
@@ -132,6 +150,8 @@ export function NewSessionNoteDialog({
     patient.modality === "hibrido" ? "online" : patient.modality
   )
 
+  const sessionNumber = isEditing ? note.sessionNumber : nextSessionNumber
+
   const canSubmit = summary.trim().length > 0 && evolution.trim().length > 0
 
   const parsedTags = tags
@@ -140,6 +160,18 @@ export function NewSessionNoteDialog({
     .filter(Boolean)
 
   function resetForm() {
+    if (isEditing && note) {
+      const state = noteToFormState(note, patient)
+      setDate(state.date)
+      setSummary(state.summary)
+      setEvolution(state.evolution)
+      setPlan(state.plan)
+      setTags(state.tags)
+      setMood(state.mood)
+      setModality(state.modality as PatientModality)
+      return
+    }
+
     setDate(toDateInput(todayBr()))
     setSummary("")
     setEvolution("")
@@ -158,26 +190,42 @@ export function NewSessionNoteDialog({
 
   useEffect(() => {
     if (!open) return
+    if (isEditing && note) {
+      const state = noteToFormState(note, patient)
+      setDate(state.date)
+      setSummary(state.summary)
+      setEvolution(state.evolution)
+      setPlan(state.plan)
+      setTags(state.tags)
+      setMood(state.mood)
+      setModality(state.modality as PatientModality)
+    }
     const timer = window.setTimeout(() => summaryRef.current?.focus(), 50)
     return () => window.clearTimeout(timer)
-  }, [open])
+  }, [open, isEditing, note, patient])
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     if (!canSubmit) return
 
-    onCreate({
-      id: crypto.randomUUID(),
+    const payload: SessionNote = {
+      id: isEditing && note ? note.id : crypto.randomUUID(),
       patientId: patient.id,
       date: fromDateInput(date),
-      sessionNumber: nextSessionNumber,
+      sessionNumber,
       summary: summary.trim(),
       evolution: evolution.trim(),
       plan: plan.trim() || undefined,
       tags: parsedTags,
       mood: mood || undefined,
       modality,
-    })
+    }
+
+    if (isEditing && note) {
+      onUpdate?.(payload)
+    } else {
+      onCreate(payload)
+    }
 
     resetForm()
     onOpenChange(false)
@@ -187,9 +235,13 @@ export function NewSessionNoteDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="!flex max-h-[92vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-2xl">
         <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
-          <DialogTitle className="text-lg">Nova evolução</DialogTitle>
+          <DialogTitle className="text-lg">
+            {isEditing ? "Editar evolução" : "Nova evolução"}
+          </DialogTitle>
           <DialogDescription>
-            Registre a nota da sessão de{" "}
+            {isEditing
+              ? "Atualize a nota da sessão de "
+              : "Registre a nota da sessão de "}
             <span className="font-medium text-foreground">{patient.name}</span>.
             Resumo e evolução clínica são obrigatórios.
           </DialogDescription>
@@ -207,13 +259,12 @@ export function NewSessionNoteDialog({
               >
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Data da sessão" htmlFor="note-date">
-                    <Input
+                    <DatePicker
                       id="note-date"
-                      type="date"
                       value={date}
-                      onChange={(event) => setDate(event.target.value)}
+                      onChange={setDate}
+                      placeholder="Selecionar data da sessão"
                       className={fieldClass}
-                      required
                     />
                   </Field>
                   <Field label="Nº da sessão">
@@ -221,7 +272,7 @@ export function NewSessionNoteDialog({
                       className="flex h-9 items-center rounded-xl border border-border bg-muted/50 px-3 font-heading text-sm font-semibold tabular-nums text-foreground"
                       aria-live="polite"
                     >
-                      {nextSessionNumber}ª sessão
+                      {sessionNumber}ª sessão
                     </div>
                   </Field>
                 </div>
@@ -359,7 +410,7 @@ export function NewSessionNoteDialog({
             </Button>
             <Button type="submit" disabled={!canSubmit}>
               <Save />
-              Salvar evolução
+              {isEditing ? "Salvar alterações" : "Salvar evolução"}
             </Button>
           </DialogFooter>
         </form>

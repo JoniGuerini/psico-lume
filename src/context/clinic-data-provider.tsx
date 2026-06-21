@@ -4,6 +4,7 @@ import { buildCalendarEvents } from "@/data/calendar"
 import { buildClinicalRecords } from "@/data/clinical-records"
 import { buildInboxEmails } from "@/data/inbox"
 import { buildNotifications } from "@/data/notifications"
+import { useToast } from "@/context/toast-provider"
 import {
   formatNextSession,
   getActivePatients,
@@ -25,6 +26,23 @@ import {
   loadGuestClinicSnapshot,
   saveGuestClinicSnapshot,
 } from "@/lib/guest-clinic-storage"
+import {
+  emitGuestNotification,
+  notificationForBulkEventPayment,
+  notificationForDeletedPatient,
+  notificationForDeletedSession,
+  notificationForDeletedSessionNote,
+  notificationForEventPayment,
+  notificationForMovedSession,
+  notificationForNewPatient,
+  notificationForPaymentOverdueOverride,
+  notificationForScheduledSession,
+  notificationForSessionNote,
+  notificationForSessionStatusChange,
+  notificationForUpdatedPatient,
+  notificationForUpdatedSession,
+  notificationForUpdatedSessionNote,
+} from "@/lib/guest-notifications"
 import {
   getEventStatus,
   mergeEventStatuses,
@@ -60,9 +78,13 @@ type ClinicDataContextValue = {
     manual: boolean | null
   ) => void
   addSessionNote: (note: SessionNote) => void
+  updateSessionNote: (note: SessionNote) => void
+  deleteSessionNote: (noteId: string) => void
+  deletePatient: (patientId: string) => void
   addEvent: (event: CalendarEvent) => void
   moveEvent: (id: string, date: Date, startMinutes: number) => void
   updateEvent: (event: CalendarEvent) => void
+  deleteEvent: (eventId: string) => void
   updateEventStatus: (id: string, status: SessionStatus) => void
   markEventPaid: (id: string, paid?: boolean) => void
   markAllEventsPaid: (ids: string[]) => void
@@ -91,6 +113,28 @@ function toMinutes(time: string) {
 function findPatientById(patients: Patient[], patientId: string | undefined) {
   if (!patientId) return undefined
   return patients.find((patient) => patient.id === patientId)
+}
+
+function maxSessionNumberFromNotes(
+  patientId: string,
+  notes: SessionNote[]
+): number {
+  return notes
+    .filter((note) => note.patientId === patientId)
+    .reduce((max, note) => Math.max(max, note.sessionNumber), 0)
+}
+
+function applyPatientSessionCountFromNotes(
+  setPatients: React.Dispatch<React.SetStateAction<Patient[]>>,
+  patientId: string,
+  notes: SessionNote[]
+) {
+  const sessions = maxSessionNumberFromNotes(patientId, notes)
+  setPatients((current) =>
+    current.map((patient) =>
+      patient.id === patientId ? { ...patient, sessions } : patient
+    )
+  )
 }
 
 function rebuildRecurringEvents(
@@ -178,6 +222,7 @@ export function ClinicDataProvider({
   const [notifications, setNotifications] = useState<Notification[]>(
     initialState.notifications
   )
+  const { toast } = useToast()
 
   useEffect(() => {
     if (mode !== "guest") return
@@ -251,6 +296,12 @@ export function ClinicDataProvider({
           setEvents((events) => rebuildRecurringEvents(next, events))
           return next
         })
+        emitGuestNotification(
+          mode,
+          setNotifications,
+          toast,
+          notificationForNewPatient(patient)
+        )
       },
       updatePatient: (patient) => {
         setPatients((current) => {
@@ -260,28 +311,123 @@ export function ClinicDataProvider({
           setEvents((events) => rebuildRecurringEvents(next, events))
           return next
         })
+        emitGuestNotification(
+          mode,
+          setNotifications,
+          toast,
+          notificationForUpdatedPatient(patient)
+        )
       },
       setPatientPaymentOverdueManual: (patientId, manual) => {
+        const patient = findPatientById(patients, patientId)
+
         setPatients((current) =>
-          current.map((patient) =>
-            patient.id === patientId
-              ? { ...patient, paymentOverdueManual: manual }
-              : patient
+          current.map((item) =>
+            item.id === patientId
+              ? { ...item, paymentOverdueManual: manual }
+              : item
           )
         )
+
+        if (patient && patient.paymentOverdueManual !== manual) {
+          emitGuestNotification(
+            mode,
+            setNotifications,
+            toast,
+            notificationForPaymentOverdueOverride(patient, manual)
+          )
+        }
       },
       addSessionNote: (note) => {
-        setSessionNotes((current) => [note, ...current])
-        setPatients((current) =>
-          current.map((patient) =>
-            patient.id === note.patientId
-              ? {
-                  ...patient,
-                  sessions: Math.max(patient.sessions, note.sessionNumber),
-                }
-              : patient
+        setSessionNotes((current) => {
+          const next = [note, ...current]
+          applyPatientSessionCountFromNotes(setPatients, note.patientId, next)
+          return next
+        })
+        const patient = findPatientById(patients, note.patientId)
+        if (patient) {
+          emitGuestNotification(
+            mode,
+            setNotifications,
+            toast,
+            notificationForSessionNote(patient, note)
           )
-        )
+        }
+      },
+      updateSessionNote: (updated) => {
+        setSessionNotes((current) => {
+          const next = current.map((note) =>
+            note.id === updated.id ? updated : note
+          )
+          applyPatientSessionCountFromNotes(
+            setPatients,
+            updated.patientId,
+            next
+          )
+          return next
+        })
+        const patient = findPatientById(patients, updated.patientId)
+        if (patient) {
+          emitGuestNotification(
+            mode,
+            setNotifications,
+            toast,
+            notificationForUpdatedSessionNote(patient, updated)
+          )
+        }
+      },
+      deleteSessionNote: (noteId) => {
+        const target = sessionNotes.find((note) => note.id === noteId)
+        const patient = target
+          ? findPatientById(patients, target.patientId)
+          : undefined
+
+        setSessionNotes((current) => {
+          const next = current.filter((note) => note.id !== noteId)
+          if (target) {
+            applyPatientSessionCountFromNotes(
+              setPatients,
+              target.patientId,
+              next
+            )
+          }
+          return next
+        })
+
+        if (target && patient) {
+          emitGuestNotification(
+            mode,
+            setNotifications,
+            toast,
+            notificationForDeletedSessionNote(patient, target)
+          )
+        }
+      },
+      deletePatient: (patientId) => {
+        const patient = findPatientById(patients, patientId)
+
+        setPatients((current) => {
+          const next = current.filter((item) => item.id !== patientId)
+          setSessionNotes((notes) =>
+            notes.filter((note) => note.patientId !== patientId)
+          )
+          setEvents((events) => {
+            const withoutPatient = events.filter(
+              (event) => event.patientId !== patientId
+            )
+            return rebuildRecurringEvents(next, withoutPatient)
+          })
+          return next
+        })
+
+        if (patient) {
+          emitGuestNotification(
+            mode,
+            setNotifications,
+            toast,
+            notificationForDeletedPatient(patient)
+          )
+        }
       },
       addEvent: (event) => {
         const patient = findPatientById(patients, event.patientId)
@@ -298,59 +444,99 @@ export function ClinicDataProvider({
             amount,
           },
         ])
+
+        if (patient) {
+          emitGuestNotification(
+            mode,
+            setNotifications,
+            toast,
+            notificationForScheduledSession(patient, {
+              date: event.date,
+              start: event.start,
+              end: event.end,
+              title: event.title,
+            })
+          )
+        }
       },
       moveEvent: (id, date, startMinutes) => {
+        const previous = events.find((event) => event.id === id)
+        if (!previous) return
+
+        const durationMin = Math.max(
+          toMinutes(previous.end) - toMinutes(previous.start),
+          30
+        )
+        const currentStatus = getEventStatus(previous)
+        const nextStatus = resolveStatusAfterMove(currentStatus)
+        const rescheduledFrom = resolveRescheduledFromAfterMove(
+          previous,
+          currentStatus,
+          nextStatus
+        )
+        const patient = findPatientById(patients, previous.patientId)
+        const nextStart = minutesToTime(startMinutes)
+        const nextEnd = minutesToTime(startMinutes + durationMin)
+        const billing = resolveEventBilling(
+          previous,
+          {
+            date,
+            start: nextStart,
+            end: nextEnd,
+            status: nextStatus,
+            rescheduledFrom,
+          },
+          patient
+        )
+
         setEvents((current) =>
           current.map((event) => {
             if (event.id !== id) return event
-
-            const durationMin = Math.max(
-              toMinutes(event.end) - toMinutes(event.start),
-              30
-            )
-            const currentStatus = getEventStatus(event)
-            const nextStatus = resolveStatusAfterMove(currentStatus)
-            const rescheduledFrom = resolveRescheduledFromAfterMove(
-              event,
-              currentStatus,
-              nextStatus
-            )
-            const patient = findPatientById(patients, event.patientId)
-            const billing = resolveEventBilling(
-              event,
-              {
-                date,
-                start: minutesToTime(startMinutes),
-                end: minutesToTime(startMinutes + durationMin),
-                status: nextStatus,
-                rescheduledFrom,
-              },
-              patient
-            )
-
             return {
               ...event,
               date,
-              start: minutesToTime(startMinutes),
-              end: minutesToTime(startMinutes + durationMin),
+              start: nextStart,
+              end: nextEnd,
               status: nextStatus,
               rescheduledFrom,
               ...billing,
             }
           })
         )
+
+        if (patient) {
+          emitGuestNotification(
+            mode,
+            setNotifications,
+            toast,
+            notificationForMovedSession(patient, previous, {
+              date,
+              start: nextStart,
+              end: nextEnd,
+              status: nextStatus,
+            })
+          )
+        }
       },
       updateEvent: (updated) => {
+        const previous = events.find((event) => event.id === updated.id)
+        if (!previous) return
+
+        const patient = findPatientById(
+          patients,
+          updated.patientId || previous.patientId
+        )
+        const billing = resolveEventBilling(previous, updated, patient)
+        const merged: CalendarEvent = {
+          ...updated,
+          ...billing,
+          rescheduledFrom:
+            getEventStatus(updated) === "remarcada"
+              ? updated.rescheduledFrom ?? previous.rescheduledFrom
+              : undefined,
+        }
+
         setEvents((current) => {
-          const previous = current.find((event) => event.id === updated.id)
-          if (!previous) return current
-
-          const patient = findPatientById(
-            patients,
-            updated.patientId || previous.patientId
-          )
-          const billing = resolveEventBilling(previous, updated, patient)
-
           applySessionCountChange(
             setPatients,
             updated.patientId || previous.patientId,
@@ -359,27 +545,58 @@ export function ClinicDataProvider({
           )
 
           return current.map((event) =>
-            event.id === updated.id
-              ? {
-                  ...updated,
-                  ...billing,
-                  rescheduledFrom:
-                    getEventStatus(updated) === "remarcada"
-                      ? updated.rescheduledFrom ?? previous.rescheduledFrom
-                      : undefined,
-                }
-              : event
+            event.id === updated.id ? merged : event
           )
         })
+
+        if (patient) {
+          emitGuestNotification(
+            mode,
+            setNotifications,
+            toast,
+            notificationForUpdatedSession(patient, merged, previous)
+          )
+        }
+      },
+      deleteEvent: (eventId) => {
+        const previous = events.find((event) => event.id === eventId)
+        if (!previous) return
+
+        const patient = findPatientById(patients, previous.patientId)
+
+        setEvents((current) => current.filter((event) => event.id !== eventId))
+
+        if (previous.status === "realizada") {
+          applySessionCountChange(
+            setPatients,
+            previous.patientId,
+            "realizada",
+            "agendada"
+          )
+        }
+
+        if (patient) {
+          emitGuestNotification(
+            mode,
+            setNotifications,
+            toast,
+            notificationForDeletedSession(patient, previous)
+          )
+        }
       },
       updateEventStatus: (id, status) => {
+        const previous = events.find((event) => event.id === id)
+        if (!previous || previous.status === status) return
+
+        const patient = findPatientById(patients, previous.patientId)
+        const billing = resolveEventBilling(previous, { status }, patient)
+        const merged: CalendarEvent = {
+          ...previous,
+          status,
+          ...billing,
+        }
+
         setEvents((current) => {
-          const previous = current.find((event) => event.id === id)
-          if (!previous || previous.status === status) return current
-
-          const patient = findPatientById(patients, previous.patientId)
-          const billing = resolveEventBilling(previous, { status }, patient)
-
           applySessionCountChange(
             setPatients,
             previous.patientId,
@@ -387,34 +604,73 @@ export function ClinicDataProvider({
             status
           )
 
-          return current.map((event) =>
-            event.id === id
-              ? {
-                  ...event,
-                  status,
-                  ...billing,
-                }
-              : event
-          )
+          return current.map((event) => (event.id === id ? merged : event))
         })
+
+        if (patient) {
+          emitGuestNotification(
+            mode,
+            setNotifications,
+            toast,
+            notificationForSessionStatusChange(
+              patient,
+              merged,
+              status,
+              previous.status ?? "agendada"
+            )
+          )
+        }
       },
-      markEventPaid: (id, paid = true) =>
+      markEventPaid: (id, paid = true) => {
+        const previous = events.find((event) => event.id === id)
+        if (!previous || !isBillableSession(previous) || previous.paid === paid) {
+          return
+        }
+
+        const patient = findPatientById(patients, previous.patientId)
+        const merged = { ...previous, paid }
+
+        setEvents((current) =>
+          current.map((event) => (event.id === id ? merged : event))
+        )
+
+        if (patient) {
+          emitGuestNotification(
+            mode,
+            setNotifications,
+            toast,
+            notificationForEventPayment(patient, merged, paid)
+          )
+        }
+      },
+      markAllEventsPaid: (ids) => {
+        const idSet = new Set(ids)
+        const targets = events.filter(
+          (event) =>
+            idSet.has(event.id) && isBillableSession(event) && !event.paid
+        )
+        if (targets.length === 0) return
+
+        const total = targets.reduce(
+          (sum, event) => sum + (event.amount ?? 0),
+          0
+        )
+
         setEvents((current) =>
           current.map((event) =>
-            event.id === id && isBillableSession(event)
-              ? { ...event, paid }
-              : event
-          )
-        ),
-      markAllEventsPaid: (ids) =>
-        setEvents((current) => {
-          const idSet = new Set(ids)
-          return current.map((event) =>
             idSet.has(event.id) && isBillableSession(event)
               ? { ...event, paid: true }
               : event
           )
-        }),
+        )
+
+        emitGuestNotification(
+          mode,
+          setNotifications,
+          toast,
+          notificationForBulkEventPayment(targets.length, total)
+        )
+      },
       markNotificationAsRead: (id) =>
         setNotifications((current) =>
           current.map((item) =>
@@ -430,6 +686,8 @@ export function ClinicDataProvider({
       clearNotifications: () => setNotifications([]),
     }),
     [
+      mode,
+      toast,
       patients,
       events,
       notifications,

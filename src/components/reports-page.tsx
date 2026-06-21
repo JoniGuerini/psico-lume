@@ -19,6 +19,7 @@ import {
   YAxis,
 } from "recharts"
 
+import { NoPatientsEmptyPage } from "@/components/no-patients-empty-page"
 import { modalityLabel } from "@/components/patients-page"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
@@ -83,7 +84,7 @@ const outcomeColors: Record<SessionStatus, string> = {
   cancelada: "var(--muted-foreground)",
 }
 
-export function ReportsPage() {
+export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}) {
   const { events, patients } = useClinicData()
   const monthOptions = useMemo(() => getReportMonthOptions(), [])
   const [monthValue, setMonthValue] = useState(monthOptions[0]?.value ?? "")
@@ -166,6 +167,15 @@ export function ReportsPage() {
       icon: BarChart3,
     },
   ]
+
+  if (patients.length === 0) {
+    return (
+      <NoPatientsEmptyPage
+        onNewPatient={onNewPatient}
+        description="Cadastre pacientes e registre sessões para visualizar comparecimento e receita nos relatórios."
+      />
+    )
+  }
 
   return (
     <div className="flex w-full flex-col gap-4">

@@ -151,20 +151,33 @@ function TimeGrid({
 
     function handleUp() {
       const meta = dragMetaRef.current
+      const payload = {
+        move: null as { id: string; date: Date; startMin: number } | null,
+        select: null as CalendarEvent | null,
+      }
+
       setPreview((current) => {
         if (meta && current) {
           if (current.moved) {
             suppressClickRef.current = true
-            onMoveEvent(meta.id, days[current.dayIndex], current.startMin)
-          } else {
-            const selected = events.find((item) => item.id === meta.id)
-            if (selected) {
-              onSelectEvent(selected)
+            payload.move = {
+              id: meta.id,
+              date: days[current.dayIndex],
+              startMin: current.startMin,
             }
+          } else {
+            payload.select = events.find((item) => item.id === meta.id) ?? null
           }
         }
         return null
       })
+
+      if (payload.move) {
+        onMoveEvent(payload.move.id, payload.move.date, payload.move.startMin)
+      } else if (payload.select) {
+        onSelectEvent(payload.select)
+      }
+
       dragMetaRef.current = null
       setDragId(null)
     }
@@ -506,17 +519,18 @@ function NewSessionPopover({
 }
 
 export function CalendarPage({
-  initialEventId = null,
+  initialSelectedDateTimestamp = null,
   initialView = "mes",
   openNewSession = false,
   onNewSessionOpenChange,
 }: {
-  initialEventId?: string | null
+  initialSelectedDateTimestamp?: number | null
   initialView?: "mes" | "semana" | "dia"
   openNewSession?: boolean
   onNewSessionOpenChange?: (open: boolean) => void
 } = {}) {
-  const { patients, events, addEvent, moveEvent, updateEvent } = useClinicData()
+  const { patients, events, addEvent, moveEvent, updateEvent, deleteEvent } =
+    useClinicData()
   const patientNames = useMemo(
     () =>
       patients
@@ -554,15 +568,13 @@ export function CalendarPage({
   )
 
   useEffect(() => {
-    if (!initialEventId) return
+    if (initialSelectedDateTimestamp === null) return
 
-    const event = events.find((item) => item.id === initialEventId)
-    if (!event) return
-
-    setSelectedDate(event.date)
-    setCurrentMonth(new Date(event.date.getFullYear(), event.date.getMonth(), 1))
-    setEditingEventId(event.id)
-  }, [initialEventId, events])
+    const date = new Date(initialSelectedDateTimestamp)
+    setSelectedDate(date)
+    setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1))
+    setView("dia")
+  }, [initialSelectedDateTimestamp])
 
   function handleSelectEvent(event: CalendarEvent) {
     setEditingEventId(event.id)
@@ -872,6 +884,7 @@ export function CalendarPage({
         patientNames={patientNames}
         patients={patients}
         onSave={updateEvent}
+        onDelete={deleteEvent}
       />
     </div>
   )

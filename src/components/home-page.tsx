@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays } from "lucide-react"
+import { ArrowRight, CalendarDays, UserPlus, Users } from "lucide-react"
 import { useMemo } from "react"
 
 import { modalityLabel } from "@/components/patients-page"
@@ -31,6 +31,8 @@ type HomePageProps = {
   onViewPatients?: () => void
   onViewAgendaWeek?: () => void
   onViewReceivables?: () => void
+  onNewPatient?: () => void
+  onOpenAgendaDay?: (date: Date) => void
 }
 
 export function HomePage({
@@ -38,6 +40,8 @@ export function HomePage({
   onViewPatients,
   onViewAgendaWeek,
   onViewReceivables,
+  onNewPatient,
+  onOpenAgendaDay,
 }: HomePageProps) {
   const {
     patients,
@@ -104,8 +108,11 @@ export function HomePage({
     },
   ]
 
+  const showAgendaEmpty =
+    patients.length === 0 || todaysEvents.length === 0
+
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className="flex min-h-0 flex-1 w-full flex-col gap-4 overflow-y-auto overscroll-contain">
       <Card className="flex flex-row flex-wrap items-center justify-between gap-4 border-transparent bg-sidebar p-6 text-sidebar-foreground">
         <div className="flex flex-col gap-1">
           <h2 className="text-2xl font-semibold tracking-tight text-primary-foreground">
@@ -163,7 +170,12 @@ export function HomePage({
         ))}
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div
+        className={cn(
+          "flex flex-col gap-4",
+          showAgendaEmpty && "min-h-0 flex-1"
+        )}
+      >
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-col">
             <h3 className="font-semibold">Agenda de hoje</h3>
@@ -177,18 +189,43 @@ export function HomePage({
           </Button>
         </div>
 
-        {todaysEvents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed px-6 py-16 text-center">
-            <div className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-              <CalendarDays className="size-5" />
+        {patients.length === 0 ? (
+          <Card className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+            <div className="flex min-h-0 flex-1 flex-col p-4">
+              <div className="flex h-full w-full min-h-0 flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/40 p-10 text-center">
+                <div className="flex size-12 items-center justify-center rounded-full border border-border bg-background/40">
+                  <Users className="size-5 text-muted-foreground" />
+                </div>
+                <div className="flex max-w-sm flex-col gap-1">
+                  <p className="text-sm font-medium">Nenhum paciente cadastrado</p>
+                  <p className="text-sm text-muted-foreground">
+                    Cadastre seu primeiro paciente para começar a agendar
+                    atendimentos.
+                  </p>
+                </div>
+                <Button size="sm" onClick={onNewPatient}>
+                  <UserPlus />
+                  Novo paciente
+                </Button>
+              </div>
             </div>
-            <div className="flex flex-col gap-1">
-              <p className="text-sm font-medium">Dia livre</p>
-              <p className="text-sm text-muted-foreground">
-                Nenhum atendimento agendado para hoje.
-              </p>
+          </Card>
+        ) : todaysEvents.length === 0 ? (
+          <Card className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+            <div className="flex min-h-0 flex-1 flex-col p-4">
+              <div className="flex h-full w-full min-h-0 flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/40 p-10 text-center">
+                <div className="flex size-12 items-center justify-center rounded-full border border-border bg-background/40">
+                  <CalendarDays className="size-5 text-muted-foreground" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm font-medium">Dia livre</p>
+                  <p className="text-sm text-muted-foreground">
+                    Nenhum atendimento agendado para hoje.
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
+          </Card>
         ) : (
           <div className="flex flex-col gap-3">
             {todaysEvents.map((event) => {
@@ -199,7 +236,19 @@ export function HomePage({
               return (
                 <div
                   key={event.id}
-                  className="flex items-stretch gap-4 rounded-2xl border bg-card px-4 py-3"
+                  role="button"
+                  tabIndex={0}
+                  className="flex cursor-pointer items-stretch gap-4 rounded-2xl border bg-card px-4 py-3 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => onOpenAgendaDay?.(event.date)}
+                  onKeyDown={(keyboardEvent) => {
+                    if (
+                      keyboardEvent.key === "Enter" ||
+                      keyboardEvent.key === " "
+                    ) {
+                      keyboardEvent.preventDefault()
+                      onOpenAgendaDay?.(event.date)
+                    }
+                  }}
                 >
                   <div className="flex w-14 shrink-0 flex-col items-center">
                     <span className="font-heading text-xl font-semibold leading-none tabular-nums">

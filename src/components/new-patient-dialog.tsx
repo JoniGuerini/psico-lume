@@ -9,6 +9,7 @@ import type {
   SessionFrequency,
 } from "@/data/types"
 import { Button } from "@/components/ui/button"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
   Dialog,
   DialogContent,
@@ -27,11 +28,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { TimePicker } from "@/components/ui/time-picker"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   DEFAULT_SESSION_FREQUENCY,
   sessionFrequencyOptions,
 } from "@/lib/session-frequency"
+import { formFieldClass } from "@/lib/form-input-styles"
 import { cn } from "@/lib/utils"
 import { formatNextSession } from "@/data/patients"
 import { resetSelectDismissGuard, shouldPreventDialogOutsideDismiss } from "@/lib/dialog-outside-guard"
@@ -41,6 +44,8 @@ import {
   isCompleteCep,
   normalizeCep,
 } from "@/lib/viacep"
+import { formatCpf } from "@/lib/cpf"
+import { formatPhone } from "@/lib/phone"
 
 type NewPatientDialogProps = {
   open: boolean
@@ -91,8 +96,7 @@ const weekdays = [
 
 const OTHER = "__outro"
 
-const fieldClass =
-  "border-border bg-background/40 hover:bg-accent/50 focus-visible:bg-card"
+const fieldClass = formFieldClass
 
 const emptyForm = {
   name: "",
@@ -139,6 +143,13 @@ function currentMonthLabel() {
     .replace(/^\w/, (char) => char.toUpperCase())
 }
 
+function todayIsoDate() {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, "0")
+  const day = String(now.getDate()).padStart(2, "0")
+  return `${now.getFullYear()}-${month}-${day}`
+}
+
 const weekdayFromLabel: Record<string, string> = {
   Segunda: "Seg",
   Terça: "Ter",
@@ -176,7 +187,7 @@ function patientToForm(patient: Patient) {
   return {
     name: patient.name,
     birthDate: brDateToInput(patient.birthDate),
-    cpf: patient.cpf,
+    cpf: formatCpf(patient.cpf),
     gender,
     genderOther: gender === OTHER ? patient.gender ?? "" : "",
     cep: patient.cep ?? "",
@@ -186,10 +197,10 @@ function patientToForm(patient: Patient) {
     neighborhood: patient.neighborhood ?? "",
     city: patient.city ?? "",
     state: patient.state ?? "",
-    phone: patient.phone,
+    phone: formatPhone(patient.phone),
     email: patient.email,
     contactName: patient.contactName ?? "",
-    contactPhone: patient.contactPhone ?? "",
+    contactPhone: formatPhone(patient.contactPhone ?? ""),
     contactRelation: patient.contactRelation ?? "",
     patientType: patient.patientType ?? "Primeira entrevista",
     status: patient.status,
@@ -200,7 +211,7 @@ function patientToForm(patient: Patient) {
     modality: patient.modality,
     complaint: patient.complaint === "—" ? "" : patient.complaint,
     approach: patient.approach === "—" ? "" : patient.approach,
-    notes: "",
+    notes: patient.notes ?? "",
     sessionFrequency: patient.sessionFrequency ?? DEFAULT_SESSION_FREQUENCY,
   }
 }
@@ -284,7 +295,9 @@ function buildPatientPayload(
     patientType: form.patientType,
     therapyStart: inputToBrDate(form.therapyStart) || undefined,
     referral: referral || undefined,
+    notes: form.notes.trim() || undefined,
     schedules,
+    recurrenceFrom: base?.recurrenceFrom ?? todayIsoDate(),
   }
 }
 
@@ -435,6 +448,17 @@ export function NewPatientDialog({
     }
   }
 
+  function handlePhoneChange(
+    field: "phone" | "contactPhone",
+    raw: string
+  ) {
+    update(field, formatPhone(raw))
+  }
+
+  function handleCpfChange(raw: string) {
+    update("cpf", formatCpf(raw))
+  }
+
   function addSchedule() {
     setSchedules((current) => [...current, emptySchedule()])
   }
@@ -509,7 +533,7 @@ export function NewPatientDialog({
                         id="patient-name"
                         value={form.name}
                         onChange={(event) => update("name", event.target.value)}
-                        placeholder="Nome e sobrenome"
+                        placeholder="Ex.: Maria Silva"
                         className={fieldClass}
                         autoFocus
                       />
@@ -519,13 +543,12 @@ export function NewPatientDialog({
                       htmlFor="patient-birth"
                       className="col-span-12 sm:col-span-4"
                     >
-                      <Input
+                      <DatePicker
                         id="patient-birth"
-                        type="date"
                         value={form.birthDate}
-                        onChange={(event) =>
-                          update("birthDate", event.target.value)
-                        }
+                        onChange={(next) => update("birthDate", next)}
+                        placeholder="Selecionar data de nascimento"
+                        maxDate={new Date()}
                         className={fieldClass}
                       />
                     </Field>
@@ -537,8 +560,10 @@ export function NewPatientDialog({
                       <Input
                         id="patient-cpf"
                         value={form.cpf}
-                        onChange={(event) => update("cpf", event.target.value)}
-                        placeholder="000.000.000-00"
+                        onChange={(event) =>
+                          handleCpfChange(event.target.value)
+                        }
+                        placeholder="Ex.: 123.456.789-00"
                         inputMode="numeric"
                         maxLength={14}
                         className={fieldClass}
@@ -610,7 +635,7 @@ export function NewPatientDialog({
                               void lookupCep(form.cep)
                             }
                           }}
-                          placeholder="00000-000"
+                          placeholder="Digite o CEP"
                           inputMode="numeric"
                           maxLength={9}
                           aria-busy={cepLookup.status === "loading"}
@@ -644,7 +669,7 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           update("street", event.target.value)
                         }
-                        placeholder="Ex.: Rua das Flores"
+                        placeholder="Ex.: Rua das Flores, 100"
                         className={fieldClass}
                       />
                     </Field>
@@ -659,7 +684,7 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           update("number", event.target.value)
                         }
-                        placeholder="123"
+                        placeholder="Número"
                         className={fieldClass}
                       />
                     </Field>
@@ -739,8 +764,11 @@ export function NewPatientDialog({
                         id="patient-phone"
                         type="tel"
                         value={form.phone}
-                        onChange={(event) => update("phone", event.target.value)}
-                        placeholder="(00) 00000-0000"
+                        onChange={(event) =>
+                          handlePhoneChange("phone", event.target.value)
+                        }
+                        placeholder="Ex.: (11) 98765-4321"
+                        inputMode="numeric"
                         maxLength={15}
                         className={fieldClass}
                       />
@@ -755,7 +783,7 @@ export function NewPatientDialog({
                         type="email"
                         value={form.email}
                         onChange={(event) => update("email", event.target.value)}
-                        placeholder="email@example.com"
+                        placeholder="nome@email.com"
                         className={fieldClass}
                       />
                     </Field>
@@ -784,9 +812,10 @@ export function NewPatientDialog({
                         type="tel"
                         value={form.contactPhone}
                         onChange={(event) =>
-                          update("contactPhone", event.target.value)
+                          handlePhoneChange("contactPhone", event.target.value)
                         }
-                        placeholder="(00) 00000-0000"
+                        placeholder="Ex.: (11) 98765-4321"
+                        inputMode="numeric"
                         maxLength={15}
                         className={fieldClass}
                       />
@@ -897,13 +926,11 @@ export function NewPatientDialog({
                       htmlFor="patient-therapy-start"
                       className="col-span-12 sm:col-span-4"
                     >
-                      <Input
+                      <DatePicker
                         id="patient-therapy-start"
-                        type="date"
                         value={form.therapyStart}
-                        onChange={(event) =>
-                          update("therapyStart", event.target.value)
-                        }
+                        onChange={(next) => update("therapyStart", next)}
+                        placeholder="Selecionar início da terapia"
                         className={fieldClass}
                       />
                     </Field>
@@ -922,7 +949,7 @@ export function NewPatientDialog({
                           onChange={(event) =>
                             update("price", event.target.value)
                           }
-                          placeholder="0,00"
+                          placeholder="Ex.: 200,00"
                           inputMode="decimal"
                           className={cn("pl-9", fieldClass)}
                         />
@@ -1018,7 +1045,7 @@ export function NewPatientDialog({
                       id="patient-session-frequency"
                       className={cn("w-full", fieldClass)}
                     >
-                      <SelectValue />
+                      <SelectValue placeholder="Selecione a frequência" />
                     </SelectTrigger>
                     <SelectContent>
                       {sessionFrequencyOptions.map((option) => (
@@ -1050,7 +1077,7 @@ export function NewPatientDialog({
                             }
                           >
                             <SelectTrigger className={cn("w-full", fieldClass)}>
-                              <SelectValue />
+                              <SelectValue placeholder="Selecione o dia" />
                             </SelectTrigger>
                             <SelectContent>
                               {weekdays.map((day) => (
@@ -1062,12 +1089,14 @@ export function NewPatientDialog({
                           </Select>
                         </Field>
                         <Field label="Horário">
-                          <Input
-                            type="time"
+                          <TimePicker
                             value={row.time}
-                            onChange={(event) =>
-                              updateSchedule(index, "time", event.target.value)
+                            onChange={(next) =>
+                              updateSchedule(index, "time", next)
                             }
+                            placeholder="Selecionar horário"
+                            startHour={6}
+                            endHour={22}
                             className={fieldClass}
                           />
                         </Field>
@@ -1079,7 +1108,7 @@ export function NewPatientDialog({
                             }
                           >
                             <SelectTrigger className={cn("w-full", fieldClass)}>
-                              <SelectValue />
+                              <SelectValue placeholder="Duração" />
                             </SelectTrigger>
                             <SelectContent>
                               {durations.map((duration) => (

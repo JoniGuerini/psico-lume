@@ -54,7 +54,8 @@ function SheetTable({ config }: { config: StyledSheetConfig }) {
 
   return (
     <ScrollArea className="min-h-0 min-w-0 flex-1">
-      <table className="w-max border-collapse text-[13px] leading-snug text-foreground">
+      <div className="inline-block w-max min-w-full pb-1 pr-10">
+        <table className="w-max border-collapse text-[13px] leading-snug text-foreground">
         <thead>
           <tr>
             {headers.map((header) => (
@@ -120,8 +121,9 @@ function SheetTable({ config }: { config: StyledSheetConfig }) {
           )}
         </tbody>
       </table>
-      <ScrollBar orientation="horizontal" />
-      <ScrollBar orientation="vertical" />
+      </div>
+      <ScrollBar orientation="horizontal" variant="sheet" />
+      <ScrollBar orientation="vertical" variant="sheet" />
     </ScrollArea>
   )
 }

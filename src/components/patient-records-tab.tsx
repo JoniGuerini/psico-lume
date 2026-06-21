@@ -5,8 +5,10 @@ import {
   ChevronDown,
   ChevronUp,
   ClipboardList,
+  Pencil,
   Plus,
   Sparkles,
+  Trash2,
 } from "lucide-react"
 
 import { NewSessionNoteDialog } from "@/components/new-session-note-dialog"
@@ -14,6 +16,14 @@ import { modalityLabel } from "@/components/patients-page"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { useClinicData } from "@/context/clinic-data-provider"
 import { getLatestRecord, getRecordsForPatient } from "@/data/clinical-records"
@@ -34,58 +44,90 @@ function Stat({ label, value }: { label: string; value: string }) {
   )
 }
 
-function NoteCard({ note }: { note: SessionNote }) {
+function NoteCard({
+  note,
+  onEdit,
+  onDelete,
+}: {
+  note: SessionNote
+  onEdit: (note: SessionNote) => void
+  onDelete: (note: SessionNote) => void
+}) {
   const [expanded, setExpanded] = useState(false)
 
   return (
     <Card className="gap-0 overflow-hidden p-0">
-      <button
-        type="button"
-        onClick={() => setExpanded((current) => !current)}
-        className="flex w-full items-start gap-3 p-4 text-left transition-colors hover:bg-accent/50"
-      >
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl border border-border bg-background/40">
-          <BookOpen className="size-4 text-muted-foreground" />
-        </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-heading text-sm font-semibold">
-              Sessão {note.sessionNumber}
-            </span>
-            <Badge
-              variant="outline"
-              className="border-border bg-background/40 text-xs"
-            >
-              <Calendar className="size-3" />
-              {note.date}
-            </Badge>
-            {note.mood ? (
-              <Badge
-                variant="outline"
-                className="border-border bg-background/40 text-xs"
-              >
-                {note.mood}
-              </Badge>
-            ) : null}
-            {note.modality ? (
-              <Badge
-                variant="outline"
-                className="border-border bg-background/40 text-xs"
-              >
-                {modalityLabel[note.modality]}
-              </Badge>
-            ) : null}
+      <div className="flex items-start gap-2 p-4">
+        <button
+          type="button"
+          onClick={() => setExpanded((current) => !current)}
+          className="flex min-w-0 flex-1 items-start gap-3 text-left transition-colors hover:opacity-90"
+        >
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl border border-border bg-background/40">
+            <BookOpen className="size-4 text-muted-foreground" />
           </div>
-          <p className="line-clamp-2 text-sm text-muted-foreground">
-            {note.summary}
-          </p>
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-heading text-sm font-semibold">
+                Sessão {note.sessionNumber}
+              </span>
+              <Badge
+                variant="outline"
+                className="border-border bg-background/40 text-xs"
+              >
+                <Calendar className="size-3" />
+                {note.date}
+              </Badge>
+              {note.mood ? (
+                <Badge
+                  variant="outline"
+                  className="border-border bg-background/40 text-xs"
+                >
+                  {note.mood}
+                </Badge>
+              ) : null}
+              {note.modality ? (
+                <Badge
+                  variant="outline"
+                  className="border-border bg-background/40 text-xs"
+                >
+                  {modalityLabel[note.modality]}
+                </Badge>
+              ) : null}
+            </div>
+            <p className="line-clamp-2 text-sm text-muted-foreground">
+              {note.summary}
+            </p>
+          </div>
+          {expanded ? (
+            <ChevronUp className="mt-1 size-4 shrink-0 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="mt-1 size-4 shrink-0 text-muted-foreground" />
+          )}
+        </button>
+        <div className="flex shrink-0 gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Editar evolução"
+            onClick={() => onEdit(note)}
+          >
+            <Pencil className="size-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-destructive"
+            aria-label="Excluir evolução"
+            onClick={() => onDelete(note)}
+          >
+            <Trash2 className="size-4" />
+          </Button>
         </div>
-        {expanded ? (
-          <ChevronUp className="mt-1 size-4 shrink-0 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="mt-1 size-4 shrink-0 text-muted-foreground" />
-        )}
-      </button>
+      </div>
 
       {expanded ? (
         <div className="flex flex-col gap-4 border-t border-border bg-background/40 px-4 py-4">
@@ -133,8 +175,15 @@ function NoteCard({ note }: { note: SessionNote }) {
 }
 
 export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
-  const { sessionNotes, addSessionNote } = useClinicData()
+  const {
+    sessionNotes,
+    addSessionNote,
+    updateSessionNote,
+    deleteSessionNote,
+  } = useClinicData()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingNote, setEditingNote] = useState<SessionNote | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<SessionNote | null>(null)
 
   const notes = useMemo(
     () => getRecordsForPatient(sessionNotes, patient.id),
@@ -162,6 +211,27 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
     return set.size
   }, [notes])
 
+  function openCreateDialog() {
+    setEditingNote(null)
+    setDialogOpen(true)
+  }
+
+  function openEditDialog(note: SessionNote) {
+    setEditingNote(note)
+    setDialogOpen(true)
+  }
+
+  function handleDialogOpenChange(open: boolean) {
+    setDialogOpen(open)
+    if (!open) setEditingNote(null)
+  }
+
+  function handleConfirmDelete() {
+    if (!deleteTarget) return
+    deleteSessionNote(deleteTarget.id)
+    setDeleteTarget(null)
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <Card className="flex flex-col gap-4 border-transparent bg-sidebar p-5 text-sidebar-foreground sm:flex-row sm:items-center sm:justify-between">
@@ -181,7 +251,7 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
         <Button
           size="sm"
           className="shrink-0 bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
-          onClick={() => setDialogOpen(true)}
+          onClick={() => openCreateDialog()}
         >
           <Plus />
           Nova evolução
@@ -257,7 +327,12 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
         ) : (
           <div className="flex flex-col gap-3">
             {notes.map((note) => (
-              <NoteCard key={note.id} note={note} />
+              <NoteCard
+                key={note.id}
+                note={note}
+                onEdit={openEditDialog}
+                onDelete={setDeleteTarget}
+              />
             ))}
           </div>
         )}
@@ -265,11 +340,48 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
 
       <NewSessionNoteDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={handleDialogOpenChange}
         patient={patient}
         nextSessionNumber={nextSessionNumber}
+        note={editingNote}
         onCreate={addSessionNote}
+        onUpdate={updateSessionNote}
       />
+
+      <Dialog
+        open={deleteTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null)
+        }}
+      >
+        <DialogContent className="gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md">
+          <DialogHeader className="border-b border-border px-6 py-4">
+            <DialogTitle className="text-lg">Excluir evolução?</DialogTitle>
+            <DialogDescription>
+              A nota da sessão {deleteTarget?.sessionNumber} (
+              {deleteTarget?.date}) será removida permanentemente do prontuário
+              de {patient.name}.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="border-t border-border px-6 py-4">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setDeleteTarget(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleConfirmDelete}
+            >
+              <Trash2 />
+              Excluir evolução
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

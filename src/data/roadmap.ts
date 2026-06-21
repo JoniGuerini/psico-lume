@@ -8,6 +8,7 @@ import {
   Mail,
   Pencil,
   Search,
+  Trash2,
   UserPlus,
   Users,
   Wallet,
@@ -26,11 +27,11 @@ export type RoadmapItem = {
 }
 
 export const ROADMAP_META = {
-  version: "1.0",
-  versionLabel: "v1.0 — Produto mock completo",
+  version: "1.1",
+  versionLabel: "v1.1 — Modo convidado e refinamentos",
   subtitle:
-    "Fechar a experiência clínica end-to-end com dados mockados. Backend e persistência entram só depois.",
-  progress: 100,
+    "Milestone v1.1: persistência local, CRUD clínico guest, empty states, formulários refinados e planilha Dados polida.",
+  progress: 95,
 }
 
 export const roadmapItems: RoadmapItem[] = [
@@ -238,10 +239,10 @@ export const roadmapItems: RoadmapItem[] = [
     id: "recurring-calendar",
     title: "Agenda recorrente",
     description:
-      "Sessões geradas automaticamente a partir do horário do paciente — 1x, 2x, 3x ou 4x por mês, janela de 90 dias passados e 365 futuros.",
+      "Sessões geradas a partir do horário do paciente — sem preencher datas anteriores ao cadastro (recurrenceFrom).",
     icon: Calendar,
     status: "done",
-    phase: "v1.0",
+    phase: "v1.1 — Modo convidado",
     tags: ["Agenda", "Entregue"],
   },
   {
@@ -293,6 +294,166 @@ export const roadmapItems: RoadmapItem[] = [
     status: "later",
     phase: "Pós v1.0",
     tags: ["Backend", "Auth"],
+  },
+  {
+    id: "guest-mode",
+    title: "Modo convidado (localStorage)",
+    description:
+      "Entrada sem login, dados persistidos no navegador, nome na 1ª visita e exclusão de conta na aba Conta.",
+    icon: UserPlus,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["Auth", "Entregue"],
+  },
+  {
+    id: "themes",
+    title: "Temas Refúgio, Lume e Coral",
+    description:
+      "Três paletas com contraste ajustado na sidebar e menu ativo legível em cada tema.",
+    icon: LayoutDashboard,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["UI", "Entregue"],
+  },
+  {
+    id: "edit-delete-note",
+    title: "Editar e excluir evolução",
+    description:
+      "Ações no prontuário com confirmação ao excluir; modal reutilizado para edição com recálculo de sessões.",
+    icon: Pencil,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["Clínico", "Entregue"],
+  },
+  {
+    id: "delete-patient",
+    title: "Excluir paciente",
+    description:
+      "Zona de perigo no perfil remove paciente, prontuário, agenda e eventos associados.",
+    icon: Trash2,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["Pacientes", "Entregue"],
+  },
+  {
+    id: "guest-profile-name",
+    title: "Salvar nome do convidado no perfil",
+    description:
+      "Campo de nome na aba Perfil da Conta persiste no localStorage e atualiza o header.",
+    icon: UserPlus,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["Conta", "Entregue"],
+  },
+  {
+    id: "patient-notes-field",
+    title: "Observações do paciente",
+    description:
+      "Persistir o campo de observações do formulário de cadastro/edição no tipo Patient.",
+    icon: ClipboardList,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["Pacientes", "Entregue"],
+  },
+  {
+    id: "patient-list-actions",
+    title: "Agendar e anotações na lista",
+    description:
+      "Menus de ação rápida na lista de pacientes abrem agendamento ou nova evolução direto.",
+    icon: Calendar,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["Pacientes", "Entregue"],
+  },
+  {
+    id: "inbox-retained",
+    title: "Inbox (UI mock mantida)",
+    description:
+      "Página preservada como protótipo visual; integração real com e-mail fica para depois.",
+    icon: Mail,
+    status: "planned",
+    phase: "v1.1 — Modo convidado",
+    tags: ["Comunicação", "Mock"],
+  },
+  {
+    id: "toast-system",
+    title: "Sistema de toasts",
+    description:
+      "Confirmações rápidas no canto da tela, padrão inferior direito, com posição configurável em Conta → Aparência.",
+    icon: LayoutDashboard,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["UX", "Entregue"],
+  },
+  {
+    id: "guest-notifications",
+    title: "Notificações automáticas no guest",
+    description:
+      "Gerar alertas locais ao cadastrar paciente, agendar sessão ou registrar evolução.",
+    icon: LayoutDashboard,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["Notificações", "Entregue"],
+  },
+  {
+    id: "delete-session",
+    title: "Excluir sessão na agenda",
+    description:
+      "Remover atendimento criado por engano, com confirmação e ajuste de contadores no modo convidado.",
+    icon: Trash2,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["Agenda", "Entregue"],
+  },
+  {
+    id: "guest-empty-states",
+    title: "Empty states no modo convidado",
+    description:
+      "Pacientes, Home, Financeiro, A receber e Relatórios reconhecem clínica vazia e convidam a cadastrar o primeiro paciente.",
+    icon: Users,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["UX", "Entregue"],
+  },
+  {
+    id: "home-agenda-navigation",
+    title: "Home → agenda do dia",
+    description:
+      "Clicar sessão na Home ou na busca global abre a agenda na visão Dia, sem abrir o modal de edição.",
+    icon: Calendar,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["UX", "Agenda", "Entregue"],
+  },
+  {
+    id: "form-pickers",
+    title: "Date e time pickers nos formulários",
+    description:
+      "Calendário clicável para datas, seletor de hora/minuto nos horários recorrentes e placeholders mais sutis.",
+    icon: Pencil,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["UX", "Formulários", "Entregue"],
+  },
+  {
+    id: "input-masks",
+    title: "Máscaras de CPF e celular",
+    description:
+      "Formatação automática ao digitar no cadastro de paciente — DDD separado e CPF pontuado.",
+    icon: ClipboardList,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["Formulários", "Entregue"],
+  },
+  {
+    id: "sheet-scroll-ux",
+    title: "Planilha Dados mais legível",
+    description:
+      "Barra horizontal mais visível e arrastável na visão em planilha; respiro à direita para a última coluna não ficar cortada.",
+    icon: Database,
+    status: "done",
+    phase: "v1.1 — Modo convidado",
+    tags: ["UX", "Dados", "Entregue"],
   },
 ]
 

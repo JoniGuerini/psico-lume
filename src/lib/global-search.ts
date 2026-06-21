@@ -38,7 +38,7 @@ export type GlobalSearchAction =
       patientId: string
       tab?: "overview" | "sessions" | "records"
     }
-  | { type: "event"; eventId: string }
+  | { type: "event"; dateTimestamp: number }
   | { type: "email"; emailId: string }
   | { type: "notification"; notificationId: string }
   | { type: "quick"; id: QuickActionId }
@@ -242,7 +242,7 @@ function buildEventItems(
         .join(" ")
         .toLowerCase(),
       icon: Calendar,
-      action: { type: "event", eventId: event.id },
+      action: { type: "event", dateTimestamp: event.date.getTime() },
     }
   })
 }

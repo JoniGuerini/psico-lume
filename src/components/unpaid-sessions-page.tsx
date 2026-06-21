@@ -8,6 +8,7 @@ import {
   User,
 } from "lucide-react"
 
+import { NoPatientsEmptyPage } from "@/components/no-patients-empty-page"
 import { modalityLabel } from "@/components/patients-page"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -27,6 +28,7 @@ type Filter = "todas" | "atraso"
 
 type UnpaidSessionsPageProps = {
   onOpenPatient?: (patientId: string) => void
+  onNewPatient?: () => void
   initialFilter?: Filter
 }
 
@@ -71,9 +73,11 @@ function Stat({
 
 export function UnpaidSessionsPage({
   onOpenPatient,
+  onNewPatient,
   initialFilter = "todas",
 }: UnpaidSessionsPageProps) {
   const {
+    patients,
     unpaidSessions,
     unpaidSessionsTotal,
     markEventPaid,
@@ -109,6 +113,15 @@ export function UnpaidSessionsPage({
     () => filtered.map((row) => row.event.id),
     [filtered]
   )
+
+  if (patients.length === 0) {
+    return (
+      <NoPatientsEmptyPage
+        onNewPatient={onNewPatient}
+        description="Cadastre pacientes e registre sessões realizadas para acompanhar os pagamentos aqui."
+      />
+    )
+  }
 
   return (
     <div className="flex w-full flex-col gap-4">

@@ -5,7 +5,24 @@ import { ScrollArea as ScrollAreaPrimitive } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
-type ScrollBarVariant = "default" | "sidebar"
+type ScrollBarVariant = "default" | "sidebar" | "sheet"
+
+const scrollBarTrackClass: Record<ScrollBarVariant, string> = {
+  default:
+    "data-horizontal:h-2 data-horizontal:w-full data-horizontal:flex-col data-horizontal:border-t data-horizontal:border-t-transparent data-vertical:h-full data-vertical:w-2 data-vertical:border-l data-vertical:border-l-transparent",
+  sidebar:
+    "data-horizontal:h-2 data-horizontal:w-full data-horizontal:flex-col data-horizontal:border-t data-horizontal:border-t-transparent data-vertical:h-full data-vertical:w-2 data-vertical:border-l data-vertical:border-l-transparent",
+  sheet:
+    "data-horizontal:h-4 data-horizontal:w-full data-horizontal:flex-col data-horizontal:border-t data-horizontal:border-border data-horizontal:bg-muted/50 data-vertical:h-full data-vertical:w-3 data-vertical:border-l data-vertical:border-border data-vertical:bg-muted/40",
+}
+
+const scrollBarThumbClass: Record<ScrollBarVariant, string> = {
+  default:
+    "bg-[var(--scrollbar-thumb)] hover:bg-[var(--scrollbar-thumb-hover)]",
+  sidebar: "bg-white/30 hover:bg-white/50",
+  sheet:
+    "rounded-md bg-foreground/30 shadow-sm hover:bg-foreground/45 active:bg-foreground/55",
+}
 
 function ScrollBar({
   className,
@@ -21,9 +38,9 @@ function ScrollBar({
       data-orientation={orientation}
       orientation={orientation}
       className={cn(
-        "z-20 flex touch-none p-0.5 transition-colors select-none",
-        "data-horizontal:h-2 data-horizontal:w-full data-horizontal:flex-col data-horizontal:border-t data-horizontal:border-t-transparent",
-        "data-vertical:h-full data-vertical:w-2 data-vertical:border-l data-vertical:border-l-transparent",
+        "z-20 flex touch-none select-none transition-colors",
+        variant === "sheet" ? "p-1" : "p-0.5",
+        scrollBarTrackClass[variant],
         className
       )}
       {...props}
@@ -32,9 +49,9 @@ function ScrollBar({
         data-slot="scroll-area-thumb"
         className={cn(
           "relative flex-1 rounded-full transition-colors",
-          variant === "sidebar"
-            ? "bg-white/30 hover:bg-white/50"
-            : "bg-[var(--scrollbar-thumb)] hover:bg-[var(--scrollbar-thumb-hover)]"
+          variant === "sheet" && orientation === "horizontal" && "min-h-2.5",
+          variant === "sheet" && orientation === "vertical" && "min-w-2",
+          scrollBarThumbClass[variant]
         )}
       />
     </ScrollAreaPrimitive.ScrollAreaScrollbar>

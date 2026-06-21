@@ -121,6 +121,7 @@ function buildPatientsRows(
     "Tipo paciente": patient.patientType ?? "",
     "Início terapia": patient.therapyStart ?? "",
     Encaminhamento: patient.referral ?? "",
+    Observações: patient.notes ?? "",
     _patientStatus: patient.status,
   }))
 }

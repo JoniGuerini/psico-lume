@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react"
-import { CheckCircle2 } from "lucide-react"
+import { CheckCircle2, Trash2 } from "lucide-react"
 
 import { SessionStatusControl } from "@/components/session-status-control"
 import { Button } from "@/components/ui/button"
+import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -13,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { TimePicker } from "@/components/ui/time-picker"
 import type { CalendarEvent, Patient, SessionStatus } from "@/data/types"
 import { parsePrice } from "@/data/patients"
 import {
@@ -39,6 +41,7 @@ type EditSessionFormProps = {
   patients: Patient[]
   onSubmit: (event: CalendarEvent) => void
   onCancel: () => void
+  onDeleteRequest?: () => void
   onMarkPaid?: (id: string, paid: boolean) => void
   onSelectOpenChange?: (open: boolean) => void
 }
@@ -49,6 +52,7 @@ export function EditSessionForm({
   patients,
   onSubmit,
   onCancel,
+  onDeleteRequest,
   onMarkPaid,
   onSelectOpenChange,
 }: EditSessionFormProps) {
@@ -182,11 +186,11 @@ export function EditSessionForm({
             <Label htmlFor="edit-session-date" className="text-xs">
               Data
             </Label>
-            <Input
+            <DatePicker
               id="edit-session-date"
-              type="date"
               value={date}
-              onChange={(formEvent) => setDate(formEvent.target.value)}
+              onChange={setDate}
+              placeholder="Selecionar data"
               className={sessionFieldClass}
             />
           </div>
@@ -196,11 +200,14 @@ export function EditSessionForm({
               <Label htmlFor="edit-session-start" className="text-xs">
                 Início
               </Label>
-              <Input
+              <TimePicker
                 id="edit-session-start"
-                type="time"
                 value={start}
-                onChange={(formEvent) => setStart(formEvent.target.value)}
+                onChange={setStart}
+                placeholder="Selecionar horário"
+                startHour={6}
+                endHour={22}
+                onOpenChange={onSelectOpenChange}
                 className={sessionFieldClass}
               />
             </div>
@@ -314,23 +321,39 @@ export function EditSessionForm({
           </section>
         ) : null}
 
-        <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="hover:bg-accent/50"
-            onClick={onCancel}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            size="sm"
-            disabled={!(lockedPatient?.name ?? patient) || !start}
-          >
-            Salvar alterações
-          </Button>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
+          {onDeleteRequest ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={onDeleteRequest}
+            >
+              <Trash2 />
+              Excluir sessão
+            </Button>
+          ) : (
+            <span aria-hidden />
+          )}
+          <div className="ml-auto flex gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="hover:bg-accent/50"
+              onClick={onCancel}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!(lockedPatient?.name ?? patient) || !start}
+            >
+              Salvar alterações
+            </Button>
+          </div>
         </div>
       </div>
     </form>

@@ -4,11 +4,15 @@ import {
   Eye,
   FileText,
   MoreHorizontal,
+  SearchX,
   UserPlus,
+  Users,
 } from "lucide-react"
 
 import { NewPatientDialog } from "@/components/new-patient-dialog"
+import { NewSessionNoteDialog } from "@/components/new-session-note-dialog"
 import { PatientProfile } from "@/components/patient-profile"
+import { ScheduleSessionDialog } from "@/components/schedule-session-dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -39,6 +43,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useClinicData } from "@/context/clinic-data-provider"
+import { getRecordsForPatient } from "@/data/clinical-records"
 import { getInitials } from "@/data/patients"
 import type { Patient, PatientModality, PatientStatus } from "@/data/types"
 import { cn } from "@/lib/utils"
@@ -78,6 +83,50 @@ function PatientCols() {
   )
 }
 
+function PatientsListEmptyState({
+  hasPatients,
+  onNewPatient,
+  onClearFilters,
+}: {
+  hasPatients: boolean
+  onNewPatient: () => void
+  onClearFilters: () => void
+}) {
+  return (
+    <div className="flex h-full w-full min-h-0 flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/40 p-10 text-center">
+      <div className="flex size-12 items-center justify-center rounded-full border border-border bg-background/40">
+        {hasPatients ? (
+          <SearchX className="size-5 text-muted-foreground" />
+        ) : (
+          <Users className="size-5 text-muted-foreground" />
+        )}
+      </div>
+      <div className="flex max-w-sm flex-col gap-1">
+        <p className="font-medium">
+          {hasPatients
+            ? "Nenhum paciente encontrado"
+            : "Nenhum paciente cadastrado"}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {hasPatients
+            ? "Ajuste a busca ou o filtro de status, ou limpe os filtros para ver todos."
+            : "Cadastre seu primeiro paciente para começar o acompanhamento clínico."}
+        </p>
+      </div>
+      {hasPatients ? (
+        <Button variant="outline" size="sm" onClick={onClearFilters}>
+          Limpar filtros
+        </Button>
+      ) : (
+        <Button size="sm" onClick={onNewPatient}>
+          <UserPlus />
+          Novo paciente
+        </Button>
+      )}
+    </div>
+  )
+}
+
 export function PatientsPage({
   initialPatientId = null,
   initialProfileTab = "overview",
@@ -89,11 +138,14 @@ export function PatientsPage({
   openNewPatient?: boolean
   onNewPatientOpenChange?: (open: boolean) => void
 } = {}) {
-  const { patients, activeCount, addPatient } = useClinicData()
+  const { patients, activeCount, addPatient, addEvent, addSessionNote, sessionNotes } =
+    useClinicData()
   const [query, setQuery] = useState("")
   const [status, setStatus] = useState<PatientStatus | "todos">("todos")
   const [newPatientOpen, setNewPatientOpen] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(initialPatientId)
+  const [schedulePatientId, setSchedulePatientId] = useState<string | null>(null)
+  const [notePatientId, setNotePatientId] = useState<string | null>(null)
   const [profileTab, setProfileTab] = useState<
     "overview" | "sessions" | "records"
   >(initialProfileTab)
@@ -128,6 +180,22 @@ export function PatientsPage({
   const selectedPatient =
     patients.find((patient) => patient.id === selectedId) ?? null
 
+  const schedulePatient =
+    patients.find((patient) => patient.id === schedulePatientId) ?? null
+
+  const notePatient =
+    patients.find((patient) => patient.id === notePatientId) ?? null
+
+  const notePatientNextSession = useMemo(() => {
+    if (!notePatient) return 1
+    const notes = getRecordsForPatient(sessionNotes, notePatient.id)
+    const maxNumber = notes.reduce(
+      (max, note) => Math.max(max, note.sessionNumber),
+      0
+    )
+    return Math.max(maxNumber + 1, notePatient.sessions + 1)
+  }, [notePatient, sessionNotes])
+
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase()
     return patients.filter((patient) => {
@@ -153,6 +221,32 @@ export function PatientsPage({
           patient={selectedPatient}
           initialTab={profileTab}
           onBack={() => setSelectedId(null)}
+          onPatientDeleted={() => setSelectedId(null)}
+        />
+      </div>
+    )
+  }
+
+  if (patients.length === 0) {
+    return (
+      <div className="flex min-h-0 flex-1 w-full flex-col">
+        <Card className="flex min-h-0 w-full flex-1 flex-col overflow-hidden p-0">
+          <div className="flex min-h-0 flex-1 flex-col p-4">
+            <PatientsListEmptyState
+              hasPatients={false}
+              onNewPatient={() => setNewPatientOpen(true)}
+              onClearFilters={() => {
+                setQuery("")
+                setStatus("todos")
+              }}
+            />
+          </div>
+        </Card>
+
+        <NewPatientDialog
+          open={newPatientOpen}
+          onOpenChange={handleNewPatientOpenChange}
+          onCreate={handleCreate}
         />
       </div>
     )
@@ -230,24 +324,24 @@ export function PatientsPage({
           </Table>
         </div>
 
-        <Card className="min-h-0 w-full flex-1 overflow-hidden p-0">
-          <ScrollArea className="h-full">
-            <Table className="table-fixed">
-            <PatientCols />
-            <TableBody>
-              {filtered.length === 0 ? (
-                <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={9} className="h-40 text-center">
-                    <p className="text-sm font-medium">
-                      Nenhum paciente encontrado
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Ajuste a busca ou o filtro de status.
-                    </p>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filtered.map((patient) => (
+        <Card className="flex min-h-0 w-full flex-1 flex-col overflow-hidden p-0">
+          {filtered.length === 0 ? (
+            <div className="flex min-h-0 flex-1 flex-col p-4">
+              <PatientsListEmptyState
+                hasPatients
+                onNewPatient={() => setNewPatientOpen(true)}
+                onClearFilters={() => {
+                  setQuery("")
+                  setStatus("todos")
+                }}
+              />
+            </div>
+          ) : (
+            <ScrollArea className="h-full min-h-0 flex-1">
+              <Table className="table-fixed">
+                <PatientCols />
+                <TableBody>
+                  {filtered.map((patient) => (
                   <TableRow
                     key={patient.id}
                     className="cursor-pointer hover:bg-accent/50"
@@ -329,24 +423,28 @@ export function PatientsPage({
                             <Eye />
                             Ver prontuário
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setSchedulePatientId(patient.id)}
+                          >
                             <CalendarPlus />
                             Agendar sessão
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setNotePatientId(patient.id)}
+                          >
                             <FileText />
-                            Anotações
+                            Nova evolução
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+                  ))}
+                </TableBody>
+              </Table>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          )}
         </Card>
       </div>
 
@@ -355,6 +453,30 @@ export function PatientsPage({
         onOpenChange={handleNewPatientOpenChange}
         onCreate={handleCreate}
       />
+
+      {schedulePatient ? (
+        <ScheduleSessionDialog
+          open={schedulePatientId !== null}
+          onOpenChange={(open) => {
+            if (!open) setSchedulePatientId(null)
+          }}
+          patient={schedulePatient}
+          patients={patients}
+          onSchedule={addEvent}
+        />
+      ) : null}
+
+      {notePatient ? (
+        <NewSessionNoteDialog
+          open={notePatientId !== null}
+          onOpenChange={(open) => {
+            if (!open) setNotePatientId(null)
+          }}
+          patient={notePatient}
+          nextSessionNumber={notePatientNextSession}
+          onCreate={addSessionNote}
+        />
+      ) : null}
     </div>
   )
 }
