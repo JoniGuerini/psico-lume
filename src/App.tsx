@@ -284,7 +284,7 @@ export function App() {
                         "flex min-h-0 flex-1 flex-col p-4 gap-[var(--density-page-gap)]",
                         FILL_VIEWPORT_PAGE_IDS.has(activeItem)
                           ? "overflow-hidden"
-                          : "overflow-y-auto overscroll-contain"
+                          : "overflow-x-hidden overflow-y-auto overscroll-contain"
                       )}
                     >
                       {activeItem === APP_PAGE_ID.inicio ? (

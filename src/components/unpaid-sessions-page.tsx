@@ -22,6 +22,7 @@ import {
   formatLocaleDate,
   getModalityLabel,
 } from "@/lib/i18n-helpers"
+import { LUME_PAGE_CONTENT_CLASS } from "@/lib/design-system"
 import { cn } from "@/lib/utils"
 
 type Filter = "todas" | "atraso"
@@ -115,7 +116,7 @@ export function UnpaidSessionsPage({
   }
 
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className={LUME_PAGE_CONTENT_CLASS}>
       <Card className="flex flex-col gap-4 border-transparent bg-sidebar p-5 text-sidebar-foreground sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/10">
@@ -233,12 +234,12 @@ export function UnpaidSessionsPage({
           </div>
         </Card>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2">
           {filtered.map((row) => (
             <Card
               key={row.event.id}
               className={cn(
-                "flex flex-col gap-3 p-4 shadow-sm sm:flex-row sm:items-center",
+                "flex min-w-0 w-full flex-col gap-3 p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between",
                 row.overdue ? "border-attention/25" : "border-border"
               )}
             >
@@ -301,11 +302,11 @@ export function UnpaidSessionsPage({
                 </div>
               </div>
 
-              <div className="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end lg:flex-row lg:items-center">
+              <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center justify-between gap-3 lg:w-auto lg:justify-end">
                 <span className="font-heading text-lg font-semibold tabular-nums">
                   {formatLocaleCurrency(row.amount, locale)}
                 </span>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {onOpenPatient ? (
                     <Button
                       variant="outline"

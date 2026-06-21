@@ -15,6 +15,13 @@ import type { PatientStatus, SessionStatus } from "@/data/types"
 export const LUME_MAIN_SURFACE_CLASS =
   "relative flex min-h-0 min-w-0 flex-1 flex-col self-stretch overflow-hidden rounded-2xl bg-background shadow-sm m-2 ml-0"
 
+/** Scroll de página quando o shell principal usa overflow-hidden (FILL_VIEWPORT). */
+export const LUME_PAGE_SCROLL_CLASS =
+  "flex min-h-0 min-w-0 flex-1 w-full flex-col gap-4 overflow-x-hidden overflow-y-auto overscroll-contain"
+
+/** Conteúdo de página com scroll no shell (fora de FILL_VIEWPORT). */
+export const LUME_PAGE_CONTENT_CLASS = "flex min-w-0 w-full flex-col gap-4"
+
 /** Modais e painéis largos (creme mais claro que o fundo). */
 export const LUME_DIALOG_SURFACE_CLASS = "bg-surface-dialog"
 

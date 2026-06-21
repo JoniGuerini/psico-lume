@@ -52,6 +52,7 @@ import {
   getSessionOutcomeBreakdown,
   parseReportMonth,
 } from "@/lib/report-metrics"
+import { LUME_PAGE_CONTENT_CLASS } from "@/lib/design-system"
 import { cn } from "@/lib/utils"
 
 const modalityColor: Record<PatientModality, string> = {
@@ -214,7 +215,7 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
   }
 
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className={LUME_PAGE_CONTENT_CLASS}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-semibold">{t("reports.title")}</h2>
@@ -303,7 +304,7 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
         </div>
         <ChartContainer
           config={attendanceTrendConfig}
-          className="aspect-auto h-[280px] w-full"
+          className="aspect-auto h-[280px] min-h-[280px] w-full min-w-0 shrink-0"
         >
           <LineChart data={historySlice} margin={{ left: 12, right: 12, top: 8 }}>
             <CartesianGrid vertical={false} />
@@ -366,7 +367,7 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
           {modalityAttendance.length > 0 ? (
             <ChartContainer
               config={modalityAttendanceConfig}
-              className="aspect-auto h-[220px] w-full"
+              className="aspect-auto h-[220px] min-h-[220px] w-full min-w-0 shrink-0"
             >
               <BarChart
                 data={modalityAttendance.map((row) => ({
@@ -433,10 +434,10 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
             </p>
           </div>
           {modalityRevenue.length > 0 ? (
-            <div className="flex flex-col items-center gap-4 sm:flex-row">
+            <div className="flex min-w-0 flex-col items-center gap-4 sm:flex-row">
               <ChartContainer
                 config={modalityRevenueConfig}
-                className="aspect-square h-[200px]"
+                className="aspect-square h-[200px] min-h-[200px] w-[200px] shrink-0"
               >
                 <PieChart>
                   <ChartTooltip
@@ -456,7 +457,7 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
                   </Pie>
                 </PieChart>
               </ChartContainer>
-              <div className="flex w-full flex-1 flex-col gap-3">
+              <div className="flex min-w-0 w-full flex-1 flex-col gap-3">
                 {modalityRevenue.map((item) => {
                   const pct = modalityRevenueTotal
                     ? Math.round((item.value / modalityRevenueTotal) * 100)

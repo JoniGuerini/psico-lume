@@ -21,9 +21,6 @@ export const FILL_VIEWPORT_PAGE_IDS = new Set<AppPageId>([
   APP_PAGE_ID.caixaEntrada,
   APP_PAGE_ID.agenda,
   APP_PAGE_ID.pacientes,
-  APP_PAGE_ID.financeiro,
-  APP_PAGE_ID.aReceber,
-  APP_PAGE_ID.relatorios,
   APP_PAGE_ID.notificacoes,
   APP_PAGE_ID.dados,
 ])

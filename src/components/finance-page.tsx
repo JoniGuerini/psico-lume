@@ -48,6 +48,7 @@ import {
   formatLocaleCurrencyCompact,
   getModalityLabel,
 } from "@/lib/i18n-helpers"
+import { LUME_PAGE_CONTENT_CLASS } from "@/lib/design-system"
 import { cn } from "@/lib/utils"
 
 const WEEKS_PER_MONTH = 4.33
@@ -222,7 +223,7 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
   }
 
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className={LUME_PAGE_CONTENT_CLASS}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-semibold">{t("finance.title")}</h2>
@@ -293,7 +294,7 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
         </div>
         <ChartContainer
           config={revenueConfig}
-          className="aspect-auto h-[280px] w-full"
+          className="aspect-auto h-[280px] min-h-[280px] w-full min-w-0 shrink-0"
         >
           <AreaChart
             data={historySlice}
@@ -352,10 +353,10 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
               {t("finance.charts.revenueByModalityHint")}
             </p>
           </div>
-          <div className="flex flex-col items-center gap-4 sm:flex-row">
+          <div className="flex min-w-0 flex-col items-center gap-4 sm:flex-row">
             <ChartContainer
               config={modalityConfig}
-              className="aspect-square h-[200px]"
+              className="aspect-square h-[200px] min-h-[200px] w-[200px] shrink-0"
             >
               <PieChart>
                 <ChartTooltip
@@ -375,7 +376,7 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
                 </Pie>
               </PieChart>
             </ChartContainer>
-            <div className="flex w-full flex-1 flex-col gap-3">
+            <div className="flex min-w-0 w-full flex-1 flex-col gap-3">
               {modalityData.map((item) => {
                 const pct = modalityTotal
                   ? Math.round((item.value / modalityTotal) * 100)
@@ -411,7 +412,7 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
           </div>
           <ChartContainer
             config={approachConfig}
-            className="aspect-auto h-[200px] w-full"
+            className="aspect-auto h-[200px] min-h-[200px] w-full min-w-0 shrink-0"
           >
             <BarChart data={approachData} margin={{ top: 8 }}>
               <CartesianGrid vertical={false} />
