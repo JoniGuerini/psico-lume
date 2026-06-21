@@ -22,6 +22,7 @@ import type {
   Notification,
   Patient,
 } from "@/data/types"
+import { APP_PAGE, type AppPage } from "@/lib/app-pages"
 import { addDays } from "@/data/patients"
 import { sessionStatusConfig } from "@/lib/session-status"
 
@@ -32,7 +33,7 @@ const SEARCH_EVENT_LIMIT = 80
 export type QuickActionId = "new-patient" | "new-session"
 
 export type GlobalSearchAction =
-  | { type: "navigate"; page: string }
+  | { type: "navigate"; page: AppPage }
   | {
       type: "patient"
       patientId: string
@@ -82,92 +83,92 @@ const navigationItems: GlobalSearchItem[] = [
   {
     id: "nav-home",
     group: "Navegação",
-    title: "Home",
+    title: APP_PAGE.inicio,
     subtitle: "Painel do dia",
-    value: "home painel dashboard início",
+    value: "início home painel dashboard",
     icon: Home,
-    action: { type: "navigate", page: "Home" },
+    action: { type: "navigate", page: APP_PAGE.inicio },
   },
   {
     id: "nav-inbox",
     group: "Navegação",
-    title: "Inbox",
+    title: APP_PAGE.caixaEntrada,
     subtitle: "E-mails",
-    value: "inbox e-mails mensagens",
+    value: "caixa de entrada inbox e-mails mensagens",
     icon: Inbox,
-    action: { type: "navigate", page: "Inbox" },
+    action: { type: "navigate", page: APP_PAGE.caixaEntrada },
   },
   {
     id: "nav-agenda",
     group: "Navegação",
-    title: "Agenda",
+    title: APP_PAGE.agenda,
     subtitle: "Calendário de sessões",
     value: "agenda calendário sessões atendimentos",
     icon: Calendar,
-    action: { type: "navigate", page: "Agenda" },
+    action: { type: "navigate", page: APP_PAGE.agenda },
   },
   {
     id: "nav-pacientes",
     group: "Navegação",
-    title: "Pacientes",
+    title: APP_PAGE.pacientes,
     subtitle: "Lista e perfis",
     value: "pacientes lista perfis cadastro",
     icon: Users,
-    action: { type: "navigate", page: "Pacientes" },
+    action: { type: "navigate", page: APP_PAGE.pacientes },
   },
   {
     id: "nav-financeiro",
     group: "Navegação",
-    title: "Financeiro",
+    title: APP_PAGE.financeiro,
     subtitle: "Receita e inadimplência",
     value: "financeiro receita pagamentos inadimplência",
     icon: Wallet,
-    action: { type: "navigate", page: "Financeiro" },
+    action: { type: "navigate", page: APP_PAGE.financeiro },
   },
   {
     id: "nav-a-receber",
     group: "Navegação",
-    title: "A receber",
+    title: APP_PAGE.aReceber,
     subtitle: "Sessões realizadas sem pagamento",
     value: "a receber sessões pendentes cobrança pagamento em aberto",
     icon: CircleDollarSign,
-    action: { type: "navigate", page: "A receber" },
+    action: { type: "navigate", page: APP_PAGE.aReceber },
   },
   {
     id: "nav-notifications",
     group: "Navegação",
-    title: "Notificações",
+    title: APP_PAGE.notificacoes,
     subtitle: "Alertas da clínica",
     value: "notificações alertas avisos",
     icon: Bell,
-    action: { type: "navigate", page: "Notifications" },
+    action: { type: "navigate", page: APP_PAGE.notificacoes },
   },
   {
     id: "nav-relatorios",
     group: "Navegação",
-    title: "Relatórios",
+    title: APP_PAGE.relatorios,
     subtitle: "Comparecimento e receita por modalidade",
     value: "relatórios comparecimento presença modalidade taxa",
     icon: BarChart3,
-    action: { type: "navigate", page: "Relatórios" },
+    action: { type: "navigate", page: APP_PAGE.relatorios },
   },
   {
     id: "nav-dados",
     group: "Navegação",
-    title: "Dados",
+    title: APP_PAGE.dados,
     subtitle: "Visão em planilha dos dados da clínica",
-    value: "dados planilha tabela export xlsx sheet",
+    value: "dados planilha tabela export xlsx",
     icon: FileSpreadsheet,
-    action: { type: "navigate", page: "Dados" },
+    action: { type: "navigate", page: APP_PAGE.dados },
   },
   {
     id: "nav-roadmap",
     group: "Navegação",
-    title: "Roadmap",
+    title: APP_PAGE.roteiro,
     subtitle: "Progresso do produto",
-    value: "roadmap progresso versão",
+    value: "roteiro roadmap progresso versão",
     icon: MapIcon,
-    action: { type: "navigate", page: "Roadmap" },
+    action: { type: "navigate", page: APP_PAGE.roteiro },
   },
 ]
 

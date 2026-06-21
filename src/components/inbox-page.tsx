@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useClinicData } from "@/context/clinic-data-provider"
 import { getInitials } from "@/data/patients"
+import { APP_PAGE } from "@/lib/app-pages"
 import { cn } from "@/lib/utils"
 import type { InboxEmail } from "@/data/types"
 
@@ -68,7 +69,7 @@ export function InboxPage({
         <div className="flex flex-col gap-4 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold">Inbox</h2>
+              <h2 className="text-lg font-semibold">{APP_PAGE.caixaEntrada}</h2>
               <Badge variant="outline" className="border-border bg-background/40">
                 {unreadCount} não lidos
               </Badge>

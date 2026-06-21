@@ -180,7 +180,7 @@ export function buildInboxEmails(patients: Patient[] = mockPatients): InboxEmail
       patientId: leonardo.id,
       name: leonardo.name,
       email: leonardo.email,
-      subject: "Feedback sobre sessão de ontem",
+      subject: "Retorno sobre sessão de ontem",
       preview:
         "A conversa sobre autocrítica no trabalho me ajudou a enxergar padrões.",
       body: [

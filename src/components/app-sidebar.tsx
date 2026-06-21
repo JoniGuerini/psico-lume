@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 
 import { NavUser } from "@/components/nav-user"
+import { APP_PAGE, type AppPage } from "@/lib/app-pages"
 import {
   Sidebar,
   SidebarContent,
@@ -26,7 +27,7 @@ import {
 } from "@/components/ui/sidebar"
 
 type NavItem = {
-  title: string
+  title: AppPage
   url: string
   icon: LucideIcon
 }
@@ -38,39 +39,39 @@ type NavGroup = {
 
 const navGroups: NavGroup[] = [
   {
-    label: "Início",
+    label: "Geral",
     items: [
-      { title: "Home", url: "#", icon: Home },
-      { title: "Inbox", url: "#", icon: Inbox },
+      { title: APP_PAGE.inicio, url: "#", icon: Home },
+      { title: APP_PAGE.caixaEntrada, url: "#", icon: Inbox },
     ],
   },
   {
     label: "Atendimento",
     items: [
-      { title: "Agenda", url: "#", icon: Calendar },
-      { title: "Pacientes", url: "#", icon: Users },
+      { title: APP_PAGE.agenda, url: "#", icon: Calendar },
+      { title: APP_PAGE.pacientes, url: "#", icon: Users },
     ],
   },
   {
     label: "Financeiro",
     items: [
-      { title: "A receber", url: "#", icon: CircleDollarSign },
-      { title: "Financeiro", url: "#", icon: Wallet },
-      { title: "Relatórios", url: "#", icon: BarChart3 },
+      { title: APP_PAGE.aReceber, url: "#", icon: CircleDollarSign },
+      { title: APP_PAGE.financeiro, url: "#", icon: Wallet },
+      { title: APP_PAGE.relatorios, url: "#", icon: BarChart3 },
     ],
   },
   {
     label: "Gestão",
     items: [
-      { title: "Dados", url: "#", icon: FileSpreadsheet },
-      { title: "Roadmap", url: "#", icon: Map },
+      { title: APP_PAGE.dados, url: "#", icon: FileSpreadsheet },
+      { title: APP_PAGE.roteiro, url: "#", icon: Map },
     ],
   },
 ]
 
 type AppSidebarProps = {
-  activeItem: string
-  onSelect: (title: string) => void
+  activeItem: AppPage
+  onSelect: (title: AppPage) => void
   onOpenAccount: () => void
   onLogout: () => void
   user: {
@@ -87,7 +88,7 @@ function SidebarNavItem({
 }: {
   item: NavItem
   isActive: boolean
-  onSelect: (title: string) => void
+  onSelect: (title: AppPage) => void
 }) {
   return (
     <SidebarMenuItem>
@@ -123,7 +124,7 @@ export function AppSidebar({
               size="lg"
               tooltip="Lume"
               className="h-14 gap-2 px-3 data-[active=true]:bg-transparent data-[active=true]:text-sidebar-foreground group-data-[collapsible=icon]:!size-auto group-data-[collapsible=icon]:!h-auto group-data-[collapsible=icon]:!min-h-0 group-data-[collapsible=icon]:!w-full group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:overflow-visible group-data-[collapsible=icon]:justify-center [&_svg]:!size-9"
-              onClick={() => onSelect("Home")}
+              onClick={() => onSelect(APP_PAGE.inicio)}
             >
               <span className="inline-flex shrink-0 items-center justify-center">
                 <svg

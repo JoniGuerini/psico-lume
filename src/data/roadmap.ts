@@ -30,7 +30,7 @@ export const ROADMAP_META = {
   version: "1.1",
   versionLabel: "v1.1 — Modo convidado e refinamentos",
   subtitle:
-    "Milestone v1.1: persistência local, CRUD clínico guest, empty states, formulários refinados e planilha Dados polida.",
+    "Milestone v1.1: persistência local, CRUD clínico convidado, estados vazios, formulários refinados e planilha Dados polida.",
   progress: 95,
 }
 
@@ -57,13 +57,13 @@ export const roadmapItems: RoadmapItem[] = [
   },
   {
     id: "home",
-    title: "Home / painel do dia",
+    title: "Início / painel do dia",
     description:
       "Resumo de atendimentos, estatísticas da semana, receita prevista e alertas de inadimplência.",
     icon: LayoutDashboard,
     status: "done",
     phase: "Telas core",
-    tags: ["Dashboard"],
+    tags: ["Painel"],
   },
   {
     id: "patients",
@@ -89,7 +89,7 @@ export const roadmapItems: RoadmapItem[] = [
     id: "finance",
     title: "Financeiro",
     description:
-      "Dashboard com gráficos, receita mensal, inadimplência e visão por modalidade.",
+      "Painel com gráficos, receita mensal, inadimplência e visão por modalidade.",
     icon: Wallet,
     status: "done",
     phase: "Telas core",
@@ -97,7 +97,7 @@ export const roadmapItems: RoadmapItem[] = [
   },
   {
     id: "inbox",
-    title: "Inbox",
+    title: "Caixa de entrada",
     description:
       "Lista de e-mails mock, leitura lateral, busca e tabs alinhadas ao design system.",
     icon: Mail,
@@ -133,7 +133,7 @@ export const roadmapItems: RoadmapItem[] = [
     icon: LayoutDashboard,
     status: "done",
     phase: "Telas core",
-    tags: ["Auth mock"],
+    tags: ["Login demo"],
   },
   {
     id: "records",
@@ -199,7 +199,7 @@ export const roadmapItems: RoadmapItem[] = [
     id: "unpaid-sessions",
     title: "Sessões a receber",
     description:
-      "Página consolidada de sessões realizadas não pagas, filtros, marcar como paga, navegação na Home e pagamento por sessão no evento.",
+      "Página consolidada de sessões realizadas não pagas, filtros, marcar como paga, navegação no Início e pagamento por sessão no evento.",
     icon: CircleDollarSign,
     status: "done",
     phase: "v1.0",
@@ -219,7 +219,7 @@ export const roadmapItems: RoadmapItem[] = [
     id: "finance-agenda",
     title: "Agenda ↔ Financeiro",
     description:
-      "Cobrança por status (realizada / faltou sem aviso), valor por sessão, atraso após o mês, inadimplência automática com override no perfil, Financeiro e Home com dados reais.",
+      "Cobrança por status (realizada / faltou sem aviso), valor por sessão, atraso após o mês, inadimplência automática com override no perfil, Financeiro e Início com dados reais.",
     icon: Wallet,
     status: "done",
     phase: "v1.0",
@@ -249,7 +249,7 @@ export const roadmapItems: RoadmapItem[] = [
     id: "search-input-clear",
     title: "Limpar busca nos campos",
     description:
-      "SearchInput reutilizável com X no fim e hover azul Luma — Pacientes, Inbox e busca global.",
+      "Campo de busca reutilizável com X no fim e hover azul Luma — Pacientes, caixa de entrada e busca global.",
     icon: Search,
     status: "done",
     phase: "v1.0",
@@ -267,9 +267,9 @@ export const roadmapItems: RoadmapItem[] = [
   },
   {
     id: "custom-scrollbar",
-    title: "Scrollbar customizada",
+    title: "Barra de rolagem customizada",
     description:
-      "ScrollArea próprio (Radix), barra nativa do SO oculta e thumb Luma sem setas — inbox, modais e listas.",
+      "ScrollArea próprio (Radix), barra nativa do SO oculta e thumb Luma sem setas — caixa de entrada, modais e listas.",
     icon: LayoutDashboard,
     status: "done",
     phase: "v1.0",
@@ -293,7 +293,7 @@ export const roadmapItems: RoadmapItem[] = [
     icon: Database,
     status: "later",
     phase: "Pós v1.0",
-    tags: ["Backend", "Auth"],
+    tags: ["Infraestrutura", "Autenticação"],
   },
   {
     id: "guest-mode",
@@ -303,7 +303,7 @@ export const roadmapItems: RoadmapItem[] = [
     icon: UserPlus,
     status: "done",
     phase: "v1.1 — Modo convidado",
-    tags: ["Auth", "Entregue"],
+    tags: ["Autenticação", "Entregue"],
   },
   {
     id: "themes",
@@ -367,13 +367,13 @@ export const roadmapItems: RoadmapItem[] = [
   },
   {
     id: "inbox-retained",
-    title: "Inbox (UI mock mantida)",
+    title: "Caixa de entrada (UI demo mantida)",
     description:
       "Página preservada como protótipo visual; integração real com e-mail fica para depois.",
     icon: Mail,
     status: "planned",
     phase: "v1.1 — Modo convidado",
-    tags: ["Comunicação", "Mock"],
+    tags: ["Comunicação", "Demo"],
   },
   {
     id: "toast-system",
@@ -387,7 +387,7 @@ export const roadmapItems: RoadmapItem[] = [
   },
   {
     id: "guest-notifications",
-    title: "Notificações automáticas no guest",
+    title: "Notificações automáticas no modo convidado",
     description:
       "Gerar alertas locais ao cadastrar paciente, agendar sessão ou registrar evolução.",
     icon: LayoutDashboard,
@@ -407,9 +407,9 @@ export const roadmapItems: RoadmapItem[] = [
   },
   {
     id: "guest-empty-states",
-    title: "Empty states no modo convidado",
+    title: "Estados vazios no modo convidado",
     description:
-      "Pacientes, Home, Financeiro, A receber e Relatórios reconhecem clínica vazia e convidam a cadastrar o primeiro paciente.",
+      "Pacientes, Início, Financeiro, A receber e Relatórios reconhecem clínica vazia e convidam a cadastrar o primeiro paciente.",
     icon: Users,
     status: "done",
     phase: "v1.1 — Modo convidado",
@@ -417,9 +417,9 @@ export const roadmapItems: RoadmapItem[] = [
   },
   {
     id: "home-agenda-navigation",
-    title: "Home → agenda do dia",
+    title: "Início → agenda do dia",
     description:
-      "Clicar sessão na Home ou na busca global abre a agenda na visão Dia, sem abrir o modal de edição.",
+      "Clicar sessão no Início ou na busca global abre a agenda na visão Dia, sem abrir o modal de edição.",
     icon: Calendar,
     status: "done",
     phase: "v1.1 — Modo convidado",

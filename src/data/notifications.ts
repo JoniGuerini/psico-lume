@@ -151,7 +151,7 @@ export function buildNotifications(
     id: "10",
     icon: Inbox,
     category: "mensagem",
-    title: "Inbox — 2 e-mails não lidos",
+    title: "Caixa de entrada — 2 e-mails não lidos",
     description: "Dois e-mails aguardando leitura na caixa de entrada.",
     date: minutesAgo(60 * 80),
     read: true,

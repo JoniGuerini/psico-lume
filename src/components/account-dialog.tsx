@@ -62,7 +62,7 @@ const sections: Section[] = [
   {
     id: "perfil",
     label: "Perfil",
-    description: "Nome, e-mail e foto no workspace.",
+    description: "Nome, e-mail e foto no perfil.",
     icon: User,
   },
   {
@@ -80,7 +80,7 @@ const sections: Section[] = [
   {
     id: "aparencia",
     label: "Aparência",
-    description: "Personalize o visual do seu workspace.",
+    description: "Personalize o visual do aplicativo.",
     icon: Palette,
   },
 ]
@@ -691,13 +691,13 @@ export function AccountDialog({
               <div className="flex flex-col gap-6">
                 <SectionHeading
                   title="Aparência"
-                  description="Personalize o visual do seu workspace."
+                  description="Personalize o visual do aplicativo."
                 />
 
                 <Panel className="gap-4">
                   <div className="flex flex-col gap-1">
                     <h4 className="font-heading text-base font-semibold">
-                      Tema do workspace
+                      Tema do aplicativo
                     </h4>
                     <p className="text-sm text-muted-foreground">
                       Cores do shell, fundo e destaques em todo o app.

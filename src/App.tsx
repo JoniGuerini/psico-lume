@@ -43,19 +43,8 @@ import {
   LUME_MAIN_SURFACE_CLASS,
   authFadeTransition,
 } from "@/lib/motion-layout"
+import { APP_PAGE, FILL_VIEWPORT_PAGES, type AppPage } from "@/lib/app-pages"
 import { cn } from "@/lib/utils"
-
-const fillViewportPages = new Set([
-  "Home",
-  "Inbox",
-  "Agenda",
-  "Pacientes",
-  "Financeiro",
-  "A receber",
-  "Relatórios",
-  "Notifications",
-  "Dados",
-])
 
 export function App() {
   const [authSession, setAuthSession] = useState<AuthSession | null>(() =>
@@ -67,7 +56,7 @@ export function App() {
   const user = authSession
     ? authSessionToUser(authSession)
     : authSessionToUser({ mode: "demo" })
-  const [activeItem, setActiveItem] = useState("Home")
+  const [activeItem, setActiveItem] = useState<AppPage>(APP_PAGE.inicio)
   const [accountOpen, setAccountOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [patientFocus, setPatientFocus] = useState<{
@@ -89,7 +78,7 @@ export function App() {
 
   useGlobalSearchShortcut(() => setSearchOpen(true))
 
-  function handleNavigate(page: string) {
+  function handleNavigate(page: AppPage) {
     setActiveItem(page)
     setPatientFocus(null)
     setEmailFocus(null)
@@ -107,7 +96,7 @@ export function App() {
     setOpenNewSession(false)
     setReceivablesFilter("todas")
     setCalendarView("semana")
-    setActiveItem("Agenda")
+    setActiveItem(APP_PAGE.agenda)
   }
 
   function handleViewReceivables() {
@@ -116,7 +105,7 @@ export function App() {
     setOpenNewPatient(false)
     setOpenNewSession(false)
     setReceivablesFilter("atraso")
-    setActiveItem("A receber")
+    setActiveItem(APP_PAGE.aReceber)
   }
 
   function handleOpenAgendaDay(date: Date) {
@@ -127,7 +116,7 @@ export function App() {
     setReceivablesFilter("todas")
     setCalendarView("dia")
     setCalendarDateFocus(date.getTime())
-    setActiveItem("Agenda")
+    setActiveItem(APP_PAGE.agenda)
   }
 
   function handleSearchSelect(action: GlobalSearchAction) {
@@ -140,7 +129,7 @@ export function App() {
         setEmailFocus(null)
         setOpenNewPatient(false)
         setOpenNewSession(false)
-        setActiveItem("Pacientes")
+        setActiveItem(APP_PAGE.pacientes)
         break
       case "event":
         handleOpenAgendaDay(new Date(action.dateTimestamp))
@@ -150,14 +139,14 @@ export function App() {
         setPatientFocus(null)
         setOpenNewPatient(false)
         setOpenNewSession(false)
-        setActiveItem("Inbox")
+        setActiveItem(APP_PAGE.caixaEntrada)
         break
       case "notification":
         setPatientFocus(null)
         setEmailFocus(null)
         setOpenNewPatient(false)
         setOpenNewSession(false)
-        setActiveItem("Notifications")
+        setActiveItem(APP_PAGE.notificacoes)
         break
       case "quick":
         setPatientFocus(null)
@@ -165,11 +154,11 @@ export function App() {
         if (action.id === "new-patient") {
           setOpenNewSession(false)
           setOpenNewPatient(true)
-          setActiveItem("Pacientes")
+          setActiveItem(APP_PAGE.pacientes)
         } else if (action.id === "new-session") {
           setOpenNewPatient(false)
           setOpenNewSession(true)
-          setActiveItem("Agenda")
+          setActiveItem(APP_PAGE.agenda)
         }
         break
     }
@@ -191,7 +180,7 @@ export function App() {
   function handleLogout() {
     clearAuthSession()
     setAuthSession(null)
-    setActiveItem("Home")
+    setActiveItem(APP_PAGE.inicio)
     setPatientFocus(null)
     setEmailFocus(null)
     setAccountOpen(false)
@@ -269,11 +258,7 @@ export function App() {
                         orientation="vertical"
                         className="mr-2 data-[orientation=vertical]:h-4"
                       />
-                      <h1 className="text-base font-medium">
-                        {activeItem === "Notifications"
-                          ? "Notificações"
-                          : activeItem}
-                      </h1>
+                      <h1 className="text-base font-medium">{activeItem}</h1>
                       <div className="ml-auto flex items-center gap-1">
                         <Button
                           variant="outline"
@@ -285,38 +270,38 @@ export function App() {
                           <Search />
                         </Button>
                         <ClinicExportButton
-                          onViewSheets={() => handleNavigate("Dados")}
+                          onViewSheets={() => handleNavigate(APP_PAGE.dados)}
                         />
                         <NotificationsBell
-                          onViewAll={() => handleNavigate("Notifications")}
+                          onViewAll={() => handleNavigate(APP_PAGE.notificacoes)}
                         />
                       </div>
                     </header>
                     <main
                       className={cn(
                         "flex min-h-0 flex-1 flex-col p-4 gap-[var(--density-page-gap)]",
-                        fillViewportPages.has(activeItem)
+                        FILL_VIEWPORT_PAGES.has(activeItem)
                           ? "overflow-hidden"
                           : "overflow-y-auto overscroll-contain"
                       )}
                     >
-                      {activeItem === "Home" ? (
+                      {activeItem === APP_PAGE.inicio ? (
                         <HomePage
-                          onViewAgenda={() => handleNavigate("Agenda")}
-                          onViewPatients={() => handleNavigate("Pacientes")}
+                          onViewAgenda={() => handleNavigate(APP_PAGE.agenda)}
+                          onViewPatients={() => handleNavigate(APP_PAGE.pacientes)}
                           onViewAgendaWeek={handleViewAgendaWeek}
                           onViewReceivables={handleViewReceivables}
                           onOpenAgendaDay={handleOpenAgendaDay}
                           onNewPatient={() => {
                             setOpenNewPatient(true)
-                            setActiveItem("Pacientes")
+                            setActiveItem(APP_PAGE.pacientes)
                           }}
                         />
                       ) : null}
-                      {activeItem === "Inbox" ? (
+                      {activeItem === APP_PAGE.caixaEntrada ? (
                         <InboxPage initialEmailId={emailFocus} />
                       ) : null}
-                      {activeItem === "Agenda" ? (
+                      {activeItem === APP_PAGE.agenda ? (
                         <CalendarPage
                           initialSelectedDateTimestamp={calendarDateFocus}
                           initialView={calendarView}
@@ -324,7 +309,7 @@ export function App() {
                           onNewSessionOpenChange={setOpenNewSession}
                         />
                       ) : null}
-                      {activeItem === "Pacientes" ? (
+                      {activeItem === APP_PAGE.pacientes ? (
                         <PatientsPage
                           initialPatientId={patientFocus?.id ?? null}
                           initialProfileTab={patientFocus?.tab ?? "overview"}
@@ -332,38 +317,38 @@ export function App() {
                           onNewPatientOpenChange={setOpenNewPatient}
                         />
                       ) : null}
-                      {activeItem === "Financeiro" ? (
+                      {activeItem === APP_PAGE.financeiro ? (
                         <FinancePage
                           onNewPatient={() => {
                             setOpenNewPatient(true)
-                            setActiveItem("Pacientes")
+                            setActiveItem(APP_PAGE.pacientes)
                           }}
                         />
                       ) : null}
-                      {activeItem === "Relatórios" ? (
+                      {activeItem === APP_PAGE.relatorios ? (
                         <ReportsPage
                           onNewPatient={() => {
                             setOpenNewPatient(true)
-                            setActiveItem("Pacientes")
+                            setActiveItem(APP_PAGE.pacientes)
                           }}
                         />
                       ) : null}
-                      {activeItem === "Dados" ? <ClinicSheetsPage /> : null}
-                      {activeItem === "A receber" ? (
+                      {activeItem === APP_PAGE.dados ? <ClinicSheetsPage /> : null}
+                      {activeItem === APP_PAGE.aReceber ? (
                         <UnpaidSessionsPage
                           initialFilter={receivablesFilter}
                           onNewPatient={() => {
                             setOpenNewPatient(true)
-                            setActiveItem("Pacientes")
+                            setActiveItem(APP_PAGE.pacientes)
                           }}
                           onOpenPatient={(patientId) => {
                             setPatientFocus({ id: patientId })
-                            setActiveItem("Pacientes")
+                            setActiveItem(APP_PAGE.pacientes)
                           }}
                         />
                       ) : null}
-                      {activeItem === "Roadmap" ? <RoadmapPage /> : null}
-                      {activeItem === "Notifications" ? (
+                      {activeItem === APP_PAGE.roteiro ? <RoadmapPage /> : null}
+                      {activeItem === APP_PAGE.notificacoes ? (
                         <NotificationsPage />
                       ) : null}
                     </main>

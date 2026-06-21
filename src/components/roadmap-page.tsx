@@ -36,7 +36,7 @@ const sections: {
   {
     status: "next",
     title: "Próximos passos",
-    description: "Prioridade imediata para fechar a v1.0 com dados mock.",
+    description: "Prioridade imediata para fechar a v1.0 com dados de demo.",
     icon: Rocket,
   },
   {
@@ -156,7 +156,7 @@ export function RoadmapPage() {
           </div>
           <div className="flex flex-col gap-1">
             <h2 className="font-heading text-2xl font-semibold text-primary-foreground">
-              Roadmap & próximos passos
+              Roteiro e próximos passos
             </h2>
             <p className="max-w-2xl text-sm text-sidebar-foreground/75">
               {ROADMAP_META.subtitle}
@@ -195,9 +195,9 @@ export function RoadmapPage() {
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Stat label="Foco atual" value="Mock v1.0" />
+        <Stat label="Foco atual" value="Demo v1.1" />
         <Stat
-          label="Backend"
+          label="Infraestrutura"
           value="Depois"
         />
         <Stat label="Meta" value={`${ROADMAP_META.progress}%`} />
@@ -318,13 +318,13 @@ export function RoadmapPage() {
               Regra da v1.0
             </h3>
             <p className="text-sm text-muted-foreground">
-              Nada de Supabase até o fluxo clínico mock estar redondo. Primeiro
+              Nada de Supabase até o fluxo clínico de demo estar redondo. Primeiro
               produto, depois infraestrutura.
             </p>
           </div>
         </div>
         <Badge className="w-fit shrink-0 border-border bg-card text-foreground">
-          Backend por último
+          Infraestrutura por último
         </Badge>
       </Card>
     </div>
