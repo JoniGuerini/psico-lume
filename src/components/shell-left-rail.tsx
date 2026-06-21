@@ -29,6 +29,7 @@ export function ShellLeftRail({ children }: ShellLeftRailProps) {
 }
 
 import { useTranslation } from "@/context/locale-provider"
+import { APP_VERSION_LABEL } from "@/lib/app-version"
 
 export function LoginHeroSlot() {
   const { t } = useTranslation()
@@ -45,8 +46,16 @@ export function LoginHeroSlot() {
         </p>
       </div>
 
-      <p className="absolute bottom-12 text-xs text-sidebar-foreground/60">
-        © {new Date().getFullYear()} {t("nav.brand")}
+      <p className="absolute bottom-12 flex items-center gap-2 text-xs text-sidebar-foreground/60">
+        <span>
+          © {new Date().getFullYear()} {t("nav.brand")}
+        </span>
+        <span aria-hidden="true" className="text-sidebar-foreground/35">
+          ·
+        </span>
+        <span className="tabular-nums text-sidebar-foreground/50">
+          {APP_VERSION_LABEL}
+        </span>
       </p>
     </div>
   )
