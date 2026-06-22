@@ -55,6 +55,7 @@ type AccountDialogProps = {
   isGuest?: boolean
   onUpdateGuestProfile?: (name: string) => void
   onDeleteGuestProfile?: () => void
+  onLogout: () => void
 }
 
 type Section = {
@@ -158,6 +159,7 @@ export function AccountDialog({
   isGuest = false,
   onUpdateGuestProfile,
   onDeleteGuestProfile,
+  onLogout,
 }: AccountDialogProps) {
   const { t, locale, setLocale } = useTranslation()
   const { restartTour } = useOnboardingTour()
@@ -326,7 +328,7 @@ export function AccountDialog({
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex h-[85vh] max-h-[calc(100%-2rem)] w-[92vw] flex-col gap-0 overflow-hidden bg-sidebar p-0 text-sidebar-foreground sm:max-w-5xl md:flex-row">
-        <aside className="flex shrink-0 flex-col gap-1 p-3 md:w-64 md:p-4">
+        <aside className="flex shrink-0 flex-col gap-1 p-3 md:w-64 md:min-h-0 md:p-4">
           <DialogHeader className="gap-1 px-2 pt-1 pb-3 text-left sm:text-left">
             <DialogTitle className="font-heading text-xl text-sidebar-foreground">
               {t("account.title")}
@@ -335,7 +337,7 @@ export function AccountDialog({
               {t("account.subtitle")}
             </DialogDescription>
           </DialogHeader>
-          <nav className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
+          <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-x-auto md:overflow-visible">
             {visibleSections.map((item) => {
               const isActive = section === item.id
               return (
@@ -356,6 +358,20 @@ export function AccountDialog({
               )
             })}
           </nav>
+          <div className="mt-auto border-t border-sidebar-border/60 pt-3">
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-auto w-full justify-start gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              onClick={() => {
+                onOpenChange(false)
+                onLogout()
+              }}
+            >
+              <LogOut className="size-4 shrink-0" />
+              {t("common.signOut")}
+            </Button>
+          </div>
         </aside>
 
         <div className="m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl bg-card text-card-foreground shadow-md md:ml-0">

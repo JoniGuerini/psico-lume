@@ -255,7 +255,6 @@ export function App() {
                     activeItem={activeItem}
                     onSelect={handleNavigate}
                     onOpenAccount={() => setAccountOpen(true)}
-                    onLogout={handleLogout}
                     user={user}
                   />
                   <main
@@ -378,6 +377,7 @@ export function App() {
                     isGuest={authSession?.mode === "guest"}
                     onUpdateGuestProfile={handleUpdateGuestProfile}
                     onDeleteGuestProfile={handleDeleteGuestProfile}
+                    onLogout={handleLogout}
                   />
 
                   <OnboardingTourOverlay />

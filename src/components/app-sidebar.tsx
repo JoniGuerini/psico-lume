@@ -74,7 +74,6 @@ type AppSidebarProps = {
   activeItem: AppPageId
   onSelect: (pageId: AppPageId) => void
   onOpenAccount: () => void
-  onLogout: () => void
   user: {
     name: string
     email: string
@@ -116,7 +115,6 @@ export function AppSidebar({
   activeItem,
   onSelect,
   onOpenAccount,
-  onLogout,
   user,
 }: AppSidebarProps) {
   const { t, pageLabel } = useTranslation()
@@ -181,11 +179,7 @@ export function AppSidebar({
       </SidebarContent>
 
       <SidebarFooter>
-        <NavUser
-          user={user}
-          onOpenAccount={onOpenAccount}
-          onLogout={onLogout}
-        />
+        <NavUser user={user} onOpenAccount={onOpenAccount} />
       </SidebarFooter>
     </Sidebar>
   )
