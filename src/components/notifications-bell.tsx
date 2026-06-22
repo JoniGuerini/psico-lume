@@ -46,6 +46,7 @@ export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
         <Button
           variant="outline"
           size="icon"
+          data-tour="header-notifications"
           className="relative border-border bg-card shadow-sm hover:bg-accent/50 aria-expanded:bg-card aria-expanded:text-foreground data-[state=open]:bg-card data-[state=open]:text-foreground"
           aria-label={t("notifications.title")}
         >

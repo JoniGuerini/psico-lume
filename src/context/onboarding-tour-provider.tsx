@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react"
@@ -14,18 +15,20 @@ import {
   onboardingTourSteps,
   clearOnboardingTourCompleted,
   readOnboardingTourCompleted,
+  waitForTourTarget,
   writeOnboardingTourCompleted,
   type OnboardingTourStep,
 } from "@/lib/onboarding-tour"
 
 type OnboardingTourContextValue = {
   isActive: boolean
+  targetReady: boolean
   stepIndex: number
   currentStep: OnboardingTourStep | null
   totalSteps: number
   next: () => void
   skip: () => void
-  restart: () => void
+  restartTour: () => void
 }
 
 const OnboardingTourContext = createContext<OnboardingTourContextValue | null>(
@@ -36,16 +39,26 @@ type OnboardingTourProviderProps = {
   children: ReactNode
   activePage: AppPageId
   authenticated: boolean
+  onNavigate: (page: AppPageId) => void
+  onCloseAccount?: () => void
+}
+
+function stepMatchesPage(step: OnboardingTourStep, activePage: AppPageId) {
+  return step.page === null || step.page === activePage
 }
 
 export function OnboardingTourProvider({
   children,
   activePage,
   authenticated,
+  onNavigate,
+  onCloseAccount,
 }: OnboardingTourProviderProps) {
   const { patients } = useClinicData()
   const [isActive, setIsActive] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
+  const [targetReady, setTargetReady] = useState(false)
+  const skipMissingRef = useRef(false)
 
   const currentStep = isActive ? (onboardingTourSteps[stepIndex] ?? null) : null
   const totalSteps = onboardingTourSteps.length
@@ -54,24 +67,55 @@ export function OnboardingTourProvider({
     writeOnboardingTourCompleted()
     setIsActive(false)
     setStepIndex(0)
+    setTargetReady(false)
   }, [])
 
   const skip = useCallback(() => {
     complete()
   }, [complete])
 
+  const advanceStep = useCallback(() => {
+    setTargetReady(false)
+    setStepIndex((index) => {
+      if (index >= onboardingTourSteps.length - 1) {
+        return index
+      }
+      return index + 1
+    })
+  }, [])
+
   const next = useCallback(() => {
     if (stepIndex >= onboardingTourSteps.length - 1) {
       complete()
       return
     }
-    setStepIndex((index) => index + 1)
-  }, [complete, stepIndex])
+    advanceStep()
+  }, [advanceStep, complete, stepIndex])
 
-  const restart = useCallback(() => {
+  const skipMissingTarget = useCallback(() => {
+    if (skipMissingRef.current) return
+    skipMissingRef.current = true
+
+    if (stepIndex >= onboardingTourSteps.length - 1) {
+      complete()
+      skipMissingRef.current = false
+      return
+    }
+
+    advanceStep()
+    window.setTimeout(() => {
+      skipMissingRef.current = false
+    }, 0)
+  }, [advanceStep, complete, stepIndex])
+
+  const restartTour = useCallback(() => {
+    clearOnboardingTourCompleted()
+    onCloseAccount?.()
+    onNavigate(APP_PAGE_ID.inicio)
     setStepIndex(0)
+    setTargetReady(false)
     setIsActive(true)
-  }, [])
+  }, [onCloseAccount, onNavigate])
 
   useEffect(() => {
     if (!authenticated) return
@@ -90,45 +134,83 @@ export function OnboardingTourProvider({
     if (!forceTour && patients.length > 0) return
 
     const timer = window.setTimeout(() => {
-      const target = document.querySelector(
-        onboardingTourSteps[0]?.targetSelector ?? ""
-      )
-      if (target) {
-        setStepIndex(0)
-        setIsActive(true)
-      }
+      setStepIndex(0)
+      setIsActive(true)
     }, 400)
 
     return () => window.clearTimeout(timer)
   }, [authenticated, activePage, patients.length])
 
   useEffect(() => {
-    if (!isActive || !currentStep) return
-    if (currentStep.page !== activePage) return
+    if (!isActive || !currentStep) {
+      setTargetReady(false)
+      return
+    }
 
-    const target = document.querySelector(currentStep.targetSelector)
-    target?.scrollIntoView({ block: "center", behavior: "smooth" })
-  }, [isActive, currentStep, activePage, stepIndex])
+    if (currentStep.navigateTo && activePage !== currentStep.navigateTo) {
+      onNavigate(currentStep.navigateTo)
+      setTargetReady(false)
+      return
+    }
+
+    if (!stepMatchesPage(currentStep, activePage)) {
+      setTargetReady(false)
+      return
+    }
+
+    const cancelWait = waitForTourTarget(
+      currentStep.targetSelector,
+      (target) => {
+        target.scrollIntoView({ block: "center", behavior: "smooth" })
+        setTargetReady(true)
+      },
+      skipMissingTarget
+    )
+
+    return cancelWait
+  }, [
+    isActive,
+    currentStep,
+    activePage,
+    stepIndex,
+    onNavigate,
+    skipMissingTarget,
+  ])
+
+  useEffect(() => {
+    if (!isActive) return
+    if (stepIndex >= onboardingTourSteps.length) {
+      complete()
+    }
+  }, [isActive, stepIndex, complete])
+
+  const visibleStep =
+    isActive &&
+    currentStep &&
+    targetReady &&
+    stepMatchesPage(currentStep, activePage)
+      ? currentStep
+      : null
 
   const value = useMemo(
     () => ({
-      isActive: isActive && currentStep?.page === activePage,
+      isActive: Boolean(visibleStep),
+      targetReady,
       stepIndex,
-      currentStep: currentStep?.page === activePage ? currentStep : null,
+      currentStep: visibleStep,
       totalSteps,
       next,
       skip,
-      restart,
+      restartTour,
     }),
     [
-      isActive,
+      visibleStep,
+      targetReady,
       stepIndex,
-      currentStep,
-      activePage,
       totalSteps,
       next,
       skip,
-      restart,
+      restartTour,
     ]
   )
 

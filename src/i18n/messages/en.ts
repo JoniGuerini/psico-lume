@@ -242,6 +242,11 @@ export const en = {
         ptBR: "Português (Brasil)",
         en: "English",
       },
+      restartTour: {
+        title: "Welcome tour",
+        description: "Review the main features of the interface.",
+        button: "Replay tour",
+      },
     },
     appearance: {
       heading: "Appearance",
@@ -523,6 +528,51 @@ export const en = {
         title: "Start with registration",
         description:
           "Register your first patient to schedule sessions on the calendar and track finances.",
+      },
+      homeStats: {
+        title: "Daily overview",
+        description:
+          "Track patients, weekly sessions, revenue, and overdue payments at a glance.",
+      },
+      navPacientes: {
+        title: "Patients",
+        description:
+          "Register, search, and manage profiles, records, and session history.",
+      },
+      navAgenda: {
+        title: "Calendar",
+        description:
+          "Schedule sessions, browse the calendar, and track each appointment status.",
+      },
+      navAReceber: {
+        title: "Receivables",
+        description:
+          "View billable sessions, mark payments, and track pending and overdue items.",
+      },
+      navFinanceiro: {
+        title: "Finance",
+        description:
+          "Revenue charts and a consolidated view of financial performance.",
+      },
+      headerSearch: {
+        title: "Global search",
+        description:
+          "Find patients, sessions, emails, and quick actions across the app.",
+      },
+      headerExport: {
+        title: "Export data",
+        description:
+          "Download Excel spreadsheets or browse clinic data sheets.",
+      },
+      headerNotifications: {
+        title: "Notifications",
+        description:
+          "Alerts for sessions, payments, and important messages.",
+      },
+      navAccount: {
+        title: "Your account",
+        description:
+          "Manage profile and preferences. In guest mode, data is saved only in this browser.",
       },
     },
   },

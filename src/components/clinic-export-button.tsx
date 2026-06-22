@@ -39,6 +39,7 @@ export function ClinicExportButton({ onViewSheets }: ClinicExportButtonProps) {
         <Button
           variant="outline"
           size="icon"
+          data-tour="header-export"
           className="border-border bg-card shadow-sm hover:bg-accent/50"
           disabled={loading}
           aria-label={t("export.clinicData")}

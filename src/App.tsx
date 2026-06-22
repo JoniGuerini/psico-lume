@@ -240,6 +240,8 @@ export function App() {
                 <OnboardingTourProvider
                   activePage={activeItem}
                   authenticated={authenticated}
+                  onNavigate={handleNavigate}
+                  onCloseAccount={() => setAccountOpen(false)}
                 >
                 <motion.div
                   key="app-shell"
@@ -271,6 +273,7 @@ export function App() {
                         <Button
                           variant="outline"
                           size="icon"
+                          data-tour="header-search"
                           className="rounded-full border-border bg-card shadow-sm hover:bg-accent/50"
                           onClick={() => setSearchOpen(true)}
                           aria-label={t("common.globalSearch")}

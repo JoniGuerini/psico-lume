@@ -10,6 +10,7 @@ import {
   Palette,
   ShieldCheck,
   Smartphone,
+  Sparkles,
   Trash2,
   User,
 } from "lucide-react"
@@ -40,6 +41,7 @@ import {
   toastPositionPresets,
   useToast,
 } from "@/context/toast-provider"
+import { useOnboardingTour } from "@/context/onboarding-tour-provider"
 import type { ToastPosition } from "@/lib/toast-preferences"
 
 type AccountDialogProps = {
@@ -158,6 +160,7 @@ export function AccountDialog({
   onDeleteGuestProfile,
 }: AccountDialogProps) {
   const { t, locale, setLocale } = useTranslation()
+  const { restartTour } = useOnboardingTour()
   const [section, setSection] = useState("perfil")
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
@@ -772,6 +775,30 @@ export function AccountDialog({
                       )
                     })}
                   </div>
+                </Panel>
+
+                <Panel className="flex-row items-center justify-between gap-4">
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <h4 className="font-heading text-base font-semibold">
+                      {t("account.preferences.restartTour.title")}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {t("account.preferences.restartTour.description")}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0"
+                    onClick={() => {
+                      onOpenChange(false)
+                      restartTour()
+                    }}
+                  >
+                    <Sparkles />
+                    {t("account.preferences.restartTour.button")}
+                  </Button>
                 </Panel>
               </div>
             ) : null}

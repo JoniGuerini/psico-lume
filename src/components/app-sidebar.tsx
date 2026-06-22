@@ -14,6 +14,7 @@ import {
 import { NavUser } from "@/components/nav-user"
 import { useTranslation } from "@/context/locale-provider"
 import { APP_PAGE_ID, type AppPageId } from "@/lib/app-pages"
+import { TOUR_SIDEBAR_TARGETS } from "@/lib/onboarding-tour"
 import {
   Sidebar,
   SidebarContent,
@@ -97,6 +98,7 @@ function SidebarNavItem({
       <SidebarMenuButton asChild tooltip={title} isActive={isActive}>
         <a
           href="#"
+          data-tour={TOUR_SIDEBAR_TARGETS[item.id]}
           onClick={(event) => {
             event.preventDefault()
             onSelect(item.id)

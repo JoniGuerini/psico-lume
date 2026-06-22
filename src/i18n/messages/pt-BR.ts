@@ -243,6 +243,11 @@ export const ptBR = {
         ptBR: "Português (Brasil)",
         en: "English",
       },
+      restartTour: {
+        title: "Tour de boas-vindas",
+        description: "Revise os principais recursos da interface.",
+        button: "Ver tour de novo",
+      },
     },
     appearance: {
       heading: "Aparência",
@@ -525,6 +530,51 @@ export const ptBR = {
         title: "Comece pelo cadastro",
         description:
           "Cadastre seu primeiro paciente para agendar sessões na agenda e acompanhar o financeiro.",
+      },
+      homeStats: {
+        title: "Visão geral do dia",
+        description:
+          "Acompanhe pacientes, sessões da semana, receita e pagamentos em atraso num relance.",
+      },
+      navPacientes: {
+        title: "Pacientes",
+        description:
+          "Cadastre, busque e gerencie fichas, prontuários e histórico de cada paciente.",
+      },
+      navAgenda: {
+        title: "Agenda",
+        description:
+          "Agende sessões, veja o calendário e acompanhe o status de cada atendimento.",
+      },
+      navAReceber: {
+        title: "A receber",
+        description:
+          "Veja sessões cobráveis, marque pagamentos e acompanhe pendências e atrasos.",
+      },
+      navFinanceiro: {
+        title: "Financeiro",
+        description:
+          "Gráficos de receita e visão consolidada do desempenho financeiro.",
+      },
+      headerSearch: {
+        title: "Busca global",
+        description:
+          "Encontre pacientes, sessões, e-mails e atalhos rápidos em todo o app.",
+      },
+      headerExport: {
+        title: "Exportar dados",
+        description:
+          "Baixe planilhas Excel ou visualize os dados da clínica.",
+      },
+      headerNotifications: {
+        title: "Notificações",
+        description:
+          "Alertas de sessões, pagamentos e mensagens importantes.",
+      },
+      navAccount: {
+        title: "Sua conta",
+        description:
+          "Gerencie perfil e preferências. No modo convidado, os dados ficam salvos apenas neste navegador.",
       },
     },
   },
