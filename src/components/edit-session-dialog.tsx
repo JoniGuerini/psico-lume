@@ -74,7 +74,7 @@ export function EditSessionDialog({
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent
-          className="gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md"
+          className="!flex max-h-[92vh] w-full max-w-[calc(100%-2rem)] flex-col gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md"
           onPointerDownOutside={(dialogEvent) => {
             if (selectOpen) dialogEvent.preventDefault()
           }}
@@ -85,7 +85,7 @@ export function EditSessionDialog({
             if (selectOpen) dialogEvent.preventDefault()
           }}
         >
-          <DialogHeader className="border-b border-border px-6 py-4">
+          <DialogHeader className="shrink-0 border-b border-border px-6 py-4">
             <DialogTitle className="text-lg">
               {t("sessionForm.editTitle")}
             </DialogTitle>

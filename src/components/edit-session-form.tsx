@@ -4,8 +4,10 @@ import { CheckCircle2, Trash2 } from "lucide-react"
 import { SessionStatusControl } from "@/components/session-status-control"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
+import { DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Switch } from "@/components/ui/switch"
 import {
   Select,
@@ -39,7 +41,12 @@ import {
   parseAmountInput,
 } from "@/lib/session-payment"
 import { getEventStatus } from "@/lib/session-status"
-import { resolveSessionModality } from "@/lib/session-modality"
+import {
+  isSessionModality,
+  resolveSessionModality,
+  sessionModalityOptions,
+  type SessionModality,
+} from "@/lib/session-modality"
 import { cn } from "@/lib/utils"
 
 type EditSessionFormProps = {
@@ -89,6 +96,12 @@ export function EditSessionForm({
   const [absenceWithNotice, setAbsenceWithNotice] = useState(
     event.absenceWithNotice ?? false
   )
+  const [modality, setModality] = useState<SessionModality | "">(() => {
+    const patientRecord = event.patientId
+      ? patients.find((item) => item.id === event.patientId)
+      : undefined
+    return resolveSessionModality(event, patientRecord) ?? ""
+  })
 
   const selectedPatient = useMemo(() => {
     if (lockedPatient) {
@@ -108,6 +121,7 @@ export function EditSessionForm({
       : undefined
     setAmountInput(formatAmountInput(getSessionAmount(event, patientRecord)))
     setAbsenceWithNotice(event.absenceWithNotice ?? false)
+    setModality(resolveSessionModality(event, patientRecord) ?? "")
   }, [event, lockedPatient, patientNames, patients])
 
   useEffect(() => {
@@ -125,23 +139,10 @@ export function EditSessionForm({
     return isBillableSession(preview)
   }, [event, status, absenceWithNotice])
 
-  const sessionModality = useMemo(
-    () =>
-      resolveSessionModality(
-        {
-          ...event,
-          date: fromDateInput(date),
-          start,
-        },
-        selectedPatient
-      ),
-    [date, event, selectedPatient, start]
-  )
-
   function handleSubmit(formEvent: React.FormEvent) {
     formEvent.preventDefault()
     const patientName = lockedPatient?.name ?? patient
-    if (!patientName || !start) return
+    if (!patientName || !start || !isSessionModality(modality)) return
 
     const startMin = toMinutes(start)
     const resolvedPatientId =
@@ -161,243 +162,274 @@ export function EditSessionForm({
       amount: amount > 0 ? amount : undefined,
       absenceWithNotice: status === "faltou" ? absenceWithNotice : undefined,
       paid: event.paid,
-      modality: sessionModality ?? event.modality,
+      modality,
       rescheduledFrom:
         status === "remarcada" ? event.rescheduledFrom : undefined,
     })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col">
-      <div className="flex flex-col gap-4 p-4">
-        <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="edit-session-patient" className="text-xs">
-              {t("sessionForm.patient")}
-            </Label>
-            {lockedPatient ? (
-              <Input
-                id="edit-session-patient"
-                value={lockedPatient.name}
-                readOnly
-                className={sessionFieldClass}
-              />
-            ) : (
-              <Select
-                value={patient}
-                onValueChange={setPatient}
-                onOpenChange={onSelectOpenChange}
-              >
-                <SelectTrigger
-                  id="edit-session-patient"
-                  className={cn("w-full", sessionFieldClass)}
-                >
-                  <SelectValue placeholder={t("sessionForm.selectPatient")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {patientNames.map((name) => (
-                    <SelectItem key={name} value={name}>
-                      {name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-
-          {sessionModality ? (
-            <div className="flex flex-col gap-1.5">
-              <Label className="text-xs">{t("sessionForm.modality")}</Label>
-              <div
-                className={cn(
-                  "flex h-9 items-center px-3 text-sm",
-                  sessionFieldClass
+    <form
+      onSubmit={handleSubmit}
+      className="flex min-h-0 flex-1 flex-col overflow-hidden"
+    >
+      <ScrollArea className="h-0 min-h-0 flex-1">
+        <div className="flex flex-col gap-3 p-4 sm:p-5">
+          <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
+                <Label htmlFor="edit-session-patient" className="text-xs">
+                  {t("sessionForm.patient")}
+                </Label>
+                {lockedPatient ? (
+                  <Input
+                    id="edit-session-patient"
+                    value={lockedPatient.name}
+                    readOnly
+                    className={sessionFieldClass}
+                  />
+                ) : (
+                  <Select
+                    value={patient}
+                    onValueChange={setPatient}
+                    onOpenChange={onSelectOpenChange}
+                  >
+                    <SelectTrigger
+                      id="edit-session-patient"
+                      className={cn("w-full", sessionFieldClass)}
+                    >
+                      <SelectValue placeholder={t("sessionForm.selectPatient")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {patientNames.map((name) => (
+                        <SelectItem key={name} value={name}>
+                          {name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
-              >
-                {getModalityLabel(t, sessionModality)}
+              </div>
+
+              <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
+                <Label htmlFor="edit-session-modality" className="text-xs">
+                  {t("sessionForm.modality")}
+                </Label>
+                <Select
+                  value={modality || undefined}
+                  onValueChange={(value) =>
+                    setModality(value as SessionModality)
+                  }
+                  onOpenChange={onSelectOpenChange}
+                >
+                  <SelectTrigger
+                    id="edit-session-modality"
+                    className={cn("w-full", sessionFieldClass)}
+                  >
+                    <SelectValue
+                      placeholder={t("patientForm.selectPlaceholder")}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sessionModalityOptions.map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {getModalityLabel(t, value)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="col-span-2 flex flex-col gap-1.5">
+                <Label htmlFor="edit-session-date" className="text-xs">
+                  {t("sessionForm.date")}
+                </Label>
+                <DatePicker
+                  id="edit-session-date"
+                  value={date}
+                  onChange={setDate}
+                  placeholder={t("sessionForm.selectDate")}
+                  className={sessionFieldClass}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="edit-session-start" className="text-xs">
+                  {t("sessionForm.start")}
+                </Label>
+                <TimePicker
+                  id="edit-session-start"
+                  value={start}
+                  onChange={setStart}
+                  placeholder={t("sessionForm.selectTime")}
+                  startHour={6}
+                  endHour={22}
+                  onOpenChange={onSelectOpenChange}
+                  className={sessionFieldClass}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="edit-session-duration" className="text-xs">
+                  {t("sessionForm.duration")}
+                </Label>
+                <Select
+                  value={duration}
+                  onValueChange={setDuration}
+                  onOpenChange={onSelectOpenChange}
+                >
+                  <SelectTrigger
+                    id="edit-session-duration"
+                    className={cn("w-full", sessionFieldClass)}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {durationOptions.map((option) => (
+                      <SelectItem key={option} value={String(option)}>
+                        {t("sessionForm.durationMinutes", { count: option })}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="col-span-2 flex flex-col gap-1.5">
+                <Label htmlFor="edit-session-amount" className="text-xs">
+                  {t("sessionForm.amount")}
+                </Label>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                    R$
+                  </span>
+                  <Input
+                    id="edit-session-amount"
+                    value={amountInput}
+                    onChange={(formEvent) => setAmountInput(formEvent.target.value)}
+                    className={cn(sessionFieldClass, "pl-9")}
+                    inputMode="decimal"
+                  />
+                </div>
+                {selectedPatient ? (
+                  <p className="text-xs text-muted-foreground">
+                    {t("sessionForm.patientDefault", {
+                      price: formatLocaleCurrency(
+                        parsePrice(selectedPatient.price),
+                        locale
+                      ),
+                    })}
+                  </p>
+                ) : null}
               </div>
             </div>
-          ) : null}
+          </section>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="edit-session-date" className="text-xs">
-              {t("sessionForm.date")}
-            </Label>
-            <DatePicker
-              id="edit-session-date"
-              value={date}
-              onChange={setDate}
-              placeholder={t("sessionForm.selectDate")}
-              className={sessionFieldClass}
+          <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <Label className="text-xs">{t("sessionForm.sessionStatus")}</Label>
+            <SessionStatusControl
+              value={status}
+              onChange={setStatus}
+              compact
+              className="grid-cols-3"
             />
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-session-start" className="text-xs">
-                {t("sessionForm.start")}
-              </Label>
-              <TimePicker
-                id="edit-session-start"
-                value={start}
-                onChange={setStart}
-                placeholder={t("sessionForm.selectTime")}
-                startHour={6}
-                endHour={22}
-                onOpenChange={onSelectOpenChange}
-                className={sessionFieldClass}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-session-duration" className="text-xs">
-                {t("sessionForm.duration")}
-              </Label>
-              <Select
-                value={duration}
-                onValueChange={setDuration}
-                onOpenChange={onSelectOpenChange}
-              >
-                <SelectTrigger
-                  id="edit-session-duration"
-                  className={cn("w-full", sessionFieldClass)}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {durationOptions.map((option) => (
-                    <SelectItem key={option} value={String(option)}>
-                      {t("sessionForm.durationMinutes", { count: option })}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="edit-session-amount" className="text-xs">
-              {t("sessionForm.amount")}
-            </Label>
-            <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                R$
-              </span>
-              <Input
-                id="edit-session-amount"
-                value={amountInput}
-                onChange={(formEvent) => setAmountInput(formEvent.target.value)}
-                className={cn(sessionFieldClass, "pl-9")}
-                inputMode="decimal"
-              />
-            </div>
-            {selectedPatient ? (
-              <p className="text-xs text-muted-foreground">
-                {t("sessionForm.patientDefault", {
-                  price: formatLocaleCurrency(
-                    parsePrice(selectedPatient.price),
-                    locale
-                  ),
-                })}
-              </p>
+            {status === "faltou" ? (
+              <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
+                <div className="min-w-0 flex flex-col gap-0.5">
+                  <Label htmlFor="edit-session-notice" className="text-xs">
+                    {t("sessionForm.absenceNoticeQuestion")}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t("sessionForm.absenceNoticeNoCharge")}
+                  </p>
+                </div>
+                <Switch
+                  id="edit-session-notice"
+                  checked={absenceWithNotice}
+                  onCheckedChange={setAbsenceWithNotice}
+                  className="shrink-0"
+                />
+              </div>
             ) : null}
-          </div>
-        </section>
 
-        <section className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm">
-          <Label className="text-xs">{t("sessionForm.sessionStatus")}</Label>
-          <SessionStatusControl value={status} onChange={setStatus} compact />
-        </section>
+            {billablePreview && onMarkPaid ? (
+              <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
+                <div className="min-w-0 flex flex-col gap-0.5">
+                  <Label className="text-xs">{t("sessionForm.payment")}</Label>
+                  <p className="text-xs text-muted-foreground">
+                    {isSessionPaid(event)
+                      ? t("sessionForm.paid")
+                      : t("sessionForm.unpaid")}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={isSessionPaid(event) ? "outline" : "default"}
+                  className="shrink-0"
+                  onClick={() => onMarkPaid(event.id, !isSessionPaid(event))}
+                >
+                  {isSessionPaid(event) ? (
+                    t("sessionForm.undoPayment")
+                  ) : (
+                    <>
+                      <CheckCircle2 className="size-3.5" />
+                      {t("sessionForm.markPaid")}
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : null}
+          </section>
 
-        {status === "faltou" ? (
-          <section className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
-            <div className="flex flex-col gap-0.5">
-              <Label htmlFor="edit-session-notice" className="text-xs">
-                {t("sessionForm.absenceNoticeQuestion")}
-              </Label>
+          {event.rescheduledFrom ? (
+            <section className="rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
               <p className="text-xs text-muted-foreground">
-                {t("sessionForm.absenceNoticeNoCharge")}
+                {t("sessionForm.originalSession")}
               </p>
-            </div>
-            <Switch
-              id="edit-session-notice"
-              checked={absenceWithNotice}
-              onCheckedChange={setAbsenceWithNotice}
-            />
-          </section>
-        ) : null}
-
-        {billablePreview && onMarkPaid ? (
-          <section className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
-            <div className="flex flex-col gap-0.5">
-              <Label className="text-xs">{t("sessionForm.payment")}</Label>
-              <p className="text-xs text-muted-foreground">
-                {isSessionPaid(event)
-                  ? t("sessionForm.paid")
-                  : t("sessionForm.unpaid")}
+              <p className="text-sm font-medium">
+                {formatRescheduledFromLabel(event.rescheduledFrom, locale)}
               </p>
-            </div>
-            <Button
-              type="button"
-              size="sm"
-              variant={isSessionPaid(event) ? "outline" : "default"}
-              onClick={() => onMarkPaid(event.id, !isSessionPaid(event))}
-            >
-              {isSessionPaid(event) ? (
-                t("sessionForm.undoPayment")
-              ) : (
-                <>
-                  <CheckCircle2 className="size-3.5" />
-                  {t("sessionForm.markPaid")}
-                </>
-              )}
-            </Button>
-          </section>
-        ) : null}
-
-        {event.rescheduledFrom ? (
-          <section className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 shadow-sm">
-            <Label className="text-xs">{t("sessionForm.originalSession")}</Label>
-            <p className="text-sm font-medium">
-              {formatRescheduledFromLabel(event.rescheduledFrom, locale)}
-            </p>
-          </section>
-        ) : null}
-
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
-          {onDeleteRequest ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              onClick={onDeleteRequest}
-            >
-              <Trash2 />
-              {t("sessionForm.deleteConfirm")}
-            </Button>
-          ) : (
-            <span aria-hidden />
-          )}
-          <div className="ml-auto flex gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="hover:bg-accent/50"
-              onClick={onCancel}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={!(lockedPatient?.name ?? patient) || !start}
-            >
-              {t("sessionForm.saveChanges")}
-            </Button>
-          </div>
+            </section>
+          ) : null}
         </div>
-      </div>
+      </ScrollArea>
+
+      <DialogFooter className="shrink-0 !flex-row flex-wrap items-center gap-2 border-t border-border px-4 py-3 sm:justify-between sm:px-5">
+        {onDeleteRequest ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mr-auto border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={onDeleteRequest}
+          >
+            <Trash2 />
+            {t("sessionForm.deleteConfirm")}
+          </Button>
+        ) : null}
+        <div className="flex w-full gap-2 sm:ml-auto sm:w-auto">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="flex-1 hover:bg-accent/50 sm:flex-none"
+            onClick={onCancel}
+          >
+            {t("common.cancel")}
+          </Button>
+          <Button
+            type="submit"
+            size="sm"
+            className="flex-1 sm:flex-none"
+            disabled={
+              !(lockedPatient?.name ?? patient) || !start || !isSessionModality(modality)
+            }
+          >
+            {t("sessionForm.saveChanges")}
+          </Button>
+        </div>
+      </DialogFooter>
     </form>
   )
 }

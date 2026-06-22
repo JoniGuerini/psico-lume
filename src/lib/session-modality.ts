@@ -11,6 +11,11 @@ import type {
 
 export type SessionModality = Extract<PatientModality, "presencial" | "online">
 
+export const sessionModalityOptions: readonly SessionModality[] = [
+  "presencial",
+  "online",
+] as const
+
 export function isSessionModality(
   value: unknown
 ): value is SessionModality {
