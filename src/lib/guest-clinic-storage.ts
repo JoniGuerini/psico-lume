@@ -15,6 +15,7 @@ import type {
   Patient,
   SessionNote,
 } from "@/data/types"
+import { clearOnboardingTourCompleted } from "@/lib/onboarding-tour"
 
 export const GUEST_CLINIC_STORAGE_KEY = "lume-guest-clinic"
 export const GUEST_PROFILE_STORAGE_KEY = "lume-guest-profile"
@@ -190,8 +191,9 @@ export function clearGuestProfileName() {
   localStorage.removeItem(GUEST_PROFILE_STORAGE_KEY)
 }
 
-/** Remove perfil convidado e todos os dados locais da clínica. */
+/** Remove perfil convidado, dados locais da clínica e estado do tour de onboarding. */
 export function clearGuestLocalData() {
   clearGuestClinicSnapshot()
   clearGuestProfileName()
+  clearOnboardingTourCompleted()
 }

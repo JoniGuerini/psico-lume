@@ -515,6 +515,19 @@ export const ptBR = {
         "Cadastre seu primeiro paciente para começar o acompanhamento clínico.",
     },
   },
+  tour: {
+    stepCounter: "Passo {{current}} de {{total}}",
+    skip: "Pular tour",
+    next: "Próximo",
+    finish: "Entendi",
+    steps: {
+      homeNewPatient: {
+        title: "Comece pelo cadastro",
+        description:
+          "Cadastre seu primeiro paciente para agendar sessões na agenda e acompanhar o financeiro.",
+      },
+    },
+  },
   home: {
     greeting: {
       morning: "Bom dia",

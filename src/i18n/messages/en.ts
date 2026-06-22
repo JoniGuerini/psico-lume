@@ -513,6 +513,19 @@ export const en = {
       description: "Register your first patient to start clinical follow-up.",
     },
   },
+  tour: {
+    stepCounter: "Step {{current}} of {{total}}",
+    skip: "Skip tour",
+    next: "Next",
+    finish: "Got it",
+    steps: {
+      homeNewPatient: {
+        title: "Start with registration",
+        description:
+          "Register your first patient to schedule sessions on the calendar and track finances.",
+      },
+    },
+  },
   home: {
     greeting: {
       morning: "Good morning",

@@ -203,7 +203,11 @@ export function HomePage({
                     {t("home.noPatientsDescription")}
                   </p>
                 </div>
-                <Button size="sm" onClick={onNewPatient}>
+                <Button
+                  size="sm"
+                  data-tour="home-new-patient"
+                  onClick={onNewPatient}
+                >
                   <UserPlus />
                   {t("common.newPatient")}
                 </Button>

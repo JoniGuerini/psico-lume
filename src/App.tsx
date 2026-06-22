@@ -18,6 +18,7 @@ import { ClinicExportButton } from "@/components/clinic-export-button"
 import { ClinicSheetsPage } from "@/components/clinic-sheets-page"
 import { NotificationsBell } from "@/components/notifications-bell"
 import { NotificationsPage } from "@/components/notifications-page"
+import { OnboardingTourOverlay } from "@/components/onboarding-tour"
 import { LoginHeroSlot, ShellLeftRail } from "@/components/shell-left-rail"
 import {
   ClinicDataProvider,
@@ -45,6 +46,7 @@ import {
 } from "@/lib/motion-layout"
 import { APP_PAGE_ID, FILL_VIEWPORT_PAGE_IDS, type AppPageId } from "@/lib/app-pages"
 import { useTranslation } from "@/context/locale-provider"
+import { OnboardingTourProvider } from "@/context/onboarding-tour-provider"
 import { cn } from "@/lib/utils"
 
 export function App() {
@@ -235,6 +237,10 @@ export function App() {
                   </main>
                 </motion.div>
               ) : (
+                <OnboardingTourProvider
+                  activePage={activeItem}
+                  authenticated={authenticated}
+                >
                 <motion.div
                   key="app-shell"
                   className="flex h-svh min-h-0 w-full overflow-hidden"
@@ -370,7 +376,10 @@ export function App() {
                     onUpdateGuestProfile={handleUpdateGuestProfile}
                     onDeleteGuestProfile={handleDeleteGuestProfile}
                   />
+
+                  <OnboardingTourOverlay />
                 </motion.div>
+                </OnboardingTourProvider>
               )}
             </AnimatePresence>
           </SidebarProvider>
