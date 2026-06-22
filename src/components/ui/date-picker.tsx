@@ -139,21 +139,51 @@ export function DatePicker({
   const { t, locale } = useTranslation()
   const [open, setOpen] = useState(false)
   const selectedDate = value ? fromDateInput(value) : null
-  const [viewMonth, setViewMonth] = useState(
-    () => selectedDate ?? new Date()
-  )
+  const [headerMonth, setHeaderMonth] = useState<number | null>(null)
+  const [headerYear, setHeaderYear] = useState<number | null>(null)
   const resolvedPlaceholder = placeholder ?? t("ui.datePicker.selectDate")
-
-  useEffect(() => {
-    if (selectedDate) {
-      setViewMonth(selectedDate)
-    }
-  }, [value])
 
   const { minYear, maxYear } = useMemo(
     () => resolveYearBounds(minDate, maxDate),
     [minDate, maxDate]
   )
+
+  const viewMonth = useMemo(() => {
+    const year =
+      headerYear ??
+      selectedDate?.getFullYear() ??
+      maxDate?.getFullYear() ??
+      new Date().getFullYear()
+    const month =
+      headerMonth ?? selectedDate?.getMonth() ?? new Date().getMonth()
+    return new Date(year, month, 1)
+  }, [headerMonth, headerYear, selectedDate, maxDate])
+
+  const calendarYear =
+    headerYear ??
+    selectedDate?.getFullYear() ??
+    maxDate?.getFullYear() ??
+    viewMonth.getFullYear()
+
+  useEffect(() => {
+    if (selectedDate) {
+      setHeaderMonth(selectedDate.getMonth())
+      setHeaderYear(selectedDate.getFullYear())
+      return
+    }
+    if (!open) {
+      setHeaderMonth(null)
+      setHeaderYear(null)
+    }
+  }, [value, selectedDate, open])
+
+  function handleOpenChange(next: boolean) {
+    setOpen(next)
+    if (next && !value) {
+      setHeaderMonth(null)
+      setHeaderYear(null)
+    }
+  }
 
   const yearOptions = useMemo(() => {
     const years: number[] = []
@@ -166,37 +196,40 @@ export function DatePicker({
   const monthGrid = useMemo(() => buildMonthGrid(viewMonth), [viewMonth])
 
   function handleSelect(date: Date) {
+    setHeaderMonth(date.getMonth())
+    setHeaderYear(date.getFullYear())
     onChange(toDateInput(date))
     setOpen(false)
   }
 
   function shiftMonth(offset: number) {
     if (!canShiftMonth(viewMonth, offset, minDate, maxDate)) return
-    setViewMonth(
-      (current) =>
-        new Date(current.getFullYear(), current.getMonth() + offset, 1)
+    const next = new Date(
+      viewMonth.getFullYear(),
+      viewMonth.getMonth() + offset,
+      1
     )
+    setHeaderMonth(next.getMonth())
+    setHeaderYear(next.getFullYear())
   }
 
   function setViewMonthIndex(monthIndex: number) {
-    setViewMonth(
-      (current) => new Date(current.getFullYear(), monthIndex, 1)
-    )
+    setHeaderMonth(monthIndex)
   }
 
   function setViewYear(year: number) {
-    setViewMonth((current) => new Date(year, current.getMonth(), 1))
+    setHeaderYear(year)
   }
 
   const displayValue = formatDisplayDate(value, locale)
   const emptyFieldClass =
-    "border border-foreground/22 bg-card text-foreground hover:border-foreground/35"
+    "border border-foreground/22 bg-card hover:border-foreground/35"
   const filledFieldClass = "border-2 border-foreground/55 bg-card text-foreground"
   const headerSelectTriggerClass =
-    "h-8 shrink-0 rounded-2xl border border-foreground/22 bg-card px-2.5 text-sm font-medium shadow-none hover:border-foreground/35"
+    "h-8 shrink-0 rounded-2xl border border-foreground/22 bg-card px-2.5 text-sm font-medium shadow-none hover:border-foreground/35 data-placeholder:text-muted-foreground/60"
 
   return (
-    <Popover open={open} onOpenChange={setOpen} modal>
+    <Popover open={open} onOpenChange={handleOpenChange} modal>
       <PopoverTrigger asChild>
         <Button
           id={id}
@@ -209,13 +242,19 @@ export function DatePicker({
             "h-9 w-full justify-start gap-2 rounded-3xl px-3 font-normal shadow-none",
             formFieldClass,
             displayValue ? filledFieldClass : emptyFieldClass,
-            !displayValue && "text-muted-foreground/60",
             className,
             displayValue ? filledFieldClass : emptyFieldClass
           )}
         >
           <CalendarDays className="size-4 shrink-0 opacity-70" />
-          <span className="truncate text-left text-sm">
+          <span
+            className={cn(
+              "truncate text-left text-sm",
+              displayValue
+                ? "text-foreground"
+                : "text-muted-foreground/60"
+            )}
+          >
             {displayValue || resolvedPlaceholder}
           </span>
         </Button>
@@ -236,14 +275,14 @@ export function DatePicker({
 
             <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5">
               <Select
-                value={String(viewMonth.getMonth())}
+                value={headerMonth !== null ? String(headerMonth) : undefined}
                 onValueChange={(next) => setViewMonthIndex(Number(next))}
               >
                 <SelectTrigger
                   aria-label={t("ui.datePicker.selectMonth")}
                   className={cn(headerSelectTriggerClass, "w-[7.25rem]")}
                 >
-                  <SelectValue />
+                  <SelectValue placeholder={t("ui.datePicker.selectMonth")} />
                 </SelectTrigger>
                 <SelectContent className="max-h-64">
                   {MONTH_INDICES.map((monthIndex) => (
@@ -252,7 +291,7 @@ export function DatePicker({
                       value={String(monthIndex)}
                       disabled={isMonthDisabled(
                         monthIndex,
-                        viewMonth.getFullYear(),
+                        calendarYear,
                         minDate,
                         maxDate
                       )}
@@ -264,14 +303,14 @@ export function DatePicker({
               </Select>
 
               <Select
-                value={String(viewMonth.getFullYear())}
+                value={headerYear !== null ? String(headerYear) : undefined}
                 onValueChange={(next) => setViewYear(Number(next))}
               >
                 <SelectTrigger
                   aria-label={t("ui.datePicker.selectYear")}
                   className={cn(headerSelectTriggerClass, "w-[5.5rem]")}
                 >
-                  <SelectValue />
+                  <SelectValue placeholder={t("ui.datePicker.selectYear")} />
                 </SelectTrigger>
                 <SelectContent className="max-h-64">
                   {yearOptions.map((year) => (
@@ -345,6 +384,8 @@ export function DatePicker({
               className="self-start text-muted-foreground"
               onClick={() => {
                 onChange("")
+                setHeaderMonth(null)
+                setHeaderYear(null)
                 setOpen(false)
               }}
             >

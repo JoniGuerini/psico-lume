@@ -299,7 +299,7 @@ function generateNotesForPatient(patient: Patient): SessionNote[] {
       summary: template.summary,
       evolution: template.evolution,
       plan: template.plan,
-      tags: [...(template.tags ?? []), patient.approach].filter(Boolean),
+      tags: [...(template.tags ?? [])].filter(Boolean),
       mood: template.mood,
       modality: patient.modality === "hibrido" ? "online" : patient.modality,
     })

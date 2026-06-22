@@ -1,6 +1,9 @@
-import { Clock } from "lucide-react"
+import { Clock, MapPin, Video } from "lucide-react"
 
 import type { CalendarEvent } from "@/data/types"
+import { useTranslation } from "@/context/locale-provider"
+import { getModalityLabel } from "@/lib/i18n-helpers"
+import type { SessionModality } from "@/lib/session-modality"
 import {
   formatRescheduledFromLabel,
   resolveEventStatus,
@@ -10,17 +13,21 @@ import { cn } from "@/lib/utils"
 
 type CalendarEventListItemProps = {
   event: CalendarEvent
+  modality?: SessionModality
   onClick: () => void
   className?: string
 }
 
 export function CalendarEventListItem({
   event,
+  modality,
   onClick,
   className,
 }: CalendarEventListItemProps) {
+  const { t } = useTranslation()
   const status = resolveEventStatus(event)
   const statusStyle = sessionStatusConfig[status]
+  const ModalityIcon = modality === "online" ? Video : MapPin
 
   return (
     <button
@@ -50,6 +57,17 @@ export function CalendarEventListItem({
           <Clock className="size-3 shrink-0" />
           {event.start} – {event.end}
         </span>
+        {modality ? (
+          <span
+            className={cn(
+              "mt-1 flex items-center gap-1 text-xs",
+              statusStyle.blockMuted
+            )}
+          >
+            <ModalityIcon className="size-3 shrink-0" />
+            {getModalityLabel(t, modality)}
+          </span>
+        ) : null}
       </div>
       {event.rescheduledFrom ? (
         <span className={cn("text-xs", statusStyle.blockMuted)}>
@@ -57,7 +75,7 @@ export function CalendarEventListItem({
         </span>
       ) : null}
       <span className={cn("text-xs", statusStyle.blockMuted)}>
-        Clique para editar
+        {t("calendar.clickToEdit")}
       </span>
     </button>
   )

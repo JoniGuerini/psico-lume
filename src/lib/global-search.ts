@@ -143,7 +143,6 @@ function buildPatientItems(
       patient.cpf,
       patient.phone,
       patient.complaint,
-      patient.approach,
     ]
       .join(" ")
       .toLowerCase(),

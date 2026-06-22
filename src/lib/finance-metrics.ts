@@ -136,31 +136,6 @@ export function getPatientBillableSummary(
   }
 }
 
-export function getRevenueByApproach(
-  events: CalendarEvent[],
-  patients: Patient[],
-  month: Date = new Date()
-) {
-  const patientMap = patientByIdMap(patients)
-  const totals = new Map<string, number>()
-
-  for (const event of getBillableEventsInMonth(events, month)) {
-    const patient = patientMap.get(event.patientId)
-    if (!patient) continue
-    totals.set(
-      patient.approach,
-      (totals.get(patient.approach) ?? 0) + getSessionAmount(event, patient)
-    )
-  }
-
-  return Array.from(totals.entries())
-    .map(([approach, receita]) => ({
-      approach,
-      receita: Math.round(receita),
-    }))
-    .sort((a, b) => b.receita - a.receita)
-}
-
 export function getTopPatientsByRevenue(
   events: CalendarEvent[],
   patients: Patient[],

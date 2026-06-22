@@ -17,9 +17,11 @@ import type { CalendarEvent, Patient } from "@/data/types"
 import {
   formatLocaleDate,
   formatRescheduledFromLabel,
+  getModalityLabel,
   getSessionStatusLabel,
 } from "@/lib/i18n-helpers"
 import { getEventStatus } from "@/lib/session-status"
+import { resolveSessionModality } from "@/lib/session-modality"
 
 type EditSessionDialogProps = {
   open: boolean
@@ -62,6 +64,11 @@ export function EditSessionDialog({
 
   const status = getEventStatus(event)
   const statusLabel = getSessionStatusLabel(t, status)
+  const patientRecord = patients.find((item) => item.id === event.patientId)
+  const sessionModality = resolveSessionModality(event, patientRecord)
+  const modalityLabel = sessionModality
+    ? getModalityLabel(t, sessionModality)
+    : null
 
   return (
     <>
@@ -83,7 +90,8 @@ export function EditSessionDialog({
               {t("sessionForm.editTitle")}
             </DialogTitle>
             <DialogDescription>
-              {event.title} · {statusLabel}.
+              {event.title} · {statusLabel}
+              {modalityLabel ? ` · ${modalityLabel}` : ""}.
               {event.rescheduledFrom
                 ? t("sessionForm.editRescheduled", {
                     from: formatRescheduledFromLabel(

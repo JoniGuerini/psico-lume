@@ -31,10 +31,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { TimePicker } from "@/components/ui/time-picker"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
-  DEFAULT_SESSION_FREQUENCY,
   sessionFrequencyOptions,
 } from "@/lib/session-frequency"
 import { formFieldClass } from "@/lib/form-input-styles"
+import { inferPatientModalityFromSchedules } from "@/lib/session-modality"
 import { cn } from "@/lib/utils"
 import { formatNextSession } from "@/data/patients"
 import { useSelectDismissGuard } from "@/lib/use-select-dismiss-guard"
@@ -87,7 +87,7 @@ const patientTypes = ["Primeira entrevista", "Recorrente"]
 
 const durations = [30, 45, 50, 60, 75, 90, 120]
 
-const modalityValues: PatientModality[] = ["presencial", "online", "hibrido"]
+const scheduleModalityValues = ["presencial", "online"] as const
 
 const weekdayValues = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
 
@@ -132,21 +132,19 @@ const emptyForm = {
   contactName: "",
   contactPhone: "",
   contactRelation: "",
-  patientType: "Primeira entrevista",
-  status: "ativo" as PatientStatus,
+  patientType: "",
+  status: "" as PatientStatus | "",
   therapyStart: "",
   price: "",
   referral: "",
   referralOther: "",
-  modality: "presencial" as PatientModality,
   complaint: "",
-  approach: "",
   notes: "",
-  sessionFrequency: DEFAULT_SESSION_FREQUENCY as SessionFrequency,
+  sessionFrequency: "" as SessionFrequency | "",
 }
 
 function emptySchedule(): PatientSchedule {
-  return { weekday: "Seg", time: "", duration: "50", modality: "" }
+  return { weekday: "", time: "", duration: "", modality: "" }
 }
 
 function currentMonthLabel(locale: Locale) {
@@ -218,17 +216,15 @@ function patientToForm(patient: Patient) {
     contactName: patient.contactName ?? "",
     contactPhone: formatPhone(patient.contactPhone ?? ""),
     contactRelation: patient.contactRelation ?? "",
-    patientType: patient.patientType ?? "Primeira entrevista",
+    patientType: patient.patientType ?? "",
     status: patient.status,
     therapyStart: brDateToInput(patient.therapyStart),
     price: patient.price,
     referral,
     referralOther: referral === OTHER ? patient.referral ?? "" : "",
-    modality: patient.modality,
     complaint: patient.complaint === "—" ? "" : patient.complaint,
-    approach: patient.approach === "—" ? "" : patient.approach,
     notes: patient.notes ?? "",
-    sessionFrequency: patient.sessionFrequency ?? DEFAULT_SESSION_FREQUENCY,
+    sessionFrequency: (patient.sessionFrequency ?? "") as SessionFrequency | "",
   }
 }
 
@@ -236,7 +232,7 @@ function normalizeSchedules(schedules: PatientSchedule[]): PatientSchedule[] {
   return schedules.map((schedule) => ({
     ...schedule,
     weekday: weekdayFromLabel[schedule.weekday] ?? schedule.weekday,
-    duration: schedule.duration || "50",
+    duration: schedule.duration || "",
     modality: (schedule.modality || "") as PatientModality | "",
   }))
 }
@@ -285,17 +281,16 @@ function buildPatientPayload(
     email: form.email.trim(),
     phone: form.phone.trim(),
     complaint: form.complaint.trim() || "—",
-    approach: form.approach.trim() || "—",
-    modality: form.modality,
+    modality: inferPatientModalityFromSchedules(schedules),
     price: form.price.trim(),
-    status: form.status,
+    status: form.status as PatientStatus,
     sessionDay,
     sessionTime,
     sessionDuration,
     nextSession,
     sessions: base?.sessions ?? 0,
     since: base?.since ?? currentMonthLabel(locale),
-    sessionFrequency: form.sessionFrequency,
+    sessionFrequency: form.sessionFrequency || undefined,
     paymentOverdueManual: base?.paymentOverdueManual,
     birthDate: inputToBrDate(form.birthDate) || undefined,
     gender: gender || undefined,
@@ -309,7 +304,7 @@ function buildPatientPayload(
     contactName: form.contactName.trim() || undefined,
     contactPhone: form.contactPhone.trim() || undefined,
     contactRelation: form.contactRelation.trim() || undefined,
-    patientType: form.patientType,
+    patientType: form.patientType || undefined,
     therapyStart: inputToBrDate(form.therapyStart) || undefined,
     referral: referral || undefined,
     notes: form.notes.trim() || undefined,
@@ -390,7 +385,7 @@ export function NewPatientDialog({
     dialogContentHandlers,
   } = useSelectDismissGuard()
 
-  const canSubmit = form.name.trim() !== ""
+  const canSubmit = form.name.trim() !== "" && form.status !== ""
 
   useEffect(() => {
     if (!open) {
@@ -569,13 +564,12 @@ export function NewPatientDialog({
                     <Field
                       label={t("patientForm.fields.birthDate")}
                       htmlFor="patient-birth"
-                      className="col-span-12 sm:col-span-4"
+                      className="col-span-12 sm:col-span-6"
                     >
                       <DatePicker
                         id="patient-birth"
                         value={form.birthDate}
                         onChange={(next) => update("birthDate", next)}
-                        placeholder={t("patientForm.placeholders.birthDate")}
                         maxDate={new Date()}
                         className={fieldClass}
                       />
@@ -583,7 +577,7 @@ export function NewPatientDialog({
                     <Field
                       label={t("patientForm.fields.cpf")}
                       htmlFor="patient-cpf"
-                      className="col-span-12 sm:col-span-4"
+                      className="col-span-12 sm:col-span-6"
                     >
                       <Input
                         id="patient-cpf"
@@ -600,7 +594,7 @@ export function NewPatientDialog({
                     <Field
                       label={t("patientForm.fields.gender")}
                       htmlFor="patient-gender"
-                      className="col-span-12 sm:col-span-4"
+                      className="col-span-12"
                     >
                       <Select
                         onOpenChange={onSelectOpenChange}
@@ -787,7 +781,7 @@ export function NewPatientDialog({
                     <Field
                       label={t("patientForm.fields.mobile")}
                       htmlFor="patient-phone"
-                      className="col-span-12 sm:col-span-5"
+                      className="col-span-12 sm:col-span-6"
                     >
                       <Input
                         id="patient-phone"
@@ -805,7 +799,7 @@ export function NewPatientDialog({
                     <Field
                       label={t("patientForm.fields.email")}
                       htmlFor="patient-email"
-                      className="col-span-12 sm:col-span-7"
+                      className="col-span-12 sm:col-span-6"
                     >
                       <Input
                         id="patient-email"
@@ -819,7 +813,7 @@ export function NewPatientDialog({
                     <Field
                       label={t("patientForm.fields.contactName")}
                       htmlFor="patient-contact-name"
-                      className="col-span-12 sm:col-span-5"
+                      className="col-span-12"
                     >
                       <Input
                         id="patient-contact-name"
@@ -834,7 +828,7 @@ export function NewPatientDialog({
                     <Field
                       label={t("patientForm.fields.contactPhone")}
                       htmlFor="patient-contact-phone"
-                      className="col-span-12 sm:col-span-4"
+                      className="col-span-12 sm:col-span-6"
                     >
                       <Input
                         id="patient-contact-phone"
@@ -852,7 +846,7 @@ export function NewPatientDialog({
                     <Field
                       label={t("patientForm.fields.contactRelation")}
                       htmlFor="patient-contact-relation"
-                      className="col-span-12 sm:col-span-3"
+                      className="col-span-12 sm:col-span-6"
                     >
                       <Input
                         id="patient-contact-relation"
@@ -885,28 +879,13 @@ export function NewPatientDialog({
                       />
                     </Field>
                     <Field
-                      label={t("patientForm.fields.approach")}
-                      htmlFor="patient-approach"
-                      className="col-span-12 sm:col-span-6"
-                    >
-                      <Input
-                        id="patient-approach"
-                        value={form.approach}
-                        onChange={(event) =>
-                          update("approach", event.target.value)
-                        }
-                        placeholder={t("patientForm.placeholders.approach")}
-                        className={fieldClass}
-                      />
-                    </Field>
-                    <Field
                       label={t("patientForm.fields.patientType")}
                       htmlFor="patient-type"
                       className="col-span-12 sm:col-span-6"
                     >
                       <Select
                         onOpenChange={onSelectOpenChange}
-                        value={form.patientType}
+                        value={form.patientType || undefined}
                         onValueChange={(value) => update("patientType", value)}
                       >
                         <SelectTrigger
@@ -931,7 +910,7 @@ export function NewPatientDialog({
                     >
                       <Select
                         onOpenChange={onSelectOpenChange}
-                        value={form.status}
+                        value={form.status || undefined}
                         onValueChange={(value) =>
                           update("status", value as PatientStatus)
                         }
@@ -954,20 +933,19 @@ export function NewPatientDialog({
                     <Field
                       label={t("patientForm.fields.therapyStart")}
                       htmlFor="patient-therapy-start"
-                      className="col-span-12 sm:col-span-4"
+                      className="col-span-12 sm:col-span-6"
                     >
                       <DatePicker
                         id="patient-therapy-start"
                         value={form.therapyStart}
                         onChange={(next) => update("therapyStart", next)}
-                        placeholder={t("patientForm.placeholders.therapyStart")}
                         className={fieldClass}
                       />
                     </Field>
                     <Field
                       label={t("patientForm.fields.sessionPrice")}
                       htmlFor="patient-price"
-                      className="col-span-12 sm:col-span-4"
+                      className="col-span-12 sm:col-span-6"
                     >
                       <div className="relative">
                         <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
@@ -984,33 +962,6 @@ export function NewPatientDialog({
                           className={cn("pl-9", fieldClass)}
                         />
                       </div>
-                    </Field>
-                    <Field
-                      label={t("patientForm.fields.modality")}
-                      htmlFor="patient-modality"
-                      className="col-span-12 sm:col-span-4"
-                    >
-                      <Select
-                        onOpenChange={onSelectOpenChange}
-                        value={form.modality}
-                        onValueChange={(value) =>
-                          update("modality", value as PatientModality)
-                        }
-                      >
-                        <SelectTrigger
-                          id="patient-modality"
-                          className={cn("w-full", fieldClass)}
-                        >
-                          <SelectValue placeholder={t("patientForm.selectPlaceholder")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {modalityValues.map((value) => (
-                            <SelectItem key={value} value={value}>
-                              {getModalityLabel(t, value)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                     </Field>
                     <Field
                       label={t("patientForm.fields.referral")}
@@ -1069,7 +1020,7 @@ export function NewPatientDialog({
                 >
                   <Select
                     onOpenChange={onSelectOpenChange}
-                    value={form.sessionFrequency}
+                    value={form.sessionFrequency || undefined}
                     onValueChange={(value) =>
                       update("sessionFrequency", value as SessionFrequency)
                     }
@@ -1105,7 +1056,7 @@ export function NewPatientDialog({
                         <Field label={t("patientForm.fields.weekday")}>
                           <Select
                             onOpenChange={onSelectOpenChange}
-                            value={row.weekday}
+                            value={row.weekday || undefined}
                             onValueChange={(value) =>
                               updateSchedule(index, "weekday", value)
                             }
@@ -1137,7 +1088,7 @@ export function NewPatientDialog({
                         <Field label={t("patientForm.fields.duration")}>
                           <Select
                             onOpenChange={onSelectOpenChange}
-                            value={row.duration}
+                            value={row.duration || undefined}
                             onValueChange={(value) =>
                               updateSchedule(index, "duration", value)
                             }
@@ -1162,7 +1113,7 @@ export function NewPatientDialog({
                         <Field label={t("patientForm.fields.modality")}>
                           <Select
                             onOpenChange={onSelectOpenChange}
-                            value={row.modality}
+                            value={row.modality || undefined}
                             onValueChange={(value) =>
                               updateSchedule(
                                 index,
@@ -1175,7 +1126,7 @@ export function NewPatientDialog({
                               <SelectValue placeholder={t("patientForm.selectPlaceholder")} />
                             </SelectTrigger>
                             <SelectContent>
-                              {modalityValues.map((value) => (
+                              {scheduleModalityValues.map((value) => (
                                 <SelectItem key={value} value={value}>
                                   {getModalityLabel(t, value)}
                                 </SelectItem>

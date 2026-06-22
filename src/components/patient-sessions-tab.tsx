@@ -13,7 +13,8 @@ import { useClinicData } from "@/context/clinic-data-provider"
 import { useTranslation } from "@/context/locale-provider"
 import { getEventsForPatientProfile } from "@/data/calendar"
 import type { CalendarEvent, Patient, RescheduledFrom } from "@/data/types"
-import { formatLocaleDate } from "@/lib/i18n-helpers"
+import { formatLocaleDate, getModalityLabel } from "@/lib/i18n-helpers"
+import { resolveSessionModality } from "@/lib/session-modality"
 import { getEventStatus, sessionStatusConfig } from "@/lib/session-status"
 import { cn } from "@/lib/utils"
 
@@ -73,9 +74,16 @@ const statusAccent: Record<
   cancelada: "border-l-muted-foreground",
 }
 
-function SessionHistoryCard({ event }: { event: CalendarEvent }) {
-  const { locale } = useTranslation()
+function SessionHistoryCard({
+  event,
+  patient,
+}: {
+  event: CalendarEvent
+  patient: Patient
+}) {
+  const { t, locale } = useTranslation()
   const status = getEventStatus(event)
+  const modality = resolveSessionModality(event, patient)
 
   return (
     <Card
@@ -92,6 +100,11 @@ function SessionHistoryCard({ event }: { event: CalendarEvent }) {
             end={event.end}
             locale={locale}
           />
+          {modality ? (
+            <span className="text-xs text-muted-foreground">
+              {getModalityLabel(t, modality)}
+            </span>
+          ) : null}
         </div>
         <SessionStatusBadge status={status} />
       </div>
@@ -184,11 +197,17 @@ function OriginalSessionCard({
   )
 }
 
-function SessionHistoryItem({ event }: { event: CalendarEvent }) {
+function SessionHistoryItem({
+  event,
+  patient,
+}: {
+  event: CalendarEvent
+  patient: Patient
+}) {
   if (event.rescheduledFrom && getEventStatus(event) === "remarcada") {
     return <RescheduledSessionGroup event={event} />
   }
-  return <SessionHistoryCard event={event} />
+  return <SessionHistoryCard event={event} patient={patient} />
 }
 
 export function PatientSessionsTab({ patient }: PatientSessionsTabProps) {
@@ -295,7 +314,11 @@ export function PatientSessionsTab({ patient }: PatientSessionsTabProps) {
         ) : (
           <div className="flex flex-col gap-3">
             {sessions.map((event) => (
-              <SessionHistoryItem key={event.id} event={event} />
+              <SessionHistoryItem
+                key={event.id}
+                event={event}
+                patient={patient}
+              />
             ))}
           </div>
         )}

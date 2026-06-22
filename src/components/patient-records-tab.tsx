@@ -268,7 +268,7 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
         </Button>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Stat
           label={t("patients.records.stats.notes")}
           value={String(notes.length)}
@@ -280,10 +280,6 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
         <Stat
           label={t("patients.records.stats.tags")}
           value={String(uniqueTags)}
-        />
-        <Stat
-          label={t("patients.records.stats.approach")}
-          value={patient.approach || "—"}
         />
       </div>
 

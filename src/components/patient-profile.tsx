@@ -216,11 +216,6 @@ export function PatientProfile({
               <span className={cn("size-2 rounded-full", status.dot)} />
               {getPatientStatusLabel(t, patient.status)}
             </Badge>
-            {patient.approach && patient.approach !== "—" ? (
-              <Badge className="border-white/15 bg-white/10 text-sidebar-foreground">
-                {patient.approach}
-              </Badge>
-            ) : null}
             <Badge className="border-white/15 bg-white/10 text-sidebar-foreground">
               {getModalityLabel(t, patient.modality)}
             </Badge>
@@ -410,7 +405,6 @@ function PatientOverview({
         <Section title={t("patients.profile.sections.care")} icon={ClipboardList}>
           <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
             <Field label={t("patients.profile.fields.complaint")} value={patient.complaint} />
-            <Field label={t("patients.profile.fields.approach")} value={patient.approach} />
             <Field
               label={t("patients.profile.fields.modality")}
               value={getModalityLabel(t, patient.modality)}

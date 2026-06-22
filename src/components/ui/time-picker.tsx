@@ -115,7 +115,7 @@ export function TimePicker({
 
   const displayValue = formatTimeLabel(value)
   const emptyFieldClass =
-    "border border-foreground/22 bg-card text-foreground hover:border-foreground/35"
+    "border border-foreground/22 bg-card hover:border-foreground/35"
   const filledFieldClass = "border-2 border-foreground/55 bg-card text-foreground"
 
   return (
@@ -131,13 +131,19 @@ export function TimePicker({
             "h-9 w-full justify-start gap-2 rounded-3xl px-3 font-normal shadow-none",
             formFieldClass,
             displayValue ? filledFieldClass : emptyFieldClass,
-            !displayValue && "text-muted-foreground/60",
             className,
             displayValue ? filledFieldClass : emptyFieldClass
           )}
         >
           <Clock3 className="size-4 shrink-0 opacity-70" />
-          <span className="truncate text-left text-sm tabular-nums">
+          <span
+            className={cn(
+              "truncate text-left text-sm tabular-nums",
+              displayValue
+                ? "text-foreground"
+                : "text-muted-foreground/60"
+            )}
+          >
             {displayValue || resolvedPlaceholder}
           </span>
         </Button>

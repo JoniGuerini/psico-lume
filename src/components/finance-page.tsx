@@ -7,8 +7,6 @@ import {
 import {
   Area,
   AreaChart,
-  Bar,
-  BarChart,
   CartesianGrid,
   Cell,
   Pie,
@@ -39,7 +37,6 @@ import type { PatientModality } from "@/data/types"
 import {
   getMonthlyFinanceSummary,
   getMonthlyRevenueHistory,
-  getRevenueByApproach,
   getRevenueByModality,
   getTopPatientsByRevenue,
 } from "@/lib/finance-metrics"
@@ -70,17 +67,6 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
         receita: {
           label: t("finance.chartLabels.revenue"),
           color: "var(--chart-1)",
-        },
-      }) satisfies ChartConfig,
-    [t]
-  )
-
-  const approachConfig = useMemo(
-    () =>
-      ({
-        receita: {
-          label: t("finance.chartLabels.revenue"),
-          color: "var(--chart-2)",
         },
       }) satisfies ChartConfig,
     [t]
@@ -152,11 +138,6 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
   }, [events, patients, t])
 
   const modalityTotal = modalityData.reduce((sum, item) => sum + item.value, 0)
-
-  const approachData = useMemo(
-    () => getRevenueByApproach(events, patients),
-    [events, patients]
-  )
 
   const topPatients = useMemo(
     () => getTopPatientsByRevenue(events, patients),
@@ -343,8 +324,7 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
         </ChartContainer>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="gap-4 p-6">
+      <Card className="gap-4 p-6">
           <div className="flex flex-col">
             <h3 className="font-heading text-base font-semibold">
               {t("finance.charts.revenueByModality")}
@@ -400,44 +380,6 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
             </div>
           </div>
         </Card>
-
-        <Card className="gap-4 p-6">
-          <div className="flex flex-col">
-            <h3 className="font-heading text-base font-semibold">
-              {t("finance.charts.revenueByApproach")}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {t("finance.charts.revenueByApproachHint")}
-            </p>
-          </div>
-          <ChartContainer
-            config={approachConfig}
-            className="aspect-auto h-[200px] min-h-[200px] w-full min-w-0 shrink-0"
-          >
-            <BarChart data={approachData} margin={{ top: 8 }}>
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="approach"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-              />
-              <ChartTooltip
-                cursor={false}
-                content={
-                  <ChartTooltipContent
-                    hideLabel
-                    formatter={(value) =>
-                      formatLocaleCurrency(Number(value), locale)
-                    }
-                  />
-                }
-              />
-              <Bar dataKey="receita" fill="var(--color-receita)" radius={8} />
-            </BarChart>
-          </ChartContainer>
-        </Card>
-      </div>
 
       <Card className="gap-0 p-6">
         <div className="flex flex-col pb-2">

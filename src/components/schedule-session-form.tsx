@@ -31,6 +31,7 @@ import {
   toMinutes,
 } from "@/lib/session-scheduling"
 import { formatAmountInput, parseAmountInput } from "@/lib/session-payment"
+import { resolveSessionModality } from "@/lib/session-modality"
 import { cn } from "@/lib/utils"
 
 type LockedPatient = {
@@ -97,16 +98,27 @@ export function ScheduleSessionForm({
 
     const startMin = toMinutes(start)
     const amount = parseAmountInput(amountInput)
+    const eventDate = fromDateInput(date)
+    const modality = resolveSessionModality(
+      {
+        modality: undefined,
+        date: eventDate,
+        start,
+        patientId: lockedPatient?.id ?? selectedPatient?.id ?? "",
+      },
+      selectedPatient
+    )
 
     onSubmit({
       id: crypto.randomUUID(),
       patientId: lockedPatient?.id ?? selectedPatient?.id ?? "",
       title: patientName,
-      date: fromDateInput(date),
+      date: eventDate,
       start,
       end: minutesToTime(startMin + Number(duration)),
       status: "agendada",
       amount: amount > 0 ? amount : undefined,
+      modality,
     })
   }
 

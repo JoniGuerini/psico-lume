@@ -76,7 +76,7 @@ export const modalityLabel: Record<PatientModality, string> = {
   hibrido: "Híbrido",
 }
 
-const columnWidths = ["22%", "12%", "11%", "10%", "12%", "12%", "9%", "7%", "5%"]
+const columnWidths = ["24%", "14%", "11%", "12%", "12%", "10%", "8%", "9%"]
 
 function PatientCols() {
   return (
@@ -328,7 +328,6 @@ export function PatientsPage({
               <TableRow className="border-0 hover:bg-transparent">
                 <TableHead className="pl-4">{t("patients.columns.patient")}</TableHead>
                 <TableHead>{t("patients.columns.complaint")}</TableHead>
-                <TableHead>{t("patients.columns.approach")}</TableHead>
                 <TableHead>{t("patients.columns.modality")}</TableHead>
                 <TableHead>{t("patients.columns.status")}</TableHead>
                 <TableHead>{t("patients.columns.nextSession")}</TableHead>
@@ -382,9 +381,6 @@ export function PatientsPage({
                     </TableCell>
                     <TableCell className="text-sm">
                       {patient.complaint}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{patient.approach}</Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {getModalityLabel(t, patient.modality)}

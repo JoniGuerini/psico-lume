@@ -98,7 +98,8 @@ function buildEventForSlot(
   eventDate: Date,
   start: string,
   duration: number,
-  todayStart: Date
+  todayStart: Date,
+  modality?: "presencial" | "online"
 ): CalendarEvent {
   const end = addMinutes(start, duration)
   const status =
@@ -125,6 +126,7 @@ function buildEventForSlot(
     amount: billable ? parsePrice(patient.price) : undefined,
     absenceWithNotice,
     paid: billable ? seedSessionPaid(patient.id, eventDate) : undefined,
+    modality,
   }
 }
 
@@ -177,7 +179,8 @@ export function buildCalendarEvents(
           eventDate,
           slot.start,
           slot.duration,
-          todayStart
+          todayStart,
+          slot.modality
         )
 
         if (seenIds.has(event.id)) continue

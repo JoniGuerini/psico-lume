@@ -23,7 +23,6 @@ export type Patient = {
   email: string
   phone: string
   complaint: string
-  approach: string
   modality: PatientModality
   price: string
   status: PatientStatus
@@ -88,6 +87,8 @@ export type CalendarEvent = {
   absenceWithNotice?: boolean
   /** Horário original antes do primeiro reagendamento por arraste. */
   rescheduledFrom?: RescheduledFrom
+  /** Presencial ou online — definido pelo horário recorrente ou sessão avulsa. */
+  modality?: "presencial" | "online"
 }
 
 export type NotificationCategory =

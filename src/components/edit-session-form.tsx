@@ -21,6 +21,7 @@ import { parsePrice } from "@/data/patients"
 import {
   formatLocaleCurrency,
   formatRescheduledFromLabel,
+  getModalityLabel,
 } from "@/lib/i18n-helpers"
 import {
   durationOptions,
@@ -38,6 +39,7 @@ import {
   parseAmountInput,
 } from "@/lib/session-payment"
 import { getEventStatus } from "@/lib/session-status"
+import { resolveSessionModality } from "@/lib/session-modality"
 import { cn } from "@/lib/utils"
 
 type EditSessionFormProps = {
@@ -123,6 +125,19 @@ export function EditSessionForm({
     return isBillableSession(preview)
   }, [event, status, absenceWithNotice])
 
+  const sessionModality = useMemo(
+    () =>
+      resolveSessionModality(
+        {
+          ...event,
+          date: fromDateInput(date),
+          start,
+        },
+        selectedPatient
+      ),
+    [date, event, selectedPatient, start]
+  )
+
   function handleSubmit(formEvent: React.FormEvent) {
     formEvent.preventDefault()
     const patientName = lockedPatient?.name ?? patient
@@ -146,6 +161,7 @@ export function EditSessionForm({
       amount: amount > 0 ? amount : undefined,
       absenceWithNotice: status === "faltou" ? absenceWithNotice : undefined,
       paid: event.paid,
+      modality: sessionModality ?? event.modality,
       rescheduledFrom:
         status === "remarcada" ? event.rescheduledFrom : undefined,
     })
@@ -188,6 +204,20 @@ export function EditSessionForm({
               </Select>
             )}
           </div>
+
+          {sessionModality ? (
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-xs">{t("sessionForm.modality")}</Label>
+              <div
+                className={cn(
+                  "flex h-9 items-center px-3 text-sm",
+                  sessionFieldClass
+                )}
+              >
+                {getModalityLabel(t, sessionModality)}
+              </div>
+            </div>
+          ) : null}
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-session-date" className="text-xs">

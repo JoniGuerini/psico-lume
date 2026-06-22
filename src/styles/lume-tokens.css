@@ -76,6 +76,7 @@
   --refugio-slate-alpha-20: #3d516633;
   --refugio-slate-alpha-25: #3d516640;
   --refugio-slate-alpha-44: #3d516670;
+  --refugio-blue-accent: #cddaea;
 
   /* Forja — carvão quente + brasa âmbar */
   --forja-accent: #c47a35;
@@ -205,7 +206,7 @@
   --secondary-foreground: var(--refugio-slate-800);
   --muted: var(--refugio-mist-300);
   --muted-foreground: #5a6578;
-  --accent: #e8e0da;
+  --accent: var(--refugio-blue-accent);
   --accent-foreground: var(--refugio-slate-800);
   --destructive: oklch(0.577 0.245 27.325);
   --border: var(--refugio-slate-alpha-14);

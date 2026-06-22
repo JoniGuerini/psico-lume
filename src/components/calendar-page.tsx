@@ -24,6 +24,7 @@ import { addDays, isSameDay } from "@/data/patients"
 import type { CalendarEvent, Patient } from "@/data/types"
 import { intlLocale } from "@/lib/locale"
 import { minutesToTime, toMinutes } from "@/lib/session-scheduling"
+import { resolveSessionModality } from "@/lib/session-modality"
 import { resolveEventStatus, sessionStatusConfig } from "@/lib/session-status"
 import { cn } from "@/lib/utils"
 
@@ -869,6 +870,10 @@ export function CalendarPage({
                   <CalendarEventListItem
                     key={event.id}
                     event={event}
+                    modality={resolveSessionModality(
+                      event,
+                      patients.find((item) => item.id === event.patientId)
+                    )}
                     onClick={() => handleSelectEvent(event)}
                   />
                 ))
