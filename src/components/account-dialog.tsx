@@ -4,15 +4,18 @@ import {
   Camera,
   Check,
   CreditCard,
+  Compass,
+  Inbox,
   Languages,
   Laptop,
   LogOut,
+  Mail,
   Palette,
   ShieldCheck,
   Smartphone,
-  Sparkles,
   Trash2,
   User,
+  UserRound,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -42,6 +45,8 @@ import {
   useToast,
 } from "@/context/toast-provider"
 import { useOnboardingTour } from "@/context/onboarding-tour-provider"
+import { useNotificationPreferences } from "@/context/notification-preferences-provider"
+import type { NotificationPreferenceKey } from "@/lib/notification-preferences"
 import type { ToastPosition } from "@/lib/toast-preferences"
 
 type AccountDialogProps = {
@@ -174,15 +179,8 @@ export function AccountDialog({
   const [confirmPassword, setConfirmPassword] = useState("")
   const [twoFactor, setTwoFactor] = useState(true)
 
-  const [notifications, setNotifications] = useState({
-    pendingSessionStatus: true,
-    sessionReminder: true,
-    pendingEvolution: true,
-    overduePayment: true,
-    waitingListReview: true,
-    weeklySummary: false,
-    productUpdates: false,
-  })
+  const { preferences: notificationPreferences, setPreference: setNotificationPreference } =
+    useNotificationPreferences()
 
   const { theme, density, setTheme, setDensity } = useTheme()
   const { toast, position: toastPosition, setPosition: setToastPosition } =
@@ -285,8 +283,8 @@ export function AccountDialog({
     event.target.value = ""
   }
 
-  function setNotification(key: keyof typeof notifications, value: boolean) {
-    setNotifications((current) => ({ ...current, [key]: value }))
+  function setNotification(key: NotificationPreferenceKey, value: boolean) {
+    setNotificationPreference(key, value)
   }
 
   const trimmedName = name.trim()
@@ -671,9 +669,9 @@ export function AccountDialog({
                       description={t(
                         "account.notifications.pendingSession.description"
                       )}
-                      checked={notifications.pendingSessionStatus}
+                      checked={notificationPreferences.pendingStatus}
                       onCheckedChange={(value) =>
-                        setNotification("pendingSessionStatus", value)
+                        setNotification("pendingStatus", value)
                       }
                     />
                     <ToggleRow
@@ -681,9 +679,9 @@ export function AccountDialog({
                       description={t(
                         "account.notifications.sessionReminder.description"
                       )}
-                      checked={notifications.sessionReminder}
+                      checked={notificationPreferences.todaySession}
                       onCheckedChange={(value) =>
-                        setNotification("sessionReminder", value)
+                        setNotification("todaySession", value)
                       }
                     />
                     <ToggleRow
@@ -691,19 +689,57 @@ export function AccountDialog({
                       description={t(
                         "account.notifications.pendingEvolution.description"
                       )}
-                      checked={notifications.pendingEvolution}
+                      checked={notificationPreferences.pendingEvolution}
                       onCheckedChange={(value) =>
                         setNotification("pendingEvolution", value)
                       }
                     />
+                  </div>
+                </Panel>
+
+                <Panel className="gap-0">
+                  <div className="flex items-center gap-2 pb-2 text-sm font-medium text-muted-foreground">
+                    <UserRound className="size-4" />
+                    {t("account.notifications.patients")}
+                  </div>
+                  <div className="divide-y divide-border">
                     <ToggleRow
                       title={t("account.notifications.waitingList.title")}
                       description={t(
                         "account.notifications.waitingList.description"
                       )}
-                      checked={notifications.waitingListReview}
+                      checked={notificationPreferences.waitlist}
                       onCheckedChange={(value) =>
-                        setNotification("waitingListReview", value)
+                        setNotification("waitlist", value)
+                      }
+                    />
+                    <ToggleRow
+                      title={t("account.notifications.pausedPatient.title")}
+                      description={t(
+                        "account.notifications.pausedPatient.description"
+                      )}
+                      checked={notificationPreferences.pausedPatient}
+                      onCheckedChange={(value) =>
+                        setNotification("pausedPatient", value)
+                      }
+                    />
+                  </div>
+                </Panel>
+
+                <Panel className="gap-0">
+                  <div className="flex items-center gap-2 pb-2 text-sm font-medium text-muted-foreground">
+                    <Inbox className="size-4" />
+                    {t("account.notifications.messages")}
+                  </div>
+                  <div className="divide-y divide-border">
+                    <ToggleRow
+                      title={t("account.notifications.inboxUnread.title")}
+                      description={t(
+                        "account.notifications.inboxUnread.description"
+                      )}
+                      checked={notificationPreferences.inboxUnread}
+                      onCheckedChange={(value) =>
+                        setNotification("inboxUnread", value)
                       }
                     />
                   </div>
@@ -720,9 +756,19 @@ export function AccountDialog({
                       description={t(
                         "account.notifications.overduePayment.description"
                       )}
-                      checked={notifications.overduePayment}
+                      checked={notificationPreferences.overduePayment}
                       onCheckedChange={(value) =>
                         setNotification("overduePayment", value)
+                      }
+                    />
+                    <ToggleRow
+                      title={t("account.notifications.unpaidWeek.title")}
+                      description={t(
+                        "account.notifications.unpaidWeek.description"
+                      )}
+                      checked={notificationPreferences.unpaidWeek}
+                      onCheckedChange={(value) =>
+                        setNotification("unpaidWeek", value)
                       }
                     />
                     <ToggleRow
@@ -730,23 +776,34 @@ export function AccountDialog({
                       description={t(
                         "account.notifications.weeklySummary.description"
                       )}
-                      checked={notifications.weeklySummary}
+                      checked={notificationPreferences.weeklySummary}
                       onCheckedChange={(value) =>
                         setNotification("weeklySummary", value)
                       }
                     />
-                    <ToggleRow
-                      title={t("account.notifications.productUpdates.title")}
-                      description={t(
-                        "account.notifications.productUpdates.description"
-                      )}
-                      checked={notifications.productUpdates}
-                      onCheckedChange={(value) =>
-                        setNotification("productUpdates", value)
-                      }
-                    />
                   </div>
                 </Panel>
+
+                {isGuest ? (
+                  <Panel className="gap-0">
+                    <div className="flex items-center gap-2 pb-2 text-sm font-medium text-muted-foreground">
+                      <Mail className="size-4" />
+                      {t("account.notifications.system")}
+                    </div>
+                    <div className="divide-y divide-border">
+                      <ToggleRow
+                        title={t("account.notifications.guestWelcome.title")}
+                        description={t(
+                          "account.notifications.guestWelcome.description"
+                        )}
+                        checked={notificationPreferences.guestWelcome}
+                        onCheckedChange={(value) =>
+                          setNotification("guestWelcome", value)
+                        }
+                      />
+                    </div>
+                  </Panel>
+                ) : null}
               </div>
             ) : null}
 
@@ -812,7 +869,7 @@ export function AccountDialog({
                       restartTour()
                     }}
                   >
-                    <Sparkles />
+                    <Compass />
                     {t("account.preferences.restartTour.button")}
                   </Button>
                 </Panel>

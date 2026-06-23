@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { Sparkles } from "lucide-react"
+import { Compass } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -270,7 +270,7 @@ export function OnboardingTourOverlay() {
         >
         <div className="flex items-start gap-3">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Sparkles className="size-5" />
+            <Compass className="size-5" />
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <p className="text-xs font-medium text-muted-foreground">

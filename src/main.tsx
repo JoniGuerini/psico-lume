@@ -9,6 +9,7 @@ import { ToastProvider } from "@/context/toast-provider"
 import { bootstrapThemeFromStorage } from "@/lib/theme"
 import { bootstrapLocaleFromStorage } from "@/lib/locale"
 import { LocaleProvider } from "@/context/locale-provider"
+import { NotificationPreferencesProvider } from "@/context/notification-preferences-provider"
 
 bootstrapThemeFromStorage()
 bootstrapLocaleFromStorage()
@@ -18,9 +19,11 @@ createRoot(document.getElementById("root")!).render(
     <LocaleProvider>
       <ThemeProvider>
         <ToastProvider>
-          <TooltipProvider>
-            <App />
-          </TooltipProvider>
+          <NotificationPreferencesProvider>
+            <TooltipProvider>
+              <App />
+            </TooltipProvider>
+          </NotificationPreferencesProvider>
         </ToastProvider>
       </ThemeProvider>
     </LocaleProvider>

@@ -283,7 +283,7 @@ function buildPatientPayload(
     complaint: form.complaint.trim() || "—",
     modality: inferPatientModalityFromSchedules(schedules),
     price: form.price.trim(),
-    status: form.status as PatientStatus,
+    status: (form.status || "ativo") as PatientStatus,
     sessionDay,
     sessionTime,
     sessionDuration,
@@ -385,7 +385,7 @@ export function NewPatientDialog({
     dialogContentHandlers,
   } = useSelectDismissGuard()
 
-  const canSubmit = form.name.trim() !== "" && form.status !== ""
+  const canSubmit = form.name.trim() !== ""
 
   useEffect(() => {
     if (!open) {

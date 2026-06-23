@@ -203,34 +203,51 @@ export const en = {
       heading: "Notifications",
       description: "Choose what you want to be notified about.",
       clinical: "Clinical & calendar",
+      patients: "Patients",
+      messages: "Messages",
       financial: "Finance & summaries",
+      system: "System",
       pendingSession: {
         title: "Pending session status",
-        description: "When a session passed and is still marked scheduled.",
+        description:
+          "When a session passed and is still scheduled, or several sessions this week remain unclosed.",
       },
       sessionReminder: {
-        title: "Today's reminders",
-        description: "Today's appointments to update after the session.",
+        title: "Today's appointments",
+        description: "Sessions scheduled for today that still need follow-up.",
       },
       pendingEvolution: {
         title: "Pending clinical note",
         description: "Completed session without a chart entry.",
       },
       waitingList: {
-        title: "Waitlist & pauses",
-        description: "Patients needing a profile review.",
+        title: "Waitlist",
+        description: "Patients waiting for a slot or return to care.",
+      },
+      pausedPatient: {
+        title: "Patient on pause",
+        description: "Paused profiles that may need a review.",
+      },
+      inboxUnread: {
+        title: "Unread emails",
+        description: "New messages in the integrated inbox.",
       },
       overduePayment: {
-        title: "Overdue & reconciliation",
-        description: "Open payments and sessions not reflected in finance.",
+        title: "Overdue payment",
+        description: "Completed sessions with open payments.",
+      },
+      unpaidWeek: {
+        title: "Weekly reconciliation",
+        description:
+          "Several completed sessions this week not yet reflected in finance.",
       },
       weeklySummary: {
         title: "Weekly summary",
         description: "Week overview with calendar and finance pending items.",
       },
-      productUpdates: {
-        title: "Lume updates",
-        description: "Tips and product news (occasionally).",
+      guestWelcome: {
+        title: "Welcome to Lume",
+        description: "Initial notice about guest mode and local data.",
       },
     },
     preferences: {
@@ -651,6 +668,56 @@ export const en = {
     emptyAll: "No notifications.",
     emptyUnread: "You're all caught up! No unread notifications.",
     viewAllNotifications: "View all notifications",
+  },
+  alerts: {
+    pendingStatus: {
+      title: "Pending status — {{name}}",
+      description:
+        "The session on {{sessionDay}} at {{time}} has passed and is still marked Scheduled.",
+    },
+    unclosedWeek: {
+      title: "{{count}} sessions this week without closure",
+      description:
+        "Update attendance status on the calendar to keep history up to date.",
+    },
+    todaySession: {
+      title: "Appointment today — {{name}}",
+      description: "Session at {{time}}. Mark the status after the appointment.",
+    },
+    overduePayment: {
+      title: "Overdue payment — {{name}}",
+      description:
+        "{{count}} open session(s) · {{total}}. Check Receivables.",
+    },
+    pendingEvolution: {
+      title: "Pending evolution — {{name}}",
+      description:
+        "Session on {{sessionDay}} completed but not yet recorded in the chart.",
+    },
+    unpaidWeek: {
+      title: "Weekly reconciliation",
+      description:
+        "{{count}} completed sessions this week are not yet reflected in finance · {{total}}.",
+    },
+    waitlist: {
+      title: "Waitlist — {{name}}",
+      description:
+        "Patient waiting for a slot. Consider scheduling the initial interview.",
+    },
+    pausedPatient: {
+      title: "Patient on pause — {{name}}",
+      description:
+        "Marked on pause. Review return, discharge, or keeping this status.",
+    },
+    inboxUnread: {
+      title: "Inbox — {{count}} unread email(s)",
+      description: "Messages waiting to be read in the inbox.",
+    },
+    weeklySummary: {
+      title: "Weekly summary available",
+      description:
+        "Overview of appointments, pending statuses, and financial alerts for the week.",
+    },
   },
   receivables: {
     title: "Receivables",

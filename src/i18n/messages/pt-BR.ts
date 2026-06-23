@@ -202,36 +202,51 @@ export const ptBR = {
       heading: "Notificações",
       description: "Escolha sobre o que você quer ser avisado.",
       clinical: "Clínico e agenda",
+      patients: "Pacientes",
+      messages: "Mensagens",
       financial: "Financeiro e resumos",
+      system: "Sistema",
       pendingSession: {
         title: "Status de sessão pendente",
         description:
-          "Quando uma sessão passou e ainda não foi marcada na agenda.",
+          "Quando uma sessão passou e ainda não foi marcada na agenda, ou várias sessões da semana sem fechamento.",
       },
       sessionReminder: {
-        title: "Lembretes do dia",
-        description: "Atendimentos de hoje para você registrar após a sessão.",
+        title: "Atendimentos de hoje",
+        description: "Sessões agendadas para hoje que ainda precisam de registro.",
       },
       pendingEvolution: {
         title: "Evolução clínica pendente",
         description: "Sessão realizada sem registro no prontuário.",
       },
       waitingList: {
-        title: "Lista de espera e pausas",
-        description: "Pacientes que precisam de revisão no cadastro.",
+        title: "Lista de espera",
+        description: "Pacientes aguardando vaga ou retorno ao atendimento.",
+      },
+      pausedPatient: {
+        title: "Paciente em pausa",
+        description: "Cadastros em pausa que podem precisar de revisão.",
+      },
+      inboxUnread: {
+        title: "E-mails não lidos",
+        description: "Novas mensagens na caixa de entrada integrada.",
       },
       overduePayment: {
-        title: "Inadimplência e conciliação",
+        title: "Pagamento em atraso",
+        description: "Sessões realizadas com pagamento em aberto.",
+      },
+      unpaidWeek: {
+        title: "Conciliação da semana",
         description:
-          "Pagamentos em aberto e sessões ainda não refletidas no financeiro.",
+          "Várias sessões realizadas na semana ainda não refletidas no financeiro.",
       },
       weeklySummary: {
         title: "Resumo semanal",
         description: "Panorama da semana com pendências de agenda e financeiro.",
       },
-      productUpdates: {
-        title: "Novidades do Lume",
-        description: "Dicas e novidades de produto (ocasional).",
+      guestWelcome: {
+        title: "Bem-vindo ao Lume",
+        description: "Aviso inicial sobre o modo convidado e dados locais.",
       },
     },
     preferences: {
@@ -653,6 +668,56 @@ export const ptBR = {
     emptyAll: "Nenhuma notificação.",
     emptyUnread: "Você está em dia! Nenhuma notificação não lida.",
     viewAllNotifications: "Ver todas as notificações",
+  },
+  alerts: {
+    pendingStatus: {
+      title: "Status pendente — {{name}}",
+      description:
+        "A sessão de {{sessionDay}} às {{time}} passou e ainda está como Agendada.",
+    },
+    unclosedWeek: {
+      title: "{{count}} sessões da semana sem fechamento",
+      description:
+        "Atualize o status de comparecimento na agenda para manter o histórico em dia.",
+    },
+    todaySession: {
+      title: "Atendimento hoje — {{name}}",
+      description: "Sessão às {{time}}. Marque o status após o atendimento.",
+    },
+    overduePayment: {
+      title: "Pagamento em atraso — {{name}}",
+      description:
+        "{{count}} sessão(ões) em aberto · {{total}}. Confira em A receber.",
+    },
+    pendingEvolution: {
+      title: "Evolução pendente — {{name}}",
+      description:
+        "Sessão de {{sessionDay}} realizada, mas ainda sem registro no prontuário.",
+    },
+    unpaidWeek: {
+      title: "Conciliação da semana",
+      description:
+        "{{count}} sessões realizadas esta semana ainda não refletem no financeiro · {{total}}.",
+    },
+    waitlist: {
+      title: "Lista de espera — {{name}}",
+      description:
+        "Paciente aguardando vaga. Considere agendar a entrevista inicial.",
+    },
+    pausedPatient: {
+      title: "Paciente em pausa — {{name}}",
+      description:
+        "Em pausa no cadastro. Avalie retorno, encerramento ou manutenção do status.",
+    },
+    inboxUnread: {
+      title: "Caixa de entrada — {{count}} e-mail(s) não lido(s)",
+      description: "Mensagens aguardando leitura na caixa de entrada.",
+    },
+    weeklySummary: {
+      title: "Resumo semanal disponível",
+      description:
+        "Panorama de atendimentos, pendências de status e alertas financeiros da semana.",
+    },
   },
   receivables: {
     title: "Sessões a receber",
