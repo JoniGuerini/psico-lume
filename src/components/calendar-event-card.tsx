@@ -40,7 +40,7 @@ export function CalendarEventListItem({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex w-full flex-col gap-2 rounded-2xl border p-3 text-left shadow-sm transition-shadow hover:shadow-md",
+        "flex w-full cursor-pointer flex-col gap-2 rounded-2xl border p-3 text-left shadow-sm transition-shadow hover:shadow-md",
         statusStyle.block,
         className
       )}

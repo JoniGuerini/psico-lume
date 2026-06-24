@@ -42,7 +42,7 @@ export function authSessionToUser(session: AuthSession) {
 
   return {
     name: session.name,
-    email: "Conta local · neste navegador",
+    email: "Conta local",
     avatar: "",
   }
 }
