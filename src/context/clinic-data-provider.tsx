@@ -30,11 +30,14 @@ import { buildClinicAlerts } from "@/lib/clinic-alerts"
 import { isAlertEnabled } from "@/lib/notification-preferences"
 import { useNotificationPreferences } from "@/context/notification-preferences-provider"
 import {
+  DEMO_SESSION_STATUS_OPTIONS,
+  GUEST_SESSION_STATUS_OPTIONS,
   getEventStatus,
   mergeEventStatuses,
   resolveRescheduledFromAfterMove,
   resolveStatusAfterMove,
   syncStaleEventStatuses,
+  type SessionStatusOptions,
 } from "@/lib/session-status"
 import {
   buildUnpaidSessionRows,
@@ -45,6 +48,7 @@ import {
 } from "@/lib/session-payment"
 
 type ClinicDataContextValue = {
+  mode: ClinicDataMode
   patients: Patient[]
   events: CalendarEvent[]
   notifications: Notification[]
@@ -123,17 +127,25 @@ function applyPatientSessionCountFromNotes(
   )
 }
 
+function sessionStatusOptionsForMode(mode: ClinicDataMode): SessionStatusOptions {
+  return mode === "demo" ? DEMO_SESSION_STATUS_OPTIONS : GUEST_SESSION_STATUS_OPTIONS
+}
+
 function rebuildRecurringEvents(
   patients: Patient[],
-  currentEvents: CalendarEvent[]
+  currentEvents: CalendarEvent[],
+  mode: ClinicDataMode
 ) {
+  const options = sessionStatusOptionsForMode(mode)
   const manual = currentEvents.filter((event) => event.patientId === "")
   return syncStaleEventStatuses(
     mergeEventStatuses(currentEvents, [
       ...manual,
-      ...buildCalendarEvents(patients),
+      ...buildCalendarEvents(patients, new Date(), options),
     ]),
-    patients
+    patients,
+    new Date(),
+    options
   )
 }
 
@@ -315,6 +327,7 @@ export function ClinicDataProvider({
 
   const value = useMemo<ClinicDataContextValue>(
     () => ({
+      mode,
       patients,
       events,
       notifications,
@@ -332,7 +345,7 @@ export function ClinicDataProvider({
       addPatient: (patient) => {
         setPatients((current) => {
           const next = [patient, ...current]
-          setEvents((events) => rebuildRecurringEvents(next, events))
+          setEvents((events) => rebuildRecurringEvents(next, events, mode))
           return next
         })
       },
@@ -341,7 +354,7 @@ export function ClinicDataProvider({
           const next = current.map((item) =>
             item.id === patient.id ? patient : item
           )
-          setEvents((events) => rebuildRecurringEvents(next, events))
+          setEvents((events) => rebuildRecurringEvents(next, events, mode))
           return next
         })
       },
@@ -399,7 +412,7 @@ export function ClinicDataProvider({
             const withoutPatient = events.filter(
               (event) => event.patientId !== patientId
             )
-            return rebuildRecurringEvents(next, withoutPatient)
+            return rebuildRecurringEvents(next, withoutPatient, mode)
           })
           return next
         })
@@ -575,6 +588,7 @@ export function ClinicDataProvider({
       clearNotifications: () => setNotifications([]),
     }),
     [
+      mode,
       patients,
       events,
       notifications,

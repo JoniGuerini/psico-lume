@@ -1,6 +1,10 @@
 import type { CalendarEvent, Patient, PatientModality, SessionStatus } from "@/data/types"
 import { getRevenueByModality } from "@/lib/finance-metrics"
-import { resolveEventStatus } from "@/lib/session-status"
+import {
+  DEMO_SESSION_STATUS_OPTIONS,
+  resolveEventStatus,
+  type SessionStatusOptions,
+} from "@/lib/session-status"
 
 function startOfDay(date: Date) {
   const copy = new Date(date)
@@ -31,7 +35,11 @@ function pastSessionsInMonth(
   )
 }
 
-function countByStatus(events: CalendarEvent[], anchor: Date) {
+function countByStatus(
+  events: CalendarEvent[],
+  anchor: Date,
+  options: SessionStatusOptions = DEMO_SESSION_STATUS_OPTIONS
+) {
   const counts: Record<SessionStatus, number> = {
     agendada: 0,
     realizada: 0,
@@ -41,7 +49,7 @@ function countByStatus(events: CalendarEvent[], anchor: Date) {
   }
 
   for (const event of events) {
-    const status = resolveEventStatus(event, anchor)
+    const status = resolveEventStatus(event, anchor, options)
     counts[status] += 1
   }
 
@@ -60,10 +68,11 @@ export type AttendanceSummary = {
 export function getAttendanceSummary(
   events: CalendarEvent[],
   month: Date = new Date(),
-  anchor: Date = new Date()
+  anchor: Date = new Date(),
+  options: SessionStatusOptions = DEMO_SESSION_STATUS_OPTIONS
 ): AttendanceSummary {
   const monthEvents = pastSessionsInMonth(events, month, anchor)
-  const counts = countByStatus(monthEvents, anchor)
+  const counts = countByStatus(monthEvents, anchor, options)
   const evaluated = counts.realizada + counts.faltou
   const rate = evaluated ? Math.round((counts.realizada / evaluated) * 100) : 0
 
@@ -89,7 +98,8 @@ export function getAttendanceByModality(
   events: CalendarEvent[],
   patients: Patient[],
   month: Date = new Date(),
-  anchor: Date = new Date()
+  anchor: Date = new Date(),
+  options: SessionStatusOptions = DEMO_SESSION_STATUS_OPTIONS
 ): ModalityAttendanceRow[] {
   const patientMap = patientByIdMap(patients)
   const monthEvents = pastSessionsInMonth(events, month, anchor)
@@ -102,7 +112,7 @@ export function getAttendanceByModality(
     const patient = patientMap.get(event.patientId)
     if (!patient) continue
 
-    const status = resolveEventStatus(event, anchor)
+    const status = resolveEventStatus(event, anchor, options)
     if (status !== "realizada" && status !== "faltou") continue
 
     const bucket = buckets.get(patient.modality) ?? { realizada: 0, faltou: 0 }
@@ -132,7 +142,8 @@ export function getAttendanceHistory(
   events: CalendarEvent[],
   months = 12,
   anchor: Date = new Date(),
-  locale = "pt-BR"
+  locale = "pt-BR",
+  options: SessionStatusOptions = DEMO_SESSION_STATUS_OPTIONS
 ) {
   const intl = locale === "en" ? "en-US" : "pt-BR"
   const now = new Date(anchor.getFullYear(), anchor.getMonth(), 1)
@@ -142,7 +153,7 @@ export function getAttendanceHistory(
     const label = date
       .toLocaleDateString(intl, { month: "short" })
       .replace(".", "")
-    const summary = getAttendanceSummary(events, date, anchor)
+    const summary = getAttendanceSummary(events, date, anchor, options)
 
     return {
       month: label.charAt(0).toUpperCase() + label.slice(1),
@@ -162,10 +173,11 @@ export type SessionOutcomeRow = {
 export function getSessionOutcomeBreakdown(
   events: CalendarEvent[],
   month: Date = new Date(),
-  anchor: Date = new Date()
+  anchor: Date = new Date(),
+  options: SessionStatusOptions = DEMO_SESSION_STATUS_OPTIONS
 ): SessionOutcomeRow[] {
   const monthEvents = pastSessionsInMonth(events, month, anchor)
-  const counts = countByStatus(monthEvents, anchor)
+  const counts = countByStatus(monthEvents, anchor, options)
   const relevant: SessionStatus[] = [
     "realizada",
     "faltou",

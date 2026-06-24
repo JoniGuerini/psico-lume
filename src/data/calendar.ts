@@ -9,7 +9,9 @@ import {
 import type { CalendarEvent, Patient } from "@/data/types"
 import {
   DEFAULT_SESSION_STATUS,
+  DEMO_SESSION_STATUS_OPTIONS,
   seedPastSessionStatus,
+  type SessionStatusOptions,
 } from "@/lib/session-status"
 import { seedAbsenceWithNotice, seedSessionPaid } from "@/lib/session-payment"
 import { shouldIncludeRecurringDate } from "@/lib/session-frequency"
@@ -99,11 +101,12 @@ function buildEventForSlot(
   start: string,
   duration: number,
   todayStart: Date,
-  modality?: "presencial" | "online"
+  modality?: "presencial" | "online",
+  options: SessionStatusOptions = DEMO_SESSION_STATUS_OPTIONS
 ): CalendarEvent {
   const end = addMinutes(start, duration)
   const status =
-    eventDate < todayStart
+    options.seedPastStatuses && eventDate < todayStart
       ? seedPastSessionStatus(patient.id, eventDate)
       : DEFAULT_SESSION_STATUS
 
@@ -132,7 +135,8 @@ function buildEventForSlot(
 
 export function buildCalendarEvents(
   patients: Patient[],
-  anchor = new Date()
+  anchor = new Date(),
+  options: SessionStatusOptions = DEMO_SESSION_STATUS_OPTIONS
 ): CalendarEvent[] {
   const events: CalendarEvent[] = []
   const seenIds = new Set<string>()
@@ -180,7 +184,8 @@ export function buildCalendarEvents(
           slot.start,
           slot.duration,
           todayStart,
-          slot.modality
+          slot.modality,
+          options
         )
 
         if (seenIds.has(event.id)) continue

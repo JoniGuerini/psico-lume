@@ -69,19 +69,34 @@ export function getEventStatus(event: CalendarEvent): SessionStatus {
   return event.status ?? DEFAULT_SESSION_STATUS
 }
 
+export type SessionStatusOptions = {
+  /** Demo: infere realizada/faltou em sessões passadas ainda agendadas. Convidado: false. */
+  seedPastStatuses?: boolean
+}
+
+export const DEMO_SESSION_STATUS_OPTIONS: SessionStatusOptions = {
+  seedPastStatuses: true,
+}
+
+export const GUEST_SESSION_STATUS_OPTIONS: SessionStatusOptions = {
+  seedPastStatuses: false,
+}
+
 function startOfDay(date: Date) {
   const copy = new Date(date)
   copy.setHours(0, 0, 0, 0)
   return copy
 }
 
-/** Status efetivo no calendário: sessões passadas não ficam presas em agendada. */
+/** Status efetivo no calendário; no demo, sessões passadas agendadas viram realizada/faltou. */
 export function resolveEventStatus(
   event: CalendarEvent,
-  anchor = new Date()
+  anchor = new Date(),
+  options: SessionStatusOptions = DEMO_SESSION_STATUS_OPTIONS
 ): SessionStatus {
   const stored = getEventStatus(event)
   if (stored !== DEFAULT_SESSION_STATUS) return stored
+  if (!options.seedPastStatuses) return stored
   if (startOfDay(event.date) >= startOfDay(anchor)) return stored
   return seedPastSessionStatus(event.patientId, event.date)
 }
@@ -99,12 +114,15 @@ function resolveMergedStatus(
 export function syncStaleEventStatuses(
   events: CalendarEvent[],
   patients: Patient[],
-  anchor = new Date()
+  anchor = new Date(),
+  options: SessionStatusOptions = DEMO_SESSION_STATUS_OPTIONS
 ): CalendarEvent[] {
+  if (!options.seedPastStatuses) return events
+
   let changed = false
 
   const next = events.map((event) => {
-    const resolved = resolveEventStatus(event, anchor)
+    const resolved = resolveEventStatus(event, anchor, options)
     if (resolved === getEventStatus(event)) return event
 
     changed = true

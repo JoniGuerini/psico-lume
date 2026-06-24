@@ -36,6 +36,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useClinicData } from "@/context/clinic-data-provider"
+import {
+  GUEST_SESSION_STATUS_OPTIONS,
+  DEMO_SESSION_STATUS_OPTIONS,
+} from "@/lib/session-status"
 import { useTranslation } from "@/context/locale-provider"
 import type { PatientModality, SessionStatus } from "@/data/types"
 import {
@@ -71,7 +75,9 @@ const outcomeColors: Record<SessionStatus, string> = {
 
 export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}) {
   const { t, locale } = useTranslation()
-  const { events, patients } = useClinicData()
+  const { events, patients, mode } = useClinicData()
+  const sessionStatusOptions =
+    mode === "demo" ? DEMO_SESSION_STATUS_OPTIONS : GUEST_SESSION_STATUS_OPTIONS
   const monthOptions = useMemo(
     () => getReportMonthOptions(12, new Date(), locale),
     [locale]
@@ -124,13 +130,20 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
   )
 
   const summary = useMemo(
-    () => getAttendanceSummary(events, selectedMonth),
-    [events, selectedMonth]
+    () => getAttendanceSummary(events, selectedMonth, new Date(), sessionStatusOptions),
+    [events, selectedMonth, sessionStatusOptions]
   )
 
   const modalityAttendance = useMemo(
-    () => getAttendanceByModality(events, patients, selectedMonth),
-    [events, patients, selectedMonth]
+    () =>
+      getAttendanceByModality(
+        events,
+        patients,
+        selectedMonth,
+        new Date(),
+        sessionStatusOptions
+      ),
+    [events, patients, selectedMonth, sessionStatusOptions]
   )
 
   const modalityRevenue = useMemo(() => {
@@ -147,8 +160,15 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
   )
 
   const history = useMemo(
-    () => getAttendanceHistory(events, 12, new Date(), locale),
-    [events, locale]
+    () =>
+      getAttendanceHistory(
+        events,
+        12,
+        new Date(),
+        locale,
+        sessionStatusOptions
+      ),
+    [events, locale, sessionStatusOptions]
   )
   const historySlice = useMemo(
     () => history.slice(-Number(historyRange)),
@@ -156,8 +176,14 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
   )
 
   const outcomes = useMemo(
-    () => getSessionOutcomeBreakdown(events, selectedMonth),
-    [events, selectedMonth]
+    () =>
+      getSessionOutcomeBreakdown(
+        events,
+        selectedMonth,
+        new Date(),
+        sessionStatusOptions
+      ),
+    [events, selectedMonth, sessionStatusOptions]
   )
 
   const deltaPct = useMemo(() => {

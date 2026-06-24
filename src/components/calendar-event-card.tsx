@@ -1,10 +1,13 @@
 import { Clock, MapPin, Video } from "lucide-react"
 
 import type { CalendarEvent } from "@/data/types"
+import { useClinicData } from "@/context/clinic-data-provider"
 import { useTranslation } from "@/context/locale-provider"
 import { getModalityLabel } from "@/lib/i18n-helpers"
 import type { SessionModality } from "@/lib/session-modality"
 import {
+  DEMO_SESSION_STATUS_OPTIONS,
+  GUEST_SESSION_STATUS_OPTIONS,
   formatRescheduledFromLabel,
   resolveEventStatus,
   sessionStatusConfig,
@@ -25,7 +28,10 @@ export function CalendarEventListItem({
   className,
 }: CalendarEventListItemProps) {
   const { t } = useTranslation()
-  const status = resolveEventStatus(event)
+  const { mode } = useClinicData()
+  const sessionStatusOptions =
+    mode === "demo" ? DEMO_SESSION_STATUS_OPTIONS : GUEST_SESSION_STATUS_OPTIONS
+  const status = resolveEventStatus(event, new Date(), sessionStatusOptions)
   const statusStyle = sessionStatusConfig[status]
   const ModalityIcon = modality === "online" ? Video : MapPin
 

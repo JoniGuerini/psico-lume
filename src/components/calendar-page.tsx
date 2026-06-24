@@ -25,7 +25,7 @@ import type { CalendarEvent, Patient } from "@/data/types"
 import { intlLocale } from "@/lib/locale"
 import { minutesToTime, toMinutes } from "@/lib/session-scheduling"
 import { resolveSessionModality } from "@/lib/session-modality"
-import { resolveEventStatus, sessionStatusConfig } from "@/lib/session-status"
+import { resolveEventStatus, sessionStatusConfig, DEMO_SESSION_STATUS_OPTIONS, GUEST_SESSION_STATUS_OPTIONS, type SessionStatusOptions } from "@/lib/session-status"
 import { cn } from "@/lib/utils"
 
 const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const
@@ -86,6 +86,7 @@ type TimeGridProps = {
   events: CalendarEvent[]
   patientNames: string[]
   patients: Patient[]
+  sessionStatusOptions: SessionStatusOptions
   onSelectDay: (date: Date) => void
   onCreate: (event: CalendarEvent) => void
   onMoveEvent: (id: string, date: Date, startMinutes: number) => void
@@ -97,6 +98,7 @@ function TimeGrid({
   events,
   patientNames,
   patients,
+  sessionStatusOptions,
   onSelectDay,
   onCreate,
   onMoveEvent,
@@ -355,7 +357,11 @@ function TimeGrid({
                         PX_PER_MIN,
                       22
                     )
-                    const eventStatus = resolveEventStatus(calendarEvent)
+                    const eventStatus = resolveEventStatus(
+                      calendarEvent,
+                      new Date(),
+                      sessionStatusOptions
+                    )
                     const statusStyle = sessionStatusConfig[eventStatus]
                     return (
                       <div
@@ -540,8 +546,13 @@ export function CalendarPage({
 } = {}) {
   const { t, locale } = useTranslation()
   const intl = intlLocale(locale)
-  const { patients, events, addEvent, moveEvent, updateEvent, deleteEvent } =
+  const { patients, events, mode, addEvent, moveEvent, updateEvent, deleteEvent } =
     useClinicData()
+  const sessionStatusOptions = useMemo<SessionStatusOptions>(
+    () =>
+      mode === "demo" ? DEMO_SESSION_STATUS_OPTIONS : GUEST_SESSION_STATUS_OPTIONS,
+    [mode]
+  )
   const patientNames = useMemo(
     () =>
       patients
@@ -808,6 +819,7 @@ export function CalendarPage({
               events={events}
               patientNames={patientNames}
               patients={patients}
+              sessionStatusOptions={sessionStatusOptions}
               onSelectDay={setSelectedDate}
               onCreate={handleCreate}
               onMoveEvent={handleMoveEvent}
@@ -821,6 +833,7 @@ export function CalendarPage({
               events={events}
               patientNames={patientNames}
               patients={patients}
+              sessionStatusOptions={sessionStatusOptions}
               onSelectDay={setSelectedDate}
               onCreate={handleCreate}
               onMoveEvent={handleMoveEvent}
