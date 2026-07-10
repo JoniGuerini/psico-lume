@@ -23,8 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 
-# Cursor local tooling
-.cursor/
+# Cursor local tooling (mantém rules versionadas)
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
 
 # Backup local snapshot (não versionar)
 backup/
