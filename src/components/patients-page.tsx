@@ -224,7 +224,7 @@ export function PatientsPage({
 
   if (selectedPatient) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <PatientProfile
           patient={selectedPatient}
           initialTab={profileTab}

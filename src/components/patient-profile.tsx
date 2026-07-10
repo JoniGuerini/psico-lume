@@ -162,121 +162,125 @@ export function PatientProfile({
     .join(" · ")
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button variant="ghost" size="sm" onClick={onBack}>
-          <ArrowLeft />
-          {t("patients.profile.back")}
-        </Button>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-border bg-card shadow-sm hover:bg-accent/50"
-            onClick={() => setEditOpen(true)}
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden">
+      <div className="flex shrink-0 flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button variant="ghost" size="sm" onClick={onBack}>
+            <ArrowLeft />
+            {t("patients.profile.back")}
+          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-border bg-card shadow-sm hover:bg-accent/50"
+              onClick={() => setEditOpen(true)}
+            >
+              <Pencil />
+              {t("patients.profile.edit")}
+            </Button>
+            <Button size="sm" onClick={() => setScheduleOpen(true)}>
+              <CalendarPlus />
+              {t("patients.profile.scheduleSession")}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-5 rounded-3xl bg-sidebar p-6 text-sidebar-foreground sm:flex-row sm:items-center">
+          <Avatar className="size-20 rounded-2xl ring-2 ring-white/15 after:rounded-2xl">
+            <AvatarFallback className="rounded-2xl bg-white/10 text-2xl text-sidebar-foreground">
+              {getInitials(patient.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <div className="flex flex-col gap-0.5">
+              <h2 className="font-heading text-2xl font-semibold text-surface-navy-heading">
+                {patient.name}
+              </h2>
+              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-sidebar-foreground/70">
+                {patient.email ? (
+                  <span className="flex items-center gap-1.5">
+                    <Mail className="size-3.5" />
+                    {patient.email}
+                  </span>
+                ) : null}
+                {patient.phone ? (
+                  <span className="flex items-center gap-1.5">
+                    <Phone className="size-3.5" />
+                    {patient.phone}
+                  </span>
+                ) : null}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Badge className="gap-1.5 border-white/15 bg-white/10 text-sidebar-foreground">
+                <span className={cn("size-2 rounded-full", status.dot)} />
+                {getPatientStatusLabel(t, patient.status)}
+              </Badge>
+              <Badge className="border-white/15 bg-white/10 text-sidebar-foreground">
+                {getModalityLabel(t, patient.modality)}
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain">
+        <div className="grid shrink-0 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat
+            label={t("patients.profile.stats.completedSessions")}
+            value={String(patient.sessions)}
+          />
+          <Stat
+            label={t("patients.profile.stats.patientSince")}
+            value={patient.since || "—"}
+          />
+          <Stat
+            label={t("patients.profile.stats.sessionPrice")}
+            value={patient.price ? `R$ ${patient.price}` : "—"}
+          />
+          <Stat
+            label={t("patients.profile.stats.nextSession")}
+            value={patient.nextSession ?? "—"}
+          />
+        </div>
+
+        <Card className="shrink-0 p-4">
+          <Tabs
+            value={tab}
+            onValueChange={(value) => setTab(value as PatientProfileTab)}
           >
-            <Pencil />
-            {t("patients.profile.edit")}
-          </Button>
-          <Button size="sm" onClick={() => setScheduleOpen(true)}>
-            <CalendarPlus />
-            {t("patients.profile.scheduleSession")}
-          </Button>
-        </div>
+            <TabsList className="h-auto min-h-9 border border-border bg-background/40">
+              <TabsTrigger value="overview">
+                {t("patients.profile.tabs.overview")}
+              </TabsTrigger>
+              <TabsTrigger value="sessions">
+                {t("patients.profile.tabs.sessions")}
+                {sessionCount > 0 ? ` (${sessionCount})` : ""}
+              </TabsTrigger>
+              <TabsTrigger value="records">
+                {t("patients.profile.tabs.records")}
+                {noteCount > 0 ? ` (${noteCount})` : ""}
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </Card>
+
+        {tab === "overview" ? (
+          <PatientOverview
+            patient={patient}
+            address={address}
+            events={events}
+            onMarkPaid={markEventPaid}
+            onSetPaymentOverdueManual={setPatientPaymentOverdueManual}
+            onDeleteRequest={() => setDeleteOpen(true)}
+          />
+        ) : tab === "sessions" ? (
+          <PatientSessionsTab patient={patient} />
+        ) : (
+          <PatientRecordsTab patient={patient} />
+        )}
       </div>
-
-      <div className="flex flex-col gap-5 rounded-3xl bg-sidebar p-6 text-sidebar-foreground sm:flex-row sm:items-center">
-        <Avatar className="size-20 rounded-2xl ring-2 ring-white/15 after:rounded-2xl">
-          <AvatarFallback className="rounded-2xl bg-white/10 text-2xl text-sidebar-foreground">
-            {getInitials(patient.name)}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-0.5">
-            <h2 className="font-heading text-2xl font-semibold text-surface-navy-heading">
-              {patient.name}
-            </h2>
-            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-sidebar-foreground/70">
-              {patient.email ? (
-                <span className="flex items-center gap-1.5">
-                  <Mail className="size-3.5" />
-                  {patient.email}
-                </span>
-              ) : null}
-              {patient.phone ? (
-                <span className="flex items-center gap-1.5">
-                  <Phone className="size-3.5" />
-                  {patient.phone}
-                </span>
-              ) : null}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Badge className="gap-1.5 border-white/15 bg-white/10 text-sidebar-foreground">
-              <span className={cn("size-2 rounded-full", status.dot)} />
-              {getPatientStatusLabel(t, patient.status)}
-            </Badge>
-            <Badge className="border-white/15 bg-white/10 text-sidebar-foreground">
-              {getModalityLabel(t, patient.modality)}
-            </Badge>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat
-          label={t("patients.profile.stats.completedSessions")}
-          value={String(patient.sessions)}
-        />
-        <Stat
-          label={t("patients.profile.stats.patientSince")}
-          value={patient.since || "—"}
-        />
-        <Stat
-          label={t("patients.profile.stats.sessionPrice")}
-          value={patient.price ? `R$ ${patient.price}` : "—"}
-        />
-        <Stat
-          label={t("patients.profile.stats.nextSession")}
-          value={patient.nextSession ?? "—"}
-        />
-      </div>
-
-      <Card className="p-4">
-        <Tabs
-          value={tab}
-          onValueChange={(value) => setTab(value as PatientProfileTab)}
-        >
-          <TabsList className="border border-border bg-background/40">
-            <TabsTrigger value="overview">
-              {t("patients.profile.tabs.overview")}
-            </TabsTrigger>
-            <TabsTrigger value="sessions">
-              {t("patients.profile.tabs.sessions")}
-              {sessionCount > 0 ? ` (${sessionCount})` : ""}
-            </TabsTrigger>
-            <TabsTrigger value="records">
-              {t("patients.profile.tabs.records")}
-              {noteCount > 0 ? ` (${noteCount})` : ""}
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </Card>
-
-      {tab === "overview" ? (
-        <PatientOverview
-          patient={patient}
-          address={address}
-          events={events}
-          onMarkPaid={markEventPaid}
-          onSetPaymentOverdueManual={setPatientPaymentOverdueManual}
-          onDeleteRequest={() => setDeleteOpen(true)}
-        />
-      ) : tab === "sessions" ? (
-        <PatientSessionsTab patient={patient} />
-      ) : (
-        <PatientRecordsTab patient={patient} />
-      )}
 
       <NewPatientDialog
         open={editOpen}

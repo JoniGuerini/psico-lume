@@ -989,9 +989,9 @@ export const en = {
     },
     sessions: {
       title: "Session history",
-      subtitle: "Past and scheduled sessions up to 1 month ahead for {{name}}.",
+      subtitle: "Past sessions and those scheduled through the end of the current month for {{name}}.",
       stats: {
-        total: "Total in period",
+        total: "Total this month",
         completed: "Completed",
         upcoming: "Upcoming",
         absences: "Absences / cancelled",

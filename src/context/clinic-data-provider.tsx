@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react"
 
-import { buildCalendarEvents } from "@/data/calendar"
+import { buildCalendarEvents, isRecurringEventId } from "@/data/calendar"
 import { buildClinicalRecords } from "@/data/clinical-records"
 import { buildInboxEmails } from "@/data/inbox"
 import { useTranslation } from "@/context/locale-provider"
@@ -137,7 +137,7 @@ function rebuildRecurringEvents(
   mode: ClinicDataMode
 ) {
   const options = sessionStatusOptionsForMode(mode)
-  const manual = currentEvents.filter((event) => event.patientId === "")
+  const manual = currentEvents.filter((event) => !isRecurringEventId(event.id))
   return syncStaleEventStatuses(
     mergeEventStatuses(currentEvents, [
       ...manual,

@@ -88,11 +88,18 @@ export function getPatientRecurrenceStart(patient: Patient, anchor = new Date())
   return todayStart
 }
 
+const RECURRING_EVENT_ID_PREFIX = "rec-"
+
 function recurringEventId(patientId: string, date: Date, start: string) {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, "0")
   const d = String(date.getDate()).padStart(2, "0")
-  return `rec-${patientId}-${y}-${m}-${d}-${start}`
+  return `${RECURRING_EVENT_ID_PREFIX}${patientId}-${y}-${m}-${d}-${start}`
+}
+
+/** Eventos gerados pela recorrência do paciente; os demais foram criados manualmente. */
+export function isRecurringEventId(id: string) {
+  return id.startsWith(RECURRING_EVENT_ID_PREFIX)
 }
 
 function buildEventForSlot(
@@ -208,20 +215,18 @@ export function eventsOfDay(events: CalendarEvent[], date: Date) {
     .sort((a, b) => a.start.localeCompare(b.start))
 }
 
-/** Janela do histórico no perfil: passado completo + 1 mês à frente. */
-export const PATIENT_SESSIONS_FUTURE_DAYS = 30
-
+/** Histórico no perfil: todo o passado + futuro só até o fim do mês atual. */
 export function getEventsForPatientProfile(
   events: CalendarEvent[],
   patientId: string,
   anchor = new Date()
 ) {
-  const todayStart = new Date(
+  const endOfCurrentMonth = new Date(
     anchor.getFullYear(),
-    anchor.getMonth(),
-    anchor.getDate()
+    anchor.getMonth() + 1,
+    0
   )
-  const futureLimit = addDays(todayStart, PATIENT_SESSIONS_FUTURE_DAYS)
+  endOfCurrentMonth.setHours(23, 59, 59, 999)
 
   return getEventsForPatient(events, patientId).filter((event) => {
     const eventDay = new Date(
@@ -229,7 +234,7 @@ export function getEventsForPatientProfile(
       event.date.getMonth(),
       event.date.getDate()
     )
-    return eventDay <= futureLimit
+    return eventDay <= endOfCurrentMonth
   })
 }
 

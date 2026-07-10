@@ -989,9 +989,9 @@ export const ptBR = {
     },
     sessions: {
       title: "Histórico de sessões",
-      subtitle: "Sessões passadas e agendadas até 1 mês à frente de {{name}}.",
+      subtitle: "Sessões passadas e as agendadas até o fim do mês atual de {{name}}.",
       stats: {
-        total: "Total no período",
+        total: "Total no mês",
         completed: "Realizadas",
         upcoming: "Próximas",
         absences: "Faltas / canceladas",
