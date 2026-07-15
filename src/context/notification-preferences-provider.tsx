@@ -19,6 +19,7 @@ import {
 type NotificationPreferencesContextValue = {
   preferences: NotificationPreferences
   setPreference: (key: NotificationPreferenceKey, enabled: boolean) => void
+  setPreferences: (preferences: NotificationPreferences) => void
 }
 
 const NotificationPreferencesContext =
@@ -29,7 +30,7 @@ export function NotificationPreferencesProvider({
 }: {
   children: ReactNode
 }) {
-  const [preferences, setPreferences] = useState<NotificationPreferences>(() =>
+  const [preferences, setPreferencesState] = useState<NotificationPreferences>(() =>
     readStoredNotificationPreferences()
   )
 
@@ -41,7 +42,12 @@ export function NotificationPreferencesProvider({
     () => ({
       preferences,
       setPreference: (key: NotificationPreferenceKey, enabled: boolean) => {
-        setPreferences((current) => setNotificationPreference(current, key, enabled))
+        setPreferencesState((current) =>
+          setNotificationPreference(current, key, enabled)
+        )
+      },
+      setPreferences: (next: NotificationPreferences) => {
+        setPreferencesState({ ...DEFAULT_NOTIFICATION_PREFERENCES, ...next })
       },
     }),
     [preferences]

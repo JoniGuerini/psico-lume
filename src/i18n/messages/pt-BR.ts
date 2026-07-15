@@ -145,6 +145,10 @@ export const ptBR = {
         label: "Aparência",
         description: "Personalize o visual do aplicativo.",
       },
+      backup: {
+        label: "Backup",
+        description: "Baixar ou restaurar dados locais.",
+      },
       excluirConta: {
         label: "Excluir conta",
         description: "Encerrar conta convidada neste navegador.",
@@ -179,6 +183,69 @@ export const ptBR = {
       confirmTitle: "Excluir conta convidada?",
       confirmDescription:
         "A conta de {{name}} e todos os dados associados serão apagados deste navegador. Você precisará criar uma nova conta convidada para voltar a usar o Lume aqui.",
+    },
+    backup: {
+      heading: "Backup local",
+      description:
+        "Salve um arquivo JSON com seus dados clínicos e preferências, ou restaure um backup anterior.",
+      warning:
+        "O arquivo contém dados clínicos sensíveis. Guarde-o em local seguro e não compartilhe.",
+      downloadTitle: "Baixar backup",
+      downloadDescription:
+        "Gera um arquivo .json com pacientes, agenda, prontuários e preferências.",
+      downloadButton: "Baixar backup",
+      restoreTitle: "Restaurar backup",
+      restoreDescription:
+        "Selecione um arquivo .json gerado pelo Lume para recuperar seus dados.",
+      restoreButton: "Escolher arquivo",
+      modeTitle: "Como restaurar?",
+      modeDescription:
+        "Escolha se o backup deve substituir tudo ou ser combinado com os dados atuais.",
+      modeReplaceTitle: "Substituir tudo",
+      modeReplaceDescription:
+        "Apaga os dados atuais deste navegador e carrega apenas o conteúdo do backup.",
+      modeMergeTitle: "Combinar",
+      modeMergeDescription:
+        "Mantém os dados atuais e adiciona itens novos do backup. Em caso de conflito, você decide.",
+      continue: "Continuar",
+      replaceConfirmTitle: "Substituir dados atuais?",
+      replaceConfirmDescription:
+        "Todos os pacientes, sessões, prontuários e notificações atuais serão substituídos pelo backup. Esta ação não pode ser desfeita.",
+      replaceConfirm: "Substituir e restaurar",
+      conflictTitle: "Conflitos encontrados",
+      conflictDescription:
+        "O backup tem {{total}} item(ns) com o mesmo ID dos dados atuais ({{patients}} pacientes, {{events}} sessões, {{sessionNotes}} prontuários). Continuar sobrescreve esses itens com a versão do backup.",
+      conflictConfirm: "Continuar e sobrescrever",
+      downloaded: "Backup baixado",
+      downloadedDescription: "Arquivo salvo neste dispositivo.",
+      restored: "Backup restaurado",
+      restoredReplaceDescription: "Os dados locais foram substituídos pelo backup.",
+      restoredMergeDescription: "Os dados do backup foram combinados com os atuais.",
+      errors: {
+        invalidJson: "O arquivo não é um JSON válido.",
+        invalidStructure: "Estrutura do backup inválida.",
+        invalidKind: "Este arquivo não é um backup do Psico Lume.",
+        invalidSchemaVersion: "Versão do formato de backup inválida.",
+        unsupportedSchemaVersion:
+          "Este backup é de uma versão mais nova do Lume. Atualize o app e tente de novo.",
+        invalidAppVersion: "Versão do app no backup inválida.",
+        invalidExportedAt: "Data de exportação inválida.",
+        invalidProfile: "Perfil do backup inválido.",
+        invalidClinic: "Dados clínicos do backup inválidos.",
+        invalidPatients: "Lista de pacientes inválida no backup.",
+        invalidEvents: "Lista de sessões inválida no backup.",
+        invalidSessionNotes: "Lista de prontuários inválida no backup.",
+        invalidNotifications: "Lista de notificações inválida no backup.",
+        invalidPreferences: "Preferências do backup inválidas.",
+        duplicatePatientIds: "Há IDs de pacientes duplicados no backup.",
+        duplicateEventIds: "Há IDs de sessões duplicados no backup.",
+        duplicateSessionNoteIds: "Há IDs de prontuários duplicados no backup.",
+        duplicateNotificationIds: "Há IDs de notificações duplicados no backup.",
+        invalidFileType: "Selecione um arquivo .json.",
+        fileTooLarge: "O arquivo é grande demais (máx. 8 MB).",
+        readFailed: "Não foi possível ler o arquivo.",
+        generic: "Não foi possível restaurar o backup.",
+      },
     },
     security: {
       heading: "Segurança",

@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
+  Archive,
   Bell,
   Camera,
   Check,
   CreditCard,
   Compass,
+  Download,
   Inbox,
   Languages,
   Laptop,
@@ -14,6 +16,7 @@ import {
   ShieldCheck,
   Smartphone,
   Trash2,
+  Upload,
   User,
   UserRound,
 } from "lucide-react"
@@ -46,8 +49,20 @@ import {
 } from "@/context/toast-provider"
 import { useOnboardingTour } from "@/context/onboarding-tour-provider"
 import { useNotificationPreferences } from "@/context/notification-preferences-provider"
+import { useClinicData } from "@/context/clinic-data-provider"
 import type { NotificationPreferenceKey } from "@/lib/notification-preferences"
 import type { ToastPosition } from "@/lib/toast-preferences"
+import {
+  buildClinicBackupFile,
+  downloadClinicBackup,
+  mergeClinicSnapshots,
+  readBackupFile,
+  summarizeMergeConflicts,
+  type MergeConflictSummary,
+  type RestoreMode,
+  type ValidatedClinicBackup,
+} from "@/lib/clinic-backup"
+import { applyThemeToDocument } from "@/lib/theme"
 
 type AccountDialogProps = {
   user: {
@@ -71,6 +86,7 @@ type Section = {
 }
 
 const guestDeleteAccountSectionId = "excluir-conta"
+const guestBackupSectionId = "backup"
 
 const TOAST_POSITION_LABEL_KEYS: Record<
   ToastPosition,
@@ -168,8 +184,18 @@ export function AccountDialog({
 }: AccountDialogProps) {
   const { t, locale, setLocale } = useTranslation()
   const { restartTour } = useOnboardingTour()
+  const { getClinicSnapshot, replaceClinicSnapshot } = useClinicData()
   const [section, setSection] = useState("perfil")
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [restoreModeOpen, setRestoreModeOpen] = useState(false)
+  const [replaceConfirmOpen, setReplaceConfirmOpen] = useState(false)
+  const [conflictConfirmOpen, setConflictConfirmOpen] = useState(false)
+  const [pendingBackup, setPendingBackup] = useState<ValidatedClinicBackup | null>(
+    null
+  )
+  const [restoreMode, setRestoreMode] = useState<RestoreMode>("replace")
+  const [conflictSummary, setConflictSummary] =
+    useState<MergeConflictSummary | null>(null)
 
   const [name, setName] = useState(user.name)
   const [email, setEmail] = useState(user.email)
@@ -179,8 +205,11 @@ export function AccountDialog({
   const [confirmPassword, setConfirmPassword] = useState("")
   const [twoFactor, setTwoFactor] = useState(true)
 
-  const { preferences: notificationPreferences, setPreference: setNotificationPreference } =
-    useNotificationPreferences()
+  const {
+    preferences: notificationPreferences,
+    setPreference: setNotificationPreference,
+    setPreferences: setAllNotificationPreferences,
+  } = useNotificationPreferences()
 
   const { theme, density, setTheme, setDensity } = useTheme()
   const { toast, position: toastPosition, setPosition: setToastPosition } =
@@ -222,6 +251,16 @@ export function AccountDialog({
     [t]
   )
 
+  const guestBackupSection = useMemo<Section>(
+    () => ({
+      id: guestBackupSectionId,
+      label: t("account.sections.backup.label"),
+      description: t("account.sections.backup.description"),
+      icon: Archive,
+    }),
+    [t]
+  )
+
   const guestDeleteAccountSection = useMemo<Section>(
     () => ({
       id: guestDeleteAccountSectionId,
@@ -233,16 +272,25 @@ export function AccountDialog({
   )
 
   const visibleSections = useMemo(
-    () => (isGuest ? [...sections, guestDeleteAccountSection] : sections),
-    [isGuest, sections, guestDeleteAccountSection]
+    () =>
+      isGuest
+        ? [...sections, guestBackupSection, guestDeleteAccountSection]
+        : sections,
+    [isGuest, sections, guestBackupSection, guestDeleteAccountSection]
   )
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const backupFileInputRef = useRef<HTMLInputElement>(null)
   const [avatarUrl, setAvatarUrl] = useState(user.avatar)
 
   useEffect(() => {
     if (!open) {
       setDeleteConfirmOpen(false)
+      setRestoreModeOpen(false)
+      setReplaceConfirmOpen(false)
+      setConflictConfirmOpen(false)
+      setPendingBackup(null)
+      setConflictSummary(null)
     }
   }, [open])
 
@@ -254,7 +302,10 @@ export function AccountDialog({
   }, [open, user.name, user.email, user.avatar])
 
   useEffect(() => {
-    if (!isGuest && section === guestDeleteAccountSectionId) {
+    if (
+      !isGuest &&
+      (section === guestDeleteAccountSectionId || section === guestBackupSectionId)
+    ) {
       setSection("perfil")
     }
   }, [isGuest, section])
@@ -320,6 +371,112 @@ export function AccountDialog({
     setDeleteConfirmOpen(false)
     onOpenChange(false)
     onDeleteGuestProfile?.()
+  }
+
+  function applyRestoredPreferences(backup: ValidatedClinicBackup) {
+    const { preferences } = backup
+    setAllNotificationPreferences(preferences.notifications)
+    setTheme(preferences.theme)
+    setDensity(preferences.density)
+    applyThemeToDocument(preferences.theme, preferences.density)
+    setLocale(preferences.locale)
+    setToastPosition(preferences.toastPosition)
+    if (backup.profileName.trim().length >= 2) {
+      onUpdateGuestProfile?.(backup.profileName.trim())
+      setName(backup.profileName.trim())
+    }
+  }
+
+  function finishRestore(backup: ValidatedClinicBackup, mode: RestoreMode) {
+    applyRestoredPreferences(backup)
+    toast(t("account.backup.restored"), {
+      description:
+        mode === "replace"
+          ? t("account.backup.restoredReplaceDescription")
+          : t("account.backup.restoredMergeDescription"),
+    })
+    setPendingBackup(null)
+    setConflictSummary(null)
+    setRestoreModeOpen(false)
+    setReplaceConfirmOpen(false)
+    setConflictConfirmOpen(false)
+  }
+
+  function handleDownloadBackup() {
+    const backup = buildClinicBackupFile({
+      profileName: user.name,
+      clinic: getClinicSnapshot(),
+      preferences: {
+        notifications: notificationPreferences,
+        theme,
+        density,
+        locale,
+        toastPosition,
+      },
+    })
+    downloadClinicBackup(backup)
+    toast(t("account.backup.downloaded"), {
+      description: t("account.backup.downloadedDescription"),
+    })
+  }
+
+  async function handleBackupFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file) return
+
+    const result = await readBackupFile(file)
+    if (!result.ok) {
+      const errorKey = `account.backup.errors.${result.error}` as const
+      toast(t("account.backup.errors.generic"), {
+        variant: "error",
+        description: t(errorKey),
+      })
+      return
+    }
+
+    setPendingBackup(result.backup)
+    setRestoreMode("replace")
+    setRestoreModeOpen(true)
+  }
+
+  function handleContinueRestoreMode() {
+    if (!pendingBackup) return
+    if (restoreMode === "replace") {
+      setRestoreModeOpen(false)
+      setReplaceConfirmOpen(true)
+      return
+    }
+
+    const summary = summarizeMergeConflicts(
+      getClinicSnapshot(),
+      pendingBackup.clinic
+    )
+    if (summary.total > 0) {
+      setConflictSummary(summary)
+      setRestoreModeOpen(false)
+      setConflictConfirmOpen(true)
+      return
+    }
+
+    replaceClinicSnapshot(
+      mergeClinicSnapshots(getClinicSnapshot(), pendingBackup.clinic, false)
+    )
+    finishRestore(pendingBackup, "merge")
+  }
+
+  function handleConfirmReplaceRestore() {
+    if (!pendingBackup) return
+    replaceClinicSnapshot(pendingBackup.clinic)
+    finishRestore(pendingBackup, "replace")
+  }
+
+  function handleConfirmConflictOverwrite() {
+    if (!pendingBackup) return
+    replaceClinicSnapshot(
+      mergeClinicSnapshots(getClinicSnapshot(), pendingBackup.clinic, true)
+    )
+    finishRestore(pendingBackup, "merge")
   }
 
   return (
@@ -472,6 +629,66 @@ export function AccountDialog({
                       onClick={handleSaveProfile}
                     >
                       {t("account.profile.saveChanges")}
+                    </Button>
+                  </div>
+                </Panel>
+              </div>
+            ) : null}
+
+            {section === "backup" && isGuest ? (
+              <div className="flex flex-col gap-6">
+                <SectionHeading
+                  title={t("account.backup.heading")}
+                  description={t("account.backup.description")}
+                />
+
+                <Panel className="gap-3 border-attention/25 bg-attention/5">
+                  <p className="text-sm text-muted-foreground">
+                    {t("account.backup.warning")}
+                  </p>
+                </Panel>
+
+                <Panel className="gap-4">
+                  <div className="flex flex-col gap-1">
+                    <h4 className="font-heading text-base font-semibold">
+                      {t("account.backup.downloadTitle")}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {t("account.backup.downloadDescription")}
+                    </p>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button type="button" onClick={handleDownloadBackup}>
+                      <Download />
+                      {t("account.backup.downloadButton")}
+                    </Button>
+                  </div>
+                </Panel>
+
+                <Panel className="gap-4">
+                  <div className="flex flex-col gap-1">
+                    <h4 className="font-heading text-base font-semibold">
+                      {t("account.backup.restoreTitle")}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {t("account.backup.restoreDescription")}
+                    </p>
+                  </div>
+                  <div className="flex justify-end">
+                    <input
+                      ref={backupFileInputRef}
+                      type="file"
+                      accept="application/json,.json"
+                      className="hidden"
+                      onChange={handleBackupFileChange}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => backupFileInputRef.current?.click()}
+                    >
+                      <Upload />
+                      {t("account.backup.restoreButton")}
                     </Button>
                   </div>
                 </Panel>
@@ -1062,6 +1279,166 @@ export function AccountDialog({
           >
             <Trash2 />
             {t("account.deleteGuest.deleteAccount")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog
+      open={restoreModeOpen}
+      onOpenChange={(next) => {
+        setRestoreModeOpen(next)
+        if (!next) {
+          setPendingBackup(null)
+          setConflictSummary(null)
+        }
+      }}
+    >
+      <DialogContent className="gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md">
+        <DialogHeader className="border-b border-border px-6 py-4">
+          <DialogTitle className="text-lg">
+            {t("account.backup.modeTitle")}
+          </DialogTitle>
+          <DialogDescription>
+            {t("account.backup.modeDescription")}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-3 px-6 py-4">
+          <button
+            type="button"
+            onClick={() => setRestoreMode("replace")}
+            className={cn(
+              "flex flex-col gap-1 rounded-xl border px-4 py-3 text-left transition-colors",
+              restoreMode === "replace"
+                ? "border-primary bg-primary/5"
+                : "border-border hover:bg-muted/50"
+            )}
+          >
+            <span className="text-sm font-semibold">
+              {t("account.backup.modeReplaceTitle")}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {t("account.backup.modeReplaceDescription")}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setRestoreMode("merge")}
+            className={cn(
+              "flex flex-col gap-1 rounded-xl border px-4 py-3 text-left transition-colors",
+              restoreMode === "merge"
+                ? "border-primary bg-primary/5"
+                : "border-border hover:bg-muted/50"
+            )}
+          >
+            <span className="text-sm font-semibold">
+              {t("account.backup.modeMergeTitle")}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {t("account.backup.modeMergeDescription")}
+            </span>
+          </button>
+        </div>
+        <DialogFooter className="border-t border-border px-6 py-4">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              setRestoreModeOpen(false)
+              setPendingBackup(null)
+            }}
+          >
+            {t("common.cancel")}
+          </Button>
+          <Button type="button" onClick={handleContinueRestoreMode}>
+            {t("account.backup.continue")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog
+      open={replaceConfirmOpen}
+      onOpenChange={(next) => {
+        setReplaceConfirmOpen(next)
+        if (!next) {
+          setPendingBackup(null)
+        }
+      }}
+    >
+      <DialogContent className="gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md">
+        <DialogHeader className="border-b border-border px-6 py-4">
+          <DialogTitle className="text-lg">
+            {t("account.backup.replaceConfirmTitle")}
+          </DialogTitle>
+          <DialogDescription>
+            {t("account.backup.replaceConfirmDescription")}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="border-t border-border px-6 py-4">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              setReplaceConfirmOpen(false)
+              setPendingBackup(null)
+            }}
+          >
+            {t("common.cancel")}
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleConfirmReplaceRestore}
+          >
+            {t("account.backup.replaceConfirm")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog
+      open={conflictConfirmOpen}
+      onOpenChange={(next) => {
+        setConflictConfirmOpen(next)
+        if (!next) {
+          setPendingBackup(null)
+          setConflictSummary(null)
+        }
+      }}
+    >
+      <DialogContent className="gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md">
+        <DialogHeader className="border-b border-border px-6 py-4">
+          <DialogTitle className="text-lg">
+            {t("account.backup.conflictTitle")}
+          </DialogTitle>
+          <DialogDescription>
+            {t("account.backup.conflictDescription", {
+              total: String(conflictSummary?.total ?? 0),
+              patients: String(conflictSummary?.patients ?? 0),
+              events: String(conflictSummary?.events ?? 0),
+              sessionNotes: String(conflictSummary?.sessionNotes ?? 0),
+            })}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="border-t border-border px-6 py-4">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              setConflictConfirmOpen(false)
+              setPendingBackup(null)
+              setConflictSummary(null)
+            }}
+          >
+            {t("common.cancel")}
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleConfirmConflictOverwrite}
+          >
+            {t("account.backup.conflictConfirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -25,6 +25,7 @@ import {
   createWelcomeNotification,
   loadGuestClinicSnapshot,
   saveGuestClinicSnapshot,
+  type GuestClinicSnapshot,
 } from "@/lib/guest-clinic-storage"
 import { buildClinicAlerts } from "@/lib/clinic-alerts"
 import { isAlertEnabled } from "@/lib/notification-preferences"
@@ -84,6 +85,8 @@ type ClinicDataContextValue = {
   markAllNotificationsAsRead: () => void
   removeNotification: (id: string) => void
   clearNotifications: () => void
+  getClinicSnapshot: () => GuestClinicSnapshot
+  replaceClinicSnapshot: (snapshot: GuestClinicSnapshot) => void
 }
 
 const ClinicDataContext = createContext<ClinicDataContextValue | null>(null)
@@ -586,6 +589,22 @@ export function ClinicDataProvider({
       removeNotification: (id) =>
         setNotifications((current) => current.filter((item) => item.id !== id)),
       clearNotifications: () => setNotifications([]),
+      getClinicSnapshot: () => ({
+        patients,
+        events,
+        sessionNotes,
+        notifications,
+      }),
+      replaceClinicSnapshot: (snapshot) => {
+        setPatients(snapshot.patients)
+        setEvents(snapshot.events)
+        setSessionNotes(snapshot.sessionNotes)
+        setNotifications(
+          snapshot.notifications.length > 0
+            ? snapshot.notifications
+            : [createWelcomeNotification()]
+        )
+      },
     }),
     [
       mode,
