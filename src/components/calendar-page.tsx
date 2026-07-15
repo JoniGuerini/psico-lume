@@ -535,7 +535,7 @@ function NewSessionPopover({
 
 export function CalendarPage({
   initialSelectedDateTimestamp = null,
-  initialView = "mes",
+  initialView = "semana",
   openNewSession = false,
   onNewSessionOpenChange,
 }: {

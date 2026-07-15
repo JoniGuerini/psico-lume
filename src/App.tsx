@@ -74,7 +74,7 @@ export function App() {
     "todas" | "atraso"
   >("todas")
   const [calendarView, setCalendarView] = useState<"mes" | "semana" | "dia">(
-    "mes"
+    "semana"
   )
   const [calendarDateFocus, setCalendarDateFocus] = useState<number | null>(
     null
@@ -89,7 +89,7 @@ export function App() {
     setOpenNewPatient(false)
     setOpenNewSession(false)
     setReceivablesFilter("todas")
-    setCalendarView("mes")
+    setCalendarView("semana")
     setCalendarDateFocus(null)
   }
 
