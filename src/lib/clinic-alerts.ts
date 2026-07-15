@@ -254,6 +254,7 @@ export function buildClinicAlerts(ctx: ClinicAlertsContext): Notification[] {
         CreditCard,
         t("alerts.unpaidWeek.title", { count: billableThisWeek.length }),
         t("alerts.unpaidWeek.description", {
+          count: billableThisWeek.length,
           total: formatLocaleCurrency(total, locale),
         }),
         now
