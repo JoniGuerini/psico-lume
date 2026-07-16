@@ -14,6 +14,9 @@ export const APP_PAGE_ID = {
 
 export type AppPageId = (typeof APP_PAGE_ID)[keyof typeof APP_PAGE_ID]
 
+/** O Roteiro é uma ferramenta interna: só aparece em desenvolvimento. */
+export const IS_ROADMAP_VISIBLE = import.meta.env.DEV
+
 export const APP_PAGE_IDS = Object.values(APP_PAGE_ID) as AppPageId[]
 
 export const FILL_VIEWPORT_PAGE_IDS = new Set<AppPageId>([

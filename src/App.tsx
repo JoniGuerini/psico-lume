@@ -44,7 +44,12 @@ import {
   LUME_MAIN_SURFACE_CLASS,
   authFadeTransition,
 } from "@/lib/motion-layout"
-import { APP_PAGE_ID, FILL_VIEWPORT_PAGE_IDS, type AppPageId } from "@/lib/app-pages"
+import {
+  APP_PAGE_ID,
+  FILL_VIEWPORT_PAGE_IDS,
+  IS_ROADMAP_VISIBLE,
+  type AppPageId,
+} from "@/lib/app-pages"
 import { useTranslation } from "@/context/locale-provider"
 import { OnboardingTourProvider } from "@/context/onboarding-tour-provider"
 import { cn } from "@/lib/utils"
@@ -357,7 +362,9 @@ export function App() {
                           }}
                         />
                       ) : null}
-                      {activeItem === APP_PAGE_ID.roteiro ? <RoadmapPage /> : null}
+                      {IS_ROADMAP_VISIBLE && activeItem === APP_PAGE_ID.roteiro ? (
+                        <RoadmapPage />
+                      ) : null}
                       {activeItem === APP_PAGE_ID.notificacoes ? (
                         <NotificationsPage />
                       ) : null}

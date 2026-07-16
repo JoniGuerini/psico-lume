@@ -24,7 +24,7 @@ import type {
   SessionStatus,
 } from "@/data/types"
 import type { TranslateFn } from "@/i18n/translate"
-import { APP_PAGE_ID, type AppPageId } from "@/lib/app-pages"
+import { APP_PAGE_ID, IS_ROADMAP_VISIBLE, type AppPageId } from "@/lib/app-pages"
 import { addDays } from "@/data/patients"
 import { intlLocale, type Locale } from "@/lib/locale"
 
@@ -46,7 +46,9 @@ const NAV_PAGE_CONFIG: {
   { id: "nav-notifications", pageId: APP_PAGE_ID.notificacoes, icon: Bell },
   { id: "nav-relatorios", pageId: APP_PAGE_ID.relatorios, icon: BarChart3 },
   { id: "nav-dados", pageId: APP_PAGE_ID.dados, icon: FileSpreadsheet },
-  { id: "nav-roadmap", pageId: APP_PAGE_ID.roteiro, icon: MapIcon },
+  ...(IS_ROADMAP_VISIBLE
+    ? [{ id: "nav-roadmap", pageId: APP_PAGE_ID.roteiro, icon: MapIcon }]
+    : []),
 ]
 
 export type QuickActionId = "new-patient" | "new-session"

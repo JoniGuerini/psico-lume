@@ -13,7 +13,7 @@ import {
 
 import { NavUser } from "@/components/nav-user"
 import { useTranslation } from "@/context/locale-provider"
-import { APP_PAGE_ID, type AppPageId } from "@/lib/app-pages"
+import { APP_PAGE_ID, IS_ROADMAP_VISIBLE, type AppPageId } from "@/lib/app-pages"
 import { TOUR_SIDEBAR_TARGETS } from "@/lib/onboarding-tour"
 import {
   Sidebar,
@@ -65,7 +65,9 @@ const navGroups: NavGroup[] = [
     labelKey: "nav.groups.gestao",
     items: [
       { id: APP_PAGE_ID.dados, icon: FileSpreadsheet },
-      { id: APP_PAGE_ID.roteiro, icon: Map },
+      ...(IS_ROADMAP_VISIBLE
+        ? [{ id: APP_PAGE_ID.roteiro, icon: Map }]
+        : []),
     ],
   },
 ]
