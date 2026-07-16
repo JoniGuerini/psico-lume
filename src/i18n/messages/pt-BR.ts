@@ -1114,6 +1114,7 @@ export const ptBR = {
     amount: "Valor da sessão",
     amountHint: "Usado no financeiro quando a sessão for realizada.",
     selectPatient: "Selecione o paciente",
+    searchPatient: "Buscar paciente...",
     selectDate: "Selecionar data",
     selectTime: "Selecionar horário",
     durationPlaceholder: "Duração",

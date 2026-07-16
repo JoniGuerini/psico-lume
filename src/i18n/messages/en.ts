@@ -1113,6 +1113,7 @@ export const en = {
     amount: "Session amount",
     amountHint: "Used in finance when the session is completed.",
     selectPatient: "Select patient",
+    searchPatient: "Search patient...",
     selectDate: "Select date",
     selectTime: "Select time",
     durationPlaceholder: "Duration",

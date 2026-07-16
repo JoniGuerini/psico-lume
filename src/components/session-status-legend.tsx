@@ -34,11 +34,15 @@ export function SessionStatusLegend({
           <div key={status} className="flex items-center gap-1.5">
             <span
               className={cn(
-                "size-3 shrink-0 rounded-sm border shadow-sm",
+                "relative h-3.5 w-8 shrink-0 overflow-hidden rounded-sm border shadow-sm",
                 config.block
               )}
               aria-hidden
-            />
+            >
+              {status === "cancelada" && (
+                <span className="absolute inset-x-1.5 top-1/2 h-px -translate-y-1/2 bg-[var(--session-cancelada-fg)]" />
+              )}
+            </span>
             <span className="text-xs text-muted-foreground">
               {getSessionStatusLabel(t, status)}
             </span>

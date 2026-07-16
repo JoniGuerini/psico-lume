@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
 import { CheckCircle2, Trash2 } from "lucide-react"
 
+import { PatientNamePicker } from "@/components/patient-name-picker"
 import { SessionStatusControl } from "@/components/session-status-control"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
@@ -210,39 +211,28 @@ export function EditSessionForm({
         <div className="flex flex-col gap-3 p-4 sm:p-5">
           <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
             <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
-                <Label htmlFor="edit-session-patient" className="text-xs">
-                  {t("sessionForm.patient")}
-                </Label>
-                {lockedPatient ? (
+              {lockedPatient ? (
+                <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
+                  <Label htmlFor="edit-session-patient" className="text-xs">
+                    {t("sessionForm.patient")}
+                  </Label>
                   <Input
                     id="edit-session-patient"
                     value={lockedPatient.name}
                     readOnly
                     className={sessionFieldClass}
                   />
-                ) : (
-                  <Select
-                    value={patient}
-                    onValueChange={handlePatientChange}
-                    onOpenChange={onSelectOpenChange}
-                  >
-                    <SelectTrigger
-                      id="edit-session-patient"
-                      className={cn("w-full", sessionFieldClass)}
-                    >
-                      <SelectValue placeholder={t("sessionForm.selectPatient")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {patientNames.map((name) => (
-                        <SelectItem key={name} value={name}>
-                          {name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
+                </div>
+              ) : (
+                <PatientNamePicker
+                  id="edit-session-patient"
+                  value={patient}
+                  names={patientNames}
+                  onChange={handlePatientChange}
+                  onOpenChange={onSelectOpenChange}
+                  className="col-span-2 sm:col-span-1"
+                />
+              )}
 
               <div className="col-span-2 flex flex-col gap-1.5 sm:col-span-1">
                 <Label htmlFor="edit-session-modality" className="text-xs">

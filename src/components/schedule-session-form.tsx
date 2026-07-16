@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
 import { CalendarPlus } from "lucide-react"
 
+import { PatientNamePicker } from "@/components/patient-name-picker"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
@@ -148,39 +149,27 @@ export function ScheduleSessionForm({
 
       <div className="flex flex-col gap-4 p-4">
         <section className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor={`${idPrefix}-patient`} className="text-xs">
-              {t("sessionForm.patient")}
-            </Label>
-            {lockedPatient ? (
+          {lockedPatient ? (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor={`${idPrefix}-patient`} className="text-xs">
+                {t("sessionForm.patient")}
+              </Label>
               <Input
                 id={`${idPrefix}-patient`}
                 value={lockedPatient.name}
                 readOnly
                 className={sessionFieldClass}
               />
-            ) : (
-              <Select
-                value={patient}
-                onValueChange={handlePatientChange}
-                onOpenChange={handleSelectOpenChange}
-              >
-                <SelectTrigger
-                  id={`${idPrefix}-patient`}
-                  className={cn("w-full", sessionFieldClass)}
-                >
-                  <SelectValue placeholder={t("sessionForm.selectPatient")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {patientNames.map((name) => (
-                    <SelectItem key={name} value={name}>
-                      {name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
+            </div>
+          ) : (
+            <PatientNamePicker
+              id={`${idPrefix}-patient`}
+              value={patient}
+              names={patientNames}
+              onChange={handlePatientChange}
+              onOpenChange={handleSelectOpenChange}
+            />
+          )}
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor={`${idPrefix}-date`} className="text-xs">
