@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useClinicData } from "@/context/clinic-data-provider"
 import { useTranslation } from "@/context/locale-provider"
 import type { CalendarEvent, Patient } from "@/data/types"
 import {
@@ -43,7 +42,6 @@ export function EditSessionDialog({
   onDelete,
 }: EditSessionDialogProps) {
   const { t, locale } = useTranslation()
-  const { markEventPaid } = useClinicData()
   const [selectOpen, setSelectOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
@@ -114,7 +112,6 @@ export function EditSessionDialog({
             }}
             onCancel={() => onOpenChange(false)}
             onDeleteRequest={onDelete ? () => setDeleteConfirmOpen(true) : undefined}
-            onMarkPaid={markEventPaid}
             onSelectOpenChange={setSelectOpen}
           />
         </DialogContent>

@@ -143,6 +143,7 @@ export function OnboardingTourProvider({
 
   useEffect(() => {
     if (!isActive || !currentStep) {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect -- reseta prontidão ao sair do passo */
       setTargetReady(false)
       return
     }
@@ -180,6 +181,7 @@ export function OnboardingTourProvider({
   useEffect(() => {
     if (!isActive) return
     if (stepIndex >= onboardingTourSteps.length) {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect -- encerra o tour ao passar do último passo */
       complete()
     }
   }, [isActive, stepIndex, complete])

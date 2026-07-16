@@ -109,10 +109,13 @@ function deserializeEvent(event: StoredCalendarEvent): CalendarEvent {
 function serializeNotification(
   notification: Notification
 ): StoredNotification {
-  const { icon: _icon, date, ...rest } = notification
   return {
-    ...rest,
-    date: date.toISOString(),
+    id: notification.id,
+    category: notification.category,
+    title: notification.title,
+    description: notification.description,
+    date: notification.date.toISOString(),
+    read: notification.read,
   }
 }
 

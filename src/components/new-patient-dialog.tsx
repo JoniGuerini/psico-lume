@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { Loader2, Plus, Save, Trash2, UserPlus } from "lucide-react"
 
 import type {
@@ -370,8 +370,12 @@ export function NewPatientDialog({
 }: NewPatientDialogProps) {
   const { t, locale } = useTranslation()
   const isEditing = patient != null
-  const [form, setForm] = useState(emptyForm)
-  const [schedules, setSchedules] = useState<PatientSchedule[]>([])
+  const [form, setForm] = useState(() =>
+    patient ? patientToForm(patient) : emptyForm
+  )
+  const [schedules, setSchedules] = useState<PatientSchedule[]>(() =>
+    patient ? patientSchedules(patient) : []
+  )
   const [cepLookup, setCepLookup] = useState<{
     status: "idle" | "loading" | "error"
     message?: string
@@ -387,28 +391,14 @@ export function NewPatientDialog({
 
   const canSubmit = form.name.trim() !== ""
 
-  useEffect(() => {
-    if (!open) {
+  function handleOpenChange(next: boolean) {
+    if (!next && shouldBlockDialogClose(null)) return
+    if (!next) {
+      resetForm()
       resetSelectGuard()
       setCepLookup({ status: "idle" })
       lastFetchedCepRef.current = ""
     }
-  }, [open, resetSelectGuard])
-
-  useEffect(() => {
-    if (!open) return
-    if (patient) {
-      setForm(patientToForm(patient))
-      setSchedules(patientSchedules(patient))
-      return
-    }
-    setForm(emptyForm)
-    setSchedules([])
-  }, [open, patient])
-
-  function handleOpenChange(next: boolean) {
-    if (!next && shouldBlockDialogClose(null)) return
-    if (!next) resetForm()
     onOpenChange(next)
   }
 

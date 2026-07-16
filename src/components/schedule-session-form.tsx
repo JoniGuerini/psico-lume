@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { CalendarPlus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -72,7 +72,14 @@ export function ScheduleSessionForm({
   const [date, setDate] = useState(toDateInput(defaults.date))
   const [start, setStart] = useState(defaults.start)
   const [duration, setDuration] = useState(String(defaults.duration))
-  const [amountInput, setAmountInput] = useState("")
+  const [amountInput, setAmountInput] = useState(() => {
+    const initialName = lockedPatient?.name ?? patientNames[0] ?? ""
+    const initial =
+      (lockedPatient
+        ? patients.find((item) => item.id === lockedPatient.id)
+        : patients.find((item) => item.name === initialName)) ?? null
+    return initial ? formatAmountInput(parsePrice(initial.price)) : ""
+  })
 
   const selectedPatient = useMemo(() => {
     if (lockedPatient) {
@@ -81,11 +88,13 @@ export function ScheduleSessionForm({
     return patients.find((item) => item.name === patient)
   }, [lockedPatient, patient, patients])
 
-  useEffect(() => {
-    if (selectedPatient) {
-      setAmountInput(formatAmountInput(parsePrice(selectedPatient.price)))
+  function handlePatientChange(name: string) {
+    setPatient(name)
+    const next = patients.find((item) => item.name === name)
+    if (next) {
+      setAmountInput(formatAmountInput(parsePrice(next.price)))
     }
-  }, [selectedPatient])
+  }
 
   function handleSelectOpenChange(open: boolean) {
     onSelectOpenChange?.(open)
@@ -153,7 +162,7 @@ export function ScheduleSessionForm({
             ) : (
               <Select
                 value={patient}
-                onValueChange={setPatient}
+                onValueChange={handlePatientChange}
                 onOpenChange={handleSelectOpenChange}
               >
                 <SelectTrigger

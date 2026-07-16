@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { FileSpreadsheet } from "lucide-react"
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
@@ -144,17 +144,16 @@ export function ClinicSheetsPage() {
     [patients, events, sessionNotes, context]
   )
   const [activeSheetKey, setActiveSheetKey] = useState<ExportSheetKey>("summary")
-
-  useEffect(() => {
-    if (!sheets.some((sheet) => sheet.sheetKey === activeSheetKey)) {
-      setActiveSheetKey(sheets[0]?.sheetKey ?? "summary")
-    }
-  }, [sheets, activeSheetKey])
+  const resolvedSheetKey = sheets.some(
+    (sheet) => sheet.sheetKey === activeSheetKey
+  )
+    ? activeSheetKey
+    : (sheets[0]?.sheetKey ?? "summary")
 
   const activeConfig = useMemo(
     () =>
-      sheets.find((sheet) => sheet.sheetKey === activeSheetKey) ?? sheets[0],
-    [activeSheetKey, sheets]
+      sheets.find((sheet) => sheet.sheetKey === resolvedSheetKey) ?? sheets[0],
+    [resolvedSheetKey, sheets]
   )
 
   if (!activeConfig) return null
@@ -183,7 +182,7 @@ export function ClinicSheetsPage() {
 
       <SheetTabs
         sheets={sheets}
-        active={activeSheetKey}
+        active={resolvedSheetKey}
         onChange={setActiveSheetKey}
       />
       <SheetTable

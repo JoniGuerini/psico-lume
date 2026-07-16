@@ -45,17 +45,22 @@ export function HomePage({
     overdueSessionCount,
   } = useClinicData()
 
-  const today = new Date()
+  const today = useMemo(() => {
+    const date = new Date()
+    date.setHours(0, 0, 0, 0)
+    return date
+  }, [])
   const todaysEvents = useMemo(() => eventsOfDay(events, today), [events, today])
   const patientById = useMemo(
     () => new Map(patients.map((patient) => [patient.id, patient])),
     [patients]
   )
 
+  const nowHours = new Date().getHours()
   const greeting =
-    today.getHours() < 12
+    nowHours < 12
       ? t("home.greeting.morning")
-      : today.getHours() < 18
+      : nowHours < 18
         ? t("home.greeting.afternoon")
         : t("home.greeting.evening")
 

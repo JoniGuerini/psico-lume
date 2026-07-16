@@ -34,14 +34,18 @@ export function GuestLoginDialog({
   const canSubmit = trimmedName.length >= 2
 
   useEffect(() => {
-    if (!open) {
-      setName("")
-      setLoading(false)
-      return
-    }
+    if (!open) return
     const timer = window.setTimeout(() => inputRef.current?.focus(), 50)
     return () => window.clearTimeout(timer)
   }, [open])
+
+  function handleOpenChange(next: boolean) {
+    if (!next) {
+      setName("")
+      setLoading(false)
+    }
+    onOpenChange(next)
+  }
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -56,7 +60,7 @@ export function GuestLoginDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="gap-0 overflow-hidden bg-surface-dialog p-0 sm:max-w-md">
         <DialogHeader className="border-b border-border px-6 py-4">
           <DialogTitle className="text-lg">{t("login.guest.title")}</DialogTitle>

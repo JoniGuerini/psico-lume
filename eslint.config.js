@@ -19,4 +19,11 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  // Providers e shadcn/ui exportam hooks/variants junto dos componentes — padrão esperado.
+  {
+    files: ['src/context/**/*.{ts,tsx}', 'src/components/ui/**/*.{ts,tsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

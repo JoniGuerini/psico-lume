@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import {
   Archive,
   Forward,
@@ -29,17 +29,11 @@ export function InboxPage({
 } = {}) {
   const { emails } = useClinicData()
   const { t, pageLabel } = useTranslation()
-  const [selectedId, setSelectedId] = useState(emails[0]?.id ?? "")
+  const [selectedId, setSelectedId] = useState(
+    () => initialEmailId ?? emails[0]?.id ?? ""
+  )
   const [tab, setTab] = useState("todos")
   const [query, setQuery] = useState("")
-
-  useEffect(() => {
-    if (initialEmailId) {
-      setSelectedId(initialEmailId)
-      setTab("todos")
-      setQuery("")
-    }
-  }, [initialEmailId])
 
   const filtered = useMemo(() => {
     return emails.filter((email: InboxEmail) => {

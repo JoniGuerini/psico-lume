@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { Clock3 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -90,23 +90,16 @@ export function TimePicker({
     [minuteStep]
   )
 
-  useEffect(() => {
-    const next = parseTime(value || "09:00")
-    setHour(next.hour)
-    setMinute(next.minute)
-  }, [value])
-
   function handleOpenChange(next: boolean) {
     if (!next) {
       applyTime(hour, minute)
+    } else {
+      const nextParsed = parseTime(value || "09:00")
+      setHour(nextParsed.hour)
+      setMinute(nextParsed.minute)
     }
     setOpen(next)
     onOpenChange?.(next)
-    if (next && !value) {
-      const fallback = parseTime("09:00")
-      setHour(fallback.hour)
-      setMinute(fallback.minute)
-    }
   }
 
   function applyTime(nextHour: string, nextMinute: string) {

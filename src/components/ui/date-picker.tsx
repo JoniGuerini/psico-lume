@@ -165,6 +165,8 @@ export function DatePicker({
     maxDate?.getFullYear() ??
     viewMonth.getFullYear()
 
+  /* Cabeçalho do calendário precisa acompanhar value/open sem remount do campo. */
+  /* eslint-disable react-hooks/set-state-in-effect -- sync controlado do mês/ano exibido */
   useEffect(() => {
     if (selectedDate) {
       setHeaderMonth(selectedDate.getMonth())
@@ -176,6 +178,7 @@ export function DatePicker({
       setHeaderYear(null)
     }
   }, [value, selectedDate, open])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function handleOpenChange(next: boolean) {
     setOpen(next)

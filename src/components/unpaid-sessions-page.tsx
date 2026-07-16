@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import {
   AlertCircle,
   Check,
@@ -76,10 +76,6 @@ export function UnpaidSessionsPage({
     markAllEventsPaid,
   } = useClinicData()
   const [filter, setFilter] = useState<Filter>(initialFilter)
-
-  useEffect(() => {
-    setFilter(initialFilter)
-  }, [initialFilter])
 
   const filtered = useMemo(() => {
     if (filter === "atraso") {

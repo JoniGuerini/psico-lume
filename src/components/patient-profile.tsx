@@ -20,7 +20,7 @@ import { NewPatientDialog } from "@/components/new-patient-dialog"
 import { PatientRecordsTab } from "@/components/patient-records-tab"
 import { PatientSessionsTab } from "@/components/patient-sessions-tab"
 import { ScheduleSessionDialog } from "@/components/schedule-session-dialog"
-import { statusConfig } from "@/components/patients-page"
+import { patientStatusDotClass } from "@/lib/patient-status-ui"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -145,7 +145,7 @@ export function PatientProfile({
     () => events.filter((event) => event.patientId === patient.id).length,
     [events, patient.id]
   )
-  const status = statusConfig[patient.status]
+  const statusDot = patientStatusDotClass[patient.status]
 
   const address = [
     patient.street && patient.number
@@ -214,7 +214,7 @@ export function PatientProfile({
             </div>
             <div className="flex flex-wrap gap-2">
               <Badge className="gap-1.5 border-white/15 bg-white/10 text-sidebar-foreground">
-                <span className={cn("size-2 rounded-full", status.dot)} />
+                <span className={cn("size-2 rounded-full", statusDot)} />
                 {getPatientStatusLabel(t, patient.status)}
               </Badge>
               <Badge className="border-white/15 bg-white/10 text-sidebar-foreground">
@@ -282,12 +282,14 @@ export function PatientProfile({
         )}
       </div>
 
-      <NewPatientDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        patient={patient}
-        onUpdate={updatePatient}
-      />
+      {editOpen ? (
+        <NewPatientDialog
+          open
+          onOpenChange={setEditOpen}
+          patient={patient}
+          onUpdate={updatePatient}
+        />
+      ) : null}
 
       <ScheduleSessionDialog
         open={scheduleOpen}

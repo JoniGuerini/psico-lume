@@ -1,11 +1,8 @@
 import { useMemo, useState } from "react"
 import { BellOff, Check, CheckCheck, Trash2 } from "lucide-react"
 
-import {
-  useNotifications,
-  type Notification,
-  type NotificationCategory,
-} from "@/components/notifications-provider"
+import { useNotifications } from "@/hooks/use-notifications"
+import type { Notification, NotificationCategory } from "@/data/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"

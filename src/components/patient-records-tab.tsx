@@ -356,6 +356,7 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
       </div>
 
       <NewSessionNoteDialog
+        key={editingNote?.id ?? "new-note"}
         open={dialogOpen}
         onOpenChange={handleDialogOpenChange}
         patient={patient}

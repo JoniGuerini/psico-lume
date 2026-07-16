@@ -233,6 +233,8 @@ export function ClinicDataProvider({
 
   useEffect(() => {
     if (mode !== "demo") return
+    /* Rebuild de alertas derivados: preserva `read` e reage a pacientes/agenda/preferências. */
+    /* eslint-disable react-hooks/set-state-in-effect -- fonte de notificações demo */
     setNotifications((current) => {
       const readById = new Map(current.map((item) => [item.id, item.read]))
       return buildClinicAlerts({
@@ -249,10 +251,12 @@ export function ClinicDataProvider({
           read: readById.get(item.id) ?? item.read,
         }))
     })
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [mode, patients, events, sessionNotes, emails, t, locale, notificationPreferences])
 
   useEffect(() => {
     if (mode !== "guest") return
+    /* eslint-disable react-hooks/set-state-in-effect -- fonte de notificações guest + welcome */
     setNotifications((current) => {
       const readById = new Map(current.map((item) => [item.id, item.read]))
       const welcome = {
@@ -277,6 +281,7 @@ export function ClinicDataProvider({
         : alerts
       return items
     })
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [mode, patients, events, sessionNotes, emails, t, locale, notificationPreferences])
 
   useEffect(() => {

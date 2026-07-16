@@ -8,7 +8,6 @@ import { CalendarPage } from "@/components/calendar-page"
 import { FinancePage } from "@/components/finance-page"
 import {
   GlobalSearchDialog,
-  useGlobalSearchShortcut,
 } from "@/components/global-search-dialog"
 import { HomePage } from "@/components/home-page"
 import { InboxPage } from "@/components/inbox-page"
@@ -52,6 +51,7 @@ import {
 } from "@/lib/app-pages"
 import { useTranslation } from "@/context/locale-provider"
 import { OnboardingTourProvider } from "@/context/onboarding-tour-provider"
+import { useGlobalSearchShortcut } from "@/hooks/use-global-search-shortcut"
 import { cn } from "@/lib/utils"
 
 export function App() {
@@ -314,10 +314,14 @@ export function App() {
                         />
                       ) : null}
                       {activeItem === APP_PAGE_ID.caixaEntrada ? (
-                        <InboxPage initialEmailId={emailFocus} />
+                        <InboxPage
+                          key={emailFocus ?? "inbox"}
+                          initialEmailId={emailFocus}
+                        />
                       ) : null}
                       {activeItem === APP_PAGE_ID.agenda ? (
                         <CalendarPage
+                          key={`${calendarView}-${calendarDateFocus ?? "today"}`}
                           initialSelectedDateTimestamp={calendarDateFocus}
                           initialView={calendarView}
                           openNewSession={openNewSession}
@@ -326,6 +330,7 @@ export function App() {
                       ) : null}
                       {activeItem === APP_PAGE_ID.pacientes ? (
                         <PatientsPage
+                          key={`${patientFocus?.id ?? "list"}-${patientFocus?.tab ?? "overview"}`}
                           initialPatientId={patientFocus?.id ?? null}
                           initialProfileTab={patientFocus?.tab ?? "overview"}
                           openNewPatient={openNewPatient}
@@ -351,6 +356,7 @@ export function App() {
                       {activeItem === APP_PAGE_ID.dados ? <ClinicSheetsPage /> : null}
                       {activeItem === APP_PAGE_ID.aReceber ? (
                         <UnpaidSessionsPage
+                          key={receivablesFilter}
                           initialFilter={receivablesFilter}
                           onNewPatient={() => {
                             setOpenNewPatient(true)
@@ -377,15 +383,17 @@ export function App() {
                     onSelect={handleSearchSelect}
                   />
 
-                  <AccountDialog
-                    user={user}
-                    open={accountOpen}
-                    onOpenChange={setAccountOpen}
-                    isGuest={authSession?.mode === "guest"}
-                    onUpdateGuestProfile={handleUpdateGuestProfile}
-                    onDeleteGuestProfile={handleDeleteGuestProfile}
-                    onLogout={handleLogout}
-                  />
+                  {accountOpen ? (
+                    <AccountDialog
+                      user={user}
+                      open
+                      onOpenChange={setAccountOpen}
+                      isGuest={authSession?.mode === "guest"}
+                      onUpdateGuestProfile={handleUpdateGuestProfile}
+                      onDeleteGuestProfile={handleDeleteGuestProfile}
+                      onLogout={handleLogout}
+                    />
+                  ) : null}
 
                   <OnboardingTourOverlay />
                 </motion.div>

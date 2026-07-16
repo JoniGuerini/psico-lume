@@ -146,7 +146,11 @@ export function resolveEventBilling(
       previous.absenceWithNotice !== absenceWithNotice)
 
   if (billingChanged) {
-    return { paid: false, amount, absenceWithNotice }
+    return {
+      paid: typeof patch.paid === "boolean" ? patch.paid : false,
+      amount,
+      absenceWithNotice,
+    }
   }
 
   return {

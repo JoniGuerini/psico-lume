@@ -244,6 +244,8 @@ function TimeGrid({
   }
 
   const meta = dragMetaRef.current
+  /* Preview do drag precisa ler o ref no render para acompanhar o ponteiro sem re-render por frame. */
+  /* eslint-disable react-hooks/refs -- preview de arraste na grade da agenda */
   const displayEvents = events.map((calendarEvent) => {
     if (dragId === calendarEvent.id && preview && meta) {
       const startMin = preview.startMin
@@ -257,6 +259,7 @@ function TimeGrid({
     }
     return { ...calendarEvent, dragging: false }
   })
+  /* eslint-enable react-hooks/refs */
 
   return (
     <Popover
@@ -561,23 +564,22 @@ export function CalendarPage({
     [patients]
   )
   const [view, setView] = useState(initialView)
-  const [currentMonth, setCurrentMonth] = useState(
-    new Date(baseYear, baseMonth, 1)
-  )
-  const [selectedDate, setSelectedDate] = useState(today)
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    if (initialSelectedDateTimestamp != null) {
+      const date = new Date(initialSelectedDateTimestamp)
+      return new Date(date.getFullYear(), date.getMonth(), 1)
+    }
+    return new Date(baseYear, baseMonth, 1)
+  })
+  const [selectedDate, setSelectedDate] = useState(() => {
+    if (initialSelectedDateTimestamp != null) {
+      return new Date(initialSelectedDateTimestamp)
+    }
+    return today
+  })
   const [editingEventId, setEditingEventId] = useState<string | null>(null)
   const [createSessionOpen, setCreateSessionOpen] = useState(false)
-
-  useEffect(() => {
-    setView(initialView)
-  }, [initialView])
-
-  useEffect(() => {
-    if (openNewSession) {
-      setCreateSessionOpen(true)
-      onNewSessionOpenChange?.(false)
-    }
-  }, [openNewSession, onNewSessionOpenChange])
+  const sessionDialogOpen = createSessionOpen || openNewSession
 
   function handleCreateSessionOpenChange(open: boolean) {
     setCreateSessionOpen(open)
@@ -588,15 +590,6 @@ export function CalendarPage({
     () => events.find((event) => event.id === editingEventId) ?? null,
     [events, editingEventId]
   )
-
-  useEffect(() => {
-    if (initialSelectedDateTimestamp === null) return
-
-    const date = new Date(initialSelectedDateTimestamp)
-    setSelectedDate(date)
-    setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1))
-    setView("dia")
-  }, [initialSelectedDateTimestamp])
 
   function handleSelectEvent(event: CalendarEvent) {
     setEditingEventId(event.id)
@@ -740,7 +733,7 @@ export function CalendarPage({
               patients={patients}
               onCreate={handleCreate}
               align="end"
-              open={createSessionOpen}
+              open={sessionDialogOpen}
               onOpenChange={handleCreateSessionOpenChange}
             >
               <Button size="sm">

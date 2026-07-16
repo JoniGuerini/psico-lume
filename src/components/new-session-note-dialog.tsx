@@ -140,14 +140,19 @@ export function NewSessionNoteDialog({
   const { t, locale } = useTranslation()
   const isEditing = note != null
   const summaryRef = useRef<HTMLTextAreaElement>(null)
-  const [date, setDate] = useState(toDateInput(new Date()))
-  const [summary, setSummary] = useState("")
-  const [evolution, setEvolution] = useState("")
-  const [plan, setPlan] = useState("")
-  const [tags, setTags] = useState("")
-  const [mood, setMood] = useState("")
+  const initialState = note ? noteToFormState(note, patient) : null
+  const [date, setDate] = useState(
+    () => initialState?.date ?? toDateInput(new Date())
+  )
+  const [summary, setSummary] = useState(() => initialState?.summary ?? "")
+  const [evolution, setEvolution] = useState(() => initialState?.evolution ?? "")
+  const [plan, setPlan] = useState(() => initialState?.plan ?? "")
+  const [tags, setTags] = useState(() => initialState?.tags ?? "")
+  const [mood, setMood] = useState(() => initialState?.mood ?? "")
   const [modality, setModality] = useState<PatientModality>(
-    patient.modality === "hibrido" ? "online" : patient.modality
+    () =>
+      (initialState?.modality as PatientModality | undefined) ??
+      (patient.modality === "hibrido" ? "online" : patient.modality)
   )
   const {
     onSelectOpenChange,
@@ -201,19 +206,9 @@ export function NewSessionNoteDialog({
 
   useEffect(() => {
     if (!open) return
-    if (isEditing && note) {
-      const state = noteToFormState(note, patient)
-      setDate(state.date)
-      setSummary(state.summary)
-      setEvolution(state.evolution)
-      setPlan(state.plan)
-      setTags(state.tags)
-      setMood(state.mood)
-      setModality(state.modality as PatientModality)
-    }
     const timer = window.setTimeout(() => summaryRef.current?.focus(), 50)
     return () => window.clearTimeout(timer)
-  }, [open, isEditing, note, patient])
+  }, [open])
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault()

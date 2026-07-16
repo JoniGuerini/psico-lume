@@ -283,8 +283,14 @@ export function AccountDialog({
   const backupFileInputRef = useRef<HTMLInputElement>(null)
   const [avatarUrl, setAvatarUrl] = useState(user.avatar)
 
-  useEffect(() => {
-    if (!open) {
+  const effectiveSection =
+    !isGuest &&
+    (section === guestDeleteAccountSectionId || section === guestBackupSectionId)
+      ? "perfil"
+      : section
+
+  function handleDialogOpenChange(next: boolean) {
+    if (!next) {
       setDeleteConfirmOpen(false)
       setRestoreModeOpen(false)
       setReplaceConfirmOpen(false)
@@ -292,23 +298,8 @@ export function AccountDialog({
       setPendingBackup(null)
       setConflictSummary(null)
     }
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-    setName(user.name)
-    setEmail(user.email)
-    setAvatarUrl(user.avatar)
-  }, [open, user.name, user.email, user.avatar])
-
-  useEffect(() => {
-    if (
-      !isGuest &&
-      (section === guestDeleteAccountSectionId || section === guestBackupSectionId)
-    ) {
-      setSection("perfil")
-    }
-  }, [isGuest, section])
+    onOpenChange(next)
+  }
 
   useEffect(() => {
     return () => {
@@ -481,7 +472,7 @@ export function AccountDialog({
 
   return (
     <>
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent className="flex h-[85vh] max-h-[calc(100%-2rem)] w-[92vw] flex-col gap-0 overflow-hidden bg-sidebar p-0 text-sidebar-foreground sm:max-w-5xl md:flex-row">
         <aside className="flex shrink-0 flex-col gap-1 p-3 md:w-64 md:min-h-0 md:p-4">
           <DialogHeader className="gap-1 px-2 pt-1 pb-3 text-left sm:text-left">
@@ -494,7 +485,7 @@ export function AccountDialog({
           </DialogHeader>
           <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-x-auto md:overflow-visible">
             {visibleSections.map((item) => {
-              const isActive = section === item.id
+              const isActive = effectiveSection === item.id
               return (
                 <button
                   key={item.id}
@@ -532,7 +523,7 @@ export function AccountDialog({
         <div className="m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl bg-card text-card-foreground shadow-md md:ml-0">
           <ScrollArea className="h-0 min-h-0 flex-1">
             <div className="p-6">
-            {section === "perfil" ? (
+            {effectiveSection === "perfil" ? (
               <div className="flex flex-col gap-6">
                 <SectionHeading
                   title={t("account.profile.heading")}
@@ -635,7 +626,7 @@ export function AccountDialog({
               </div>
             ) : null}
 
-            {section === "backup" && isGuest ? (
+            {effectiveSection === "backup" && isGuest ? (
               <div className="flex flex-col gap-6">
                 <SectionHeading
                   title={t("account.backup.heading")}
@@ -695,7 +686,7 @@ export function AccountDialog({
               </div>
             ) : null}
 
-            {section === "excluir-conta" && isGuest ? (
+            {effectiveSection === "excluir-conta" && isGuest ? (
               <div className="flex flex-col gap-6">
                 <SectionHeading
                   title={t("account.deleteGuest.heading")}
@@ -738,7 +729,7 @@ export function AccountDialog({
               </div>
             ) : null}
 
-            {section === "seguranca" ? (
+            {effectiveSection === "seguranca" ? (
               <div className="flex flex-col gap-6">
                 <SectionHeading
                   title={t("account.security.heading")}
@@ -868,7 +859,7 @@ export function AccountDialog({
               </div>
             ) : null}
 
-            {section === "notificacoes" ? (
+            {effectiveSection === "notificacoes" ? (
               <div className="flex flex-col gap-6">
                 <SectionHeading
                   title={t("account.notifications.heading")}
@@ -1024,7 +1015,7 @@ export function AccountDialog({
               </div>
             ) : null}
 
-            {section === "preferencias" ? (
+            {effectiveSection === "preferencias" ? (
               <div className="flex flex-col gap-6">
                 <SectionHeading
                   title={t("account.preferences.heading")}
@@ -1093,7 +1084,7 @@ export function AccountDialog({
               </div>
             ) : null}
 
-            {section === "aparencia" ? (
+            {effectiveSection === "aparencia" ? (
               <div className="flex flex-col gap-6">
                 <SectionHeading
                   title={t("account.appearance.heading")}

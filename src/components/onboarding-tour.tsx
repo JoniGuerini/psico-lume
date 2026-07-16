@@ -173,6 +173,7 @@ export function OnboardingTourOverlay() {
 
   useEffect(() => {
     if (!isActive || !currentStep) {
+      /* eslint-disable-next-line react-hooks/set-state-in-effect -- limpa spotlight fora do tour */
       setSpotlight(null)
       return
     }

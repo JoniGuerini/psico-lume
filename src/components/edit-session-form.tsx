@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { CheckCircle2, Trash2 } from "lucide-react"
 
 import { SessionStatusControl } from "@/components/session-status-control"
@@ -37,7 +37,6 @@ import {
   formatAmountInput,
   getSessionAmount,
   isBillableSession,
-  isSessionPaid,
   parseAmountInput,
 } from "@/lib/session-payment"
 import { getEventStatus } from "@/lib/session-status"
@@ -56,7 +55,6 @@ type EditSessionFormProps = {
   onSubmit: (event: CalendarEvent) => void
   onCancel: () => void
   onDeleteRequest?: () => void
-  onMarkPaid?: (id: string, paid: boolean) => void
   onSelectOpenChange?: (open: boolean) => void
 }
 
@@ -67,7 +65,6 @@ export function EditSessionForm({
   onSubmit,
   onCancel,
   onDeleteRequest,
-  onMarkPaid,
   onSelectOpenChange,
 }: EditSessionFormProps) {
   const { t, locale } = useTranslation()
@@ -96,6 +93,7 @@ export function EditSessionForm({
   const [absenceWithNotice, setAbsenceWithNotice] = useState(
     event.absenceWithNotice ?? false
   )
+  const [paid, setPaid] = useState(event.paid === true)
   const [modality, setModality] = useState<SessionModality | "">(() => {
     const patientRecord = event.patientId
       ? patients.find((item) => item.id === event.patientId)
@@ -110,34 +108,64 @@ export function EditSessionForm({
     return patients.find((item) => item.name === patient)
   }, [lockedPatient, patient, patients])
 
-  useEffect(() => {
-    setPatient(lockedPatient?.name ?? event.title ?? patientNames[0] ?? "")
-    setDate(toDateInput(event.date))
-    setStart(event.start)
-    setDuration(String(Math.max(toMinutes(event.end) - toMinutes(event.start), 30)))
-    setStatus(getEventStatus(event))
-    const patientRecord = lockedPatient
-      ? patients.find((item) => item.id === lockedPatient.id)
-      : undefined
-    setAmountInput(formatAmountInput(getSessionAmount(event, patientRecord)))
-    setAbsenceWithNotice(event.absenceWithNotice ?? false)
-    setModality(resolveSessionModality(event, patientRecord) ?? "")
-  }, [event, lockedPatient, patientNames, patients])
-
-  useEffect(() => {
-    if (selectedPatient && event.amount == null) {
-      setAmountInput(formatAmountInput(parsePrice(selectedPatient.price)))
+  function handlePatientChange(name: string) {
+    setPatient(name)
+    if (event.amount != null) return
+    const next = patients.find((item) => item.name === name)
+    if (next) {
+      setAmountInput(formatAmountInput(parsePrice(next.price)))
     }
-  }, [selectedPatient, event.amount])
+  }
 
-  const billablePreview = useMemo(() => {
-    const preview: CalendarEvent = {
+  const draftEvent = useMemo<CalendarEvent>(
+    () => ({
       ...event,
       status,
       absenceWithNotice: status === "faltou" ? absenceWithNotice : undefined,
+      paid,
+    }),
+    [event, status, absenceWithNotice, paid]
+  )
+
+  const billablePreview = useMemo(
+    () => isBillableSession(draftEvent),
+    [draftEvent]
+  )
+
+  function handleStatusChange(next: SessionStatus) {
+    const wasBillable = isBillableSession({
+      ...event,
+      status,
+      absenceWithNotice: status === "faltou" ? absenceWithNotice : undefined,
+    })
+    const nextAbsence = next === "faltou" ? absenceWithNotice : undefined
+    const nextBillable = isBillableSession({
+      ...event,
+      status: next,
+      absenceWithNotice: nextAbsence,
+    })
+    setStatus(next)
+    if (!nextBillable || !wasBillable) {
+      setPaid(false)
     }
-    return isBillableSession(preview)
-  }, [event, status, absenceWithNotice])
+  }
+
+  function handleAbsenceChange(checked: boolean) {
+    const wasBillable = isBillableSession({
+      ...event,
+      status,
+      absenceWithNotice,
+    })
+    const nextBillable = isBillableSession({
+      ...event,
+      status,
+      absenceWithNotice: checked,
+    })
+    setAbsenceWithNotice(checked)
+    if (!nextBillable || !wasBillable) {
+      setPaid(false)
+    }
+  }
 
   function handleSubmit(formEvent: React.FormEvent) {
     formEvent.preventDefault()
@@ -150,6 +178,11 @@ export function EditSessionForm({
       patients.find((item) => item.name === patientName)?.id ??
       event.patientId
     const amount = parseAmountInput(amountInput)
+    const nextBillable = isBillableSession({
+      ...event,
+      status,
+      absenceWithNotice: status === "faltou" ? absenceWithNotice : undefined,
+    })
 
     onSubmit({
       id: event.id,
@@ -161,7 +194,7 @@ export function EditSessionForm({
       status,
       amount: amount > 0 ? amount : undefined,
       absenceWithNotice: status === "faltou" ? absenceWithNotice : undefined,
-      paid: event.paid,
+      paid: nextBillable ? paid : undefined,
       modality,
       rescheduledFrom:
         status === "remarcada" ? event.rescheduledFrom : undefined,
@@ -191,7 +224,7 @@ export function EditSessionForm({
                 ) : (
                   <Select
                     value={patient}
-                    onValueChange={setPatient}
+                    onValueChange={handlePatientChange}
                     onOpenChange={onSelectOpenChange}
                   >
                     <SelectTrigger
@@ -328,7 +361,7 @@ export function EditSessionForm({
             <Label className="text-xs">{t("sessionForm.sessionStatus")}</Label>
             <SessionStatusControl
               value={status}
-              onChange={setStatus}
+              onChange={handleStatusChange}
               compact
               className="grid-cols-3"
             />
@@ -346,30 +379,28 @@ export function EditSessionForm({
                 <Switch
                   id="edit-session-notice"
                   checked={absenceWithNotice}
-                  onCheckedChange={setAbsenceWithNotice}
+                  onCheckedChange={handleAbsenceChange}
                   className="shrink-0"
                 />
               </div>
             ) : null}
 
-            {billablePreview && onMarkPaid ? (
+            {billablePreview ? (
               <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
                 <div className="min-w-0 flex flex-col gap-0.5">
                   <Label className="text-xs">{t("sessionForm.payment")}</Label>
                   <p className="text-xs text-muted-foreground">
-                    {isSessionPaid(event)
-                      ? t("sessionForm.paid")
-                      : t("sessionForm.unpaid")}
+                    {paid ? t("sessionForm.paid") : t("sessionForm.unpaid")}
                   </p>
                 </div>
                 <Button
                   type="button"
                   size="sm"
-                  variant={isSessionPaid(event) ? "outline" : "default"}
+                  variant={paid ? "outline" : "default"}
                   className="shrink-0"
-                  onClick={() => onMarkPaid(event.id, !isSessionPaid(event))}
+                  onClick={() => setPaid((current) => !current)}
                 >
-                  {isSessionPaid(event) ? (
+                  {paid ? (
                     t("sessionForm.undoPayment")
                   ) : (
                     <>

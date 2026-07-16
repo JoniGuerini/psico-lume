@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 import { Bell, CheckCheck } from "lucide-react"
 
-import { useNotifications } from "@/components/notifications-provider"
+import { useNotifications } from "@/hooks/use-notifications"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import {
   CalendarPlus,
   Eye,
@@ -46,35 +46,13 @@ import { useClinicData } from "@/context/clinic-data-provider"
 import { useTranslation } from "@/context/locale-provider"
 import { getRecordsForPatient } from "@/data/clinical-records"
 import { getInitials } from "@/data/patients"
-import type { Patient, PatientModality, PatientStatus } from "@/data/types"
+import type { Patient, PatientStatus } from "@/data/types"
 import {
   getModalityLabel,
   getPatientStatusLabel,
 } from "@/lib/i18n-helpers"
+import { patientStatusDotClass } from "@/lib/patient-status-ui"
 import { cn } from "@/lib/utils"
-
-export type {
-  Patient,
-  PatientModality,
-  PatientSchedule,
-  PatientStatus,
-} from "@/data/types"
-
-export const statusConfig: Record<
-  PatientStatus,
-  { label: string; dot: string }
-> = {
-  ativo: { label: "Ativo", dot: "bg-emerald-500" },
-  "em-pausa": { label: "Em pausa", dot: "bg-amber-500" },
-  "lista-espera": { label: "Lista de espera", dot: "bg-sky-500" },
-  alta: { label: "Alta", dot: "bg-muted-foreground" },
-}
-
-export const modalityLabel: Record<PatientModality, string> = {
-  presencial: "Presencial",
-  online: "Remoto",
-  hibrido: "Híbrido",
-}
 
 const columnWidths = ["24%", "14%", "11%", "12%", "12%", "10%", "8%", "9%"]
 
@@ -157,20 +135,7 @@ export function PatientsPage({
   const [profileTab, setProfileTab] = useState<
     "overview" | "sessions" | "records"
   >(initialProfileTab)
-
-  useEffect(() => {
-    if (initialPatientId) {
-      setSelectedId(initialPatientId)
-      setProfileTab(initialProfileTab)
-    }
-  }, [initialPatientId, initialProfileTab])
-
-  useEffect(() => {
-    if (openNewPatient) {
-      setNewPatientOpen(true)
-      onNewPatientOpenChange?.(false)
-    }
-  }, [openNewPatient, onNewPatientOpenChange])
+  const newPatientDialogOpen = newPatientOpen || openNewPatient
 
   function handleNewPatientOpenChange(open: boolean) {
     setNewPatientOpen(open)
@@ -251,11 +216,13 @@ export function PatientsPage({
           </div>
         </Card>
 
-        <NewPatientDialog
-          open={newPatientOpen}
-          onOpenChange={handleNewPatientOpenChange}
-          onCreate={handleCreate}
-        />
+        {newPatientDialogOpen ? (
+          <NewPatientDialog
+            open
+            onOpenChange={handleNewPatientOpenChange}
+            onCreate={handleCreate}
+          />
+        ) : null}
       </div>
     )
   }
@@ -390,7 +357,7 @@ export function PatientsPage({
                         <span
                           className={cn(
                             "size-2 shrink-0 rounded-full",
-                            statusConfig[patient.status].dot
+                            patientStatusDotClass[patient.status]
                           )}
                         />
                         {getPatientStatusLabel(t, patient.status)}
@@ -464,11 +431,13 @@ export function PatientsPage({
         </Card>
       </div>
 
-      <NewPatientDialog
-        open={newPatientOpen}
-        onOpenChange={handleNewPatientOpenChange}
-        onCreate={handleCreate}
-      />
+      {newPatientDialogOpen ? (
+        <NewPatientDialog
+          open
+          onOpenChange={handleNewPatientOpenChange}
+          onCreate={handleCreate}
+        />
+      ) : null}
 
       {schedulePatient ? (
         <ScheduleSessionDialog
@@ -484,6 +453,7 @@ export function PatientsPage({
 
       {notePatient ? (
         <NewSessionNoteDialog
+          key={`new-note-${notePatient.id}`}
           open={notePatientId !== null}
           onOpenChange={(open) => {
             if (!open) setNotePatientId(null)
