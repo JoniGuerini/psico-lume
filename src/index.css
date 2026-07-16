@@ -87,6 +87,38 @@
     height: 0;
     }
 
+  /* Planilha Dados: scroll nativo nos dois eixos com barra sólida */
+  .sheet-scroll {
+    scrollbar-width: auto;
+    scrollbar-color: var(--muted-foreground) var(--muted);
+    -ms-overflow-style: auto;
+  }
+
+  .sheet-scroll::-webkit-scrollbar {
+    display: block;
+    width: 12px;
+    height: 14px;
+  }
+
+  .sheet-scroll::-webkit-scrollbar-track {
+    background: var(--muted);
+    border-top: 1px solid var(--border);
+  }
+
+  .sheet-scroll::-webkit-scrollbar-thumb {
+    background: var(--muted-foreground);
+    border-radius: 999px;
+    border: 3px solid var(--muted);
+  }
+
+  .sheet-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--foreground);
+  }
+
+  .sheet-scroll::-webkit-scrollbar-corner {
+    background: var(--muted);
+  }
+
   :where(
     button:not(:disabled):not([disabled]):not([aria-disabled="true"]),
     [role="button"]:not([aria-disabled="true"]),

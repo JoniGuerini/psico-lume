@@ -556,6 +556,8 @@ export const ptBR = {
       rows_one: "{{count}} linha",
       rows_other: "{{count}} linhas",
       subtitle: "mesmas abas e cores do export XLSX",
+      fullscreen: "Tela cheia",
+      exitFullscreen: "Sair da tela cheia",
     },
   },
   enums: {
@@ -646,7 +648,7 @@ export const ptBR = {
       headerExport: {
         title: "Exportar dados",
         description:
-          "Baixe planilhas Excel ou visualize os dados da clínica.",
+          "Baixe a planilha Excel diretamente pela página Dados.",
       },
       headerNotifications: {
         title: "Notificações",

@@ -13,7 +13,6 @@ import { HomePage } from "@/components/home-page"
 import { InboxPage } from "@/components/inbox-page"
 import { LoginFormContent } from "@/components/login-page"
 import { LumeNavyGlow } from "@/components/lume-navy-glow"
-import { ClinicExportButton } from "@/components/clinic-export-button"
 import { ClinicSheetsPage } from "@/components/clinic-sheets-page"
 import { NotificationsBell } from "@/components/notifications-bell"
 import { NotificationsPage } from "@/components/notifications-page"
@@ -284,9 +283,6 @@ export function App() {
                         >
                           <Search />
                         </Button>
-                        <ClinicExportButton
-                          onViewSheets={() => handleNavigate(APP_PAGE_ID.dados)}
-                        />
                         <NotificationsBell
                           onViewAll={() => handleNavigate(APP_PAGE_ID.notificacoes)}
                         />

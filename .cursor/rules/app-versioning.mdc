@@ -1,11 +1,11 @@
 ---
-description: Sempre atualizar a versão do app (semver) a cada alteração entregue
+description: Atualizar a versão do app (semver) apenas ao subir para produção
 alwaysApply: true
 ---
 
 # Versionamento do Psico Lume
 
-A cada entrega de alteração (feature, correção, ajuste de UX/copy), **atualize a versão do app** antes de commit/push. Não deixe mudanças de produto sem bump de versão.
+**Não** faça bump de versão a cada alteração durante o desenvolvimento. Atualize a versão **somente** quando o usuário pedir para subir / enviar para produção (commit + push de release).
 
 ## Formato
 
@@ -19,7 +19,7 @@ A cada entrega de alteração (feature, correção, ajuste de UX/copy), **atuali
 
 Antes de `1.0.0`, o MAJOR permanece `0`. Ao subir MINOR, zere o PATCH (`0.10.0`). Ao subir PATCH, mantenha MAJOR.MINOR.
 
-## Arquivos a atualizar juntos
+## Arquivos a atualizar juntos (só no release)
 
 1. `src/lib/app-version.ts` — `APP_VERSION` (fonte da UI / login)
 2. `package.json` — campo `"version"`
@@ -29,7 +29,7 @@ A UI exibe `v${APP_VERSION}` via `APP_VERSION_LABEL`.
 
 ## Fluxo esperado
 
-1. Implementar a mudança
-2. Escolher PATCH / MINOR / MAJOR conforme a tabela
+1. Implementar e iterar mudanças **sem** alterar a versão
+2. Quando o usuário pedir para subir para produção: escolher PATCH / MINOR / MAJOR conforme o conjunto de mudanças desde o último release
 3. Atualizar os três arquivos
-4. Incluir o bump no mesmo commit (ou no commit de release) e push
+4. Incluir o bump no commit de release e fazer o push

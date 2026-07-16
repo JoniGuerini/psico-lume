@@ -32,17 +32,6 @@ export const lumeSurfaces = {
   navyPanel: "bg-sidebar text-sidebar-foreground",
   /** Título sobre fundo navy. */
   navyHeading: "text-surface-navy-heading font-heading font-semibold",
-  /** Container da página Dados / planilha. */
-  sheetRoot:
-    "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-surface-sheet-border bg-card shadow-sm",
-  sheetToolbar:
-    "flex shrink-0 items-center gap-3 border-b border-surface-sheet-border bg-surface-sheet-muted px-4 py-3",
-  sheetTabBar:
-    "shrink-0 overflow-x-auto border-b border-surface-sheet-border bg-surface-sheet-muted",
-  sheetTabActive:
-    "border-surface-sheet-border bg-surface-sheet-tab-active text-foreground shadow-sm",
-  sheetTabIdle:
-    "border-transparent bg-surface-sheet-tab text-foreground/70 hover:bg-surface-sheet-border/60 hover:text-foreground",
 } as const
 
 /* ── Primitivos (hex para contextos sem CSS) ── */

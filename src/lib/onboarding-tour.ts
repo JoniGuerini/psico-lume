@@ -74,9 +74,10 @@ export const onboardingTourSteps: OnboardingTourStep[] = [
     descriptionKey: "tour.steps.headerSearch.description",
   },
   {
-    id: "header-export",
-    targetSelector: '[data-tour="header-export"]',
-    page: null,
+    id: "data-export",
+    targetSelector: '[data-tour="data-export"]',
+    page: APP_PAGE_ID.dados,
+    navigateTo: APP_PAGE_ID.dados,
     titleKey: "tour.steps.headerExport.title",
     descriptionKey: "tour.steps.headerExport.description",
   },

@@ -13,7 +13,7 @@ const scrollBarTrackClass: Record<ScrollBarVariant, string> = {
   sidebar:
     "data-horizontal:h-2 data-horizontal:w-full data-horizontal:flex-col data-horizontal:border-t data-horizontal:border-t-transparent data-vertical:h-full data-vertical:w-2 data-vertical:border-l data-vertical:border-l-transparent",
   sheet:
-    "data-horizontal:h-4 data-horizontal:w-full data-horizontal:flex-col data-horizontal:border-t data-horizontal:border-border data-horizontal:bg-muted/50 data-vertical:h-full data-vertical:w-3 data-vertical:border-l data-vertical:border-border data-vertical:bg-muted/40",
+    "data-horizontal:h-4 data-horizontal:w-full data-horizontal:flex-col data-horizontal:border-t data-horizontal:border-border data-horizontal:bg-muted data-vertical:h-full data-vertical:w-3 data-vertical:border-l data-vertical:border-border data-vertical:bg-muted",
 }
 
 const scrollBarThumbClass: Record<ScrollBarVariant, string> = {
@@ -21,7 +21,7 @@ const scrollBarThumbClass: Record<ScrollBarVariant, string> = {
     "bg-[var(--scrollbar-thumb)] hover:bg-[var(--scrollbar-thumb-hover)]",
   sidebar: "bg-white/30 hover:bg-white/50",
   sheet:
-    "rounded-md bg-foreground/30 shadow-sm hover:bg-foreground/45 active:bg-foreground/55",
+    "rounded-md bg-muted-foreground shadow-sm hover:bg-foreground active:bg-foreground",
 }
 
 function ScrollBar({

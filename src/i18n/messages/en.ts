@@ -557,6 +557,8 @@ export const en = {
       rows_one: "{{count}} row",
       rows_other: "{{count}} rows",
       subtitle: "same tabs and colors as the XLSX export",
+      fullscreen: "Full screen",
+      exitFullscreen: "Exit full screen",
     },
   },
   enums: {
@@ -646,7 +648,7 @@ export const en = {
       headerExport: {
         title: "Export data",
         description:
-          "Download Excel spreadsheets or browse clinic data sheets.",
+          "Download the Excel spreadsheet directly from the Data page.",
       },
       headerNotifications: {
         title: "Notifications",
