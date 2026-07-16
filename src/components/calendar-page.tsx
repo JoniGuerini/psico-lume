@@ -36,6 +36,42 @@ const PX_PER_MIN = HOUR_HEIGHT / 60
 const HOURS = Array.from({ length: 24 }, (_, index) => index)
 const DAY_MINUTES = 24 * 60
 
+function useNow(intervalMs = 60_000) {
+  const [now, setNow] = useState(() => new Date())
+
+  useEffect(() => {
+    let intervalId = 0
+    const alignMs = intervalMs - (Date.now() % intervalMs)
+
+    const timeoutId = window.setTimeout(() => {
+      setNow(new Date())
+      intervalId = window.setInterval(() => setNow(new Date()), intervalMs)
+    }, alignMs)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+      window.clearInterval(intervalId)
+    }
+  }, [intervalMs])
+
+  return now
+}
+
+function CurrentTimeIndicator({ top }: { top: number }) {
+  return (
+    <div
+      className="pointer-events-none absolute right-0 left-0 z-30"
+      style={{ top }}
+      aria-hidden
+    >
+      <div className="relative h-0">
+        <span className="absolute top-1/2 -left-[5px] size-2.5 -translate-y-1/2 rounded-full bg-attention shadow-sm" />
+        <span className="absolute top-1/2 right-0 left-0 h-0.5 -translate-y-1/2 bg-attention" />
+      </div>
+    </div>
+  )
+}
+
 function formatHour(hour: number) {
   if (hour === 0) {
     return "GMT-03"
@@ -105,6 +141,7 @@ function TimeGrid({
   onSelectEvent,
 }: TimeGridProps) {
   const { t } = useTranslation()
+  const now = useNow()
   const scrollRef = useRef<HTMLDivElement>(null)
   const columnsRef = useRef<HTMLDivElement>(null)
   const dragMetaRef = useRef<DragMeta | null>(null)
@@ -115,14 +152,28 @@ function TimeGrid({
   const [draft, setDraft] = useState<Draft | null>(null)
   const [selectOpen, setSelectOpen] = useState(false)
 
+  const nowTop = useMemo(() => {
+    const minutes = now.getHours() * 60 + now.getMinutes()
+    return (minutes - START_HOUR * 60) * PX_PER_MIN
+  }, [now])
+
+  const daysKey = useMemo(
+    () => days.map((day) => day.toDateString()).join("|"),
+    [days]
+  )
+
   useEffect(() => {
     const viewport = scrollRef.current?.closest(
       "[data-slot=scroll-area-viewport]"
     )
-    if (viewport instanceof HTMLElement) {
-      viewport.scrollTop = 7 * HOUR_HEIGHT
-    }
-  }, [])
+    if (!(viewport instanceof HTMLElement)) return
+
+    // Posiciona o horário atual ~1/3 abaixo do topo, com contexto acima e abaixo.
+    const offset = Math.max(0, nowTop - viewport.clientHeight / 3)
+    viewport.scrollTop = offset
+    // Ancorar ao entrar/trocar a grade — não a cada minuto.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- nowTop só na troca de visão
+  }, [daysKey])
 
   function pointToGrid(clientX: number, clientY: number) {
     const rect = columnsRef.current?.getBoundingClientRect()
@@ -278,7 +329,7 @@ function TimeGrid({
           style={{ gridTemplateColumns: `repeat(${days.length}, 1fr)` }}
         >
           {days.map((day) => {
-            const isToday = isSameDay(day, today)
+            const isToday = isSameDay(day, now)
             return (
               <button
                 key={day.toISOString()}
@@ -346,6 +397,9 @@ function TimeGrid({
                     className="border-b border-border/60"
                   />
                 ))}
+                {isSameDay(day, now) ? (
+                  <CurrentTimeIndicator top={nowTop} />
+                ) : null}
                 {displayEvents
                   .filter((calendarEvent) =>
                     isSameDay(calendarEvent.date, day)
