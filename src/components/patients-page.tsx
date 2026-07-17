@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, type ReactNode } from "react"
 import {
   CalendarPlus,
   Eye,
@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { SearchInput } from "@/components/ui/search-input"
 import {
   DropdownMenu,
@@ -34,14 +34,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { useClinicData } from "@/context/clinic-data-provider"
 import { useTranslation } from "@/context/locale-provider"
 import { getInitials } from "@/data/patients"
@@ -52,18 +44,6 @@ import {
 } from "@/lib/i18n-helpers"
 import { patientStatusDotClass } from "@/lib/patient-status-ui"
 import { cn } from "@/lib/utils"
-
-const columnWidths = ["24%", "14%", "11%", "12%", "12%", "10%", "8%", "9%"]
-
-function PatientCols() {
-  return (
-    <colgroup>
-      {columnWidths.map((width, index) => (
-        <col key={index} style={{ width }} />
-      ))}
-    </colgroup>
-  )
-}
 
 function PatientsListEmptyState({
   hasPatients,
@@ -111,6 +91,168 @@ function PatientsListEmptyState({
   )
 }
 
+function PatientMeta({
+  label,
+  value,
+  muted,
+}: {
+  label: string
+  value: ReactNode
+  muted?: boolean
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-0.5">
+      <span className="text-[11px] font-medium text-muted-foreground">
+        {label}
+      </span>
+      <span
+        className={cn(
+          "truncate text-sm",
+          muted && "text-muted-foreground"
+        )}
+      >
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function PatientListCard({
+  patient,
+  onOpen,
+  onViewRecord,
+  onSchedule,
+  onNewNote,
+}: {
+  patient: Patient
+  onOpen: () => void
+  onViewRecord: () => void
+  onSchedule: () => void
+  onNewNote: () => void
+}) {
+  const { t } = useTranslation()
+
+  return (
+    <Card
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault()
+          onOpen()
+        }
+      }}
+      className="cursor-pointer gap-4 p-4 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <div className="flex items-start gap-3">
+        <Avatar className="size-10 shrink-0 rounded-lg after:rounded-lg">
+          <AvatarFallback className="rounded-lg bg-background/40 text-xs text-foreground">
+            {getInitials(patient.name)}
+          </AvatarFallback>
+        </Avatar>
+
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate font-heading text-sm font-semibold">
+                {patient.name}
+              </span>
+              <span className="truncate text-xs text-muted-foreground">
+                {patient.email}
+              </span>
+            </div>
+
+            <div
+              className="flex shrink-0 items-center gap-2"
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+            >
+              <span className="flex items-center gap-2 text-sm">
+                <span
+                  className={cn(
+                    "size-2 shrink-0 rounded-full",
+                    patientStatusDotClass[patient.status]
+                  )}
+                />
+                {getPatientStatusLabel(t, patient.status)}
+              </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
+                    aria-label={t("patients.actions.menuAria", {
+                      name: patient.name,
+                    })}
+                  >
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>
+                    {t("patients.actions.menu")}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onViewRecord}>
+                    <Eye />
+                    {t("patients.actions.viewRecord")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onSchedule}>
+                    <CalendarPlus />
+                    {t("patients.actions.schedule")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onNewNote}>
+                    <FileText />
+                    {t("patients.actions.newNote")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <PatientMeta
+              label={t("patients.columns.complaint")}
+              value={patient.complaint}
+            />
+            <PatientMeta
+              label={t("patients.columns.modality")}
+              value={getModalityLabel(t, patient.modality)}
+              muted
+            />
+            <PatientMeta
+              label={t("patients.columns.nextSession")}
+              value={
+                patient.nextSession ?? (
+                  <span className="text-muted-foreground">—</span>
+                )
+              }
+            />
+            <PatientMeta
+              label={t("patients.columns.price")}
+              value={
+                patient.price ? (
+                  <span className="tabular-nums">R$ {patient.price}</span>
+                ) : (
+                  <span className="text-muted-foreground">—</span>
+                )
+              }
+            />
+            <PatientMeta
+              label={t("patients.columns.sessions")}
+              value={
+                <span className="tabular-nums">{patient.sessions}</span>
+              }
+            />
+          </div>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 export function PatientsPage({
   initialPatientId = null,
   initialProfileTab = "overview",
@@ -123,13 +265,22 @@ export function PatientsPage({
   onNewPatientOpenChange?: (open: boolean) => void
 } = {}) {
   const { t } = useTranslation()
-  const { patients, activeCount, addPatient, addEvent, addSessionNote, sessionNotes, events } =
-    useClinicData()
+  const {
+    patients,
+    activeCount,
+    addPatient,
+    addEvent,
+    addSessionNote,
+    sessionNotes,
+    events,
+  } = useClinicData()
   const [query, setQuery] = useState("")
   const [status, setStatus] = useState<PatientStatus | "todos">("todos")
   const [newPatientOpen, setNewPatientOpen] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(initialPatientId)
-  const [schedulePatientId, setSchedulePatientId] = useState<string | null>(null)
+  const [schedulePatientId, setSchedulePatientId] = useState<string | null>(
+    null
+  )
   const [notePatientId, setNotePatientId] = useState<string | null>(null)
   const [profileTab, setProfileTab] = useState<
     "overview" | "sessions" | "records"
@@ -191,7 +342,7 @@ export function PatientsPage({
 
   if (patients.length === 0) {
     return (
-      <div className="flex min-h-0 flex-1 w-full flex-col">
+      <div className="flex min-h-0 w-full flex-1 flex-col">
         <Card className="flex min-h-0 w-full flex-1 flex-col overflow-hidden p-0">
           <div className="flex min-h-0 flex-1 flex-col p-4">
             <PatientsListEmptyState
@@ -217,7 +368,7 @@ export function PatientsPage({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 w-full flex-col gap-4">
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-4">
       <Card className="flex flex-col gap-4 p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
@@ -276,27 +427,9 @@ export function PatientsPage({
         </div>
       </Card>
 
-      <div className="flex min-h-0 w-full flex-1 flex-col gap-3">
-        <div className="overflow-hidden rounded-2xl bg-sidebar shadow-sm">
-          <Table className="table-fixed">
-            <PatientCols />
-            <TableHeader className="[&_tr]:border-b-0 [&_th]:text-sidebar-foreground/75">
-              <TableRow className="border-0 hover:bg-transparent">
-                <TableHead className="pl-4">{t("patients.columns.patient")}</TableHead>
-                <TableHead>{t("patients.columns.complaint")}</TableHead>
-                <TableHead>{t("patients.columns.modality")}</TableHead>
-                <TableHead>{t("patients.columns.status")}</TableHead>
-                <TableHead>{t("patients.columns.nextSession")}</TableHead>
-                <TableHead className="text-right">{t("patients.columns.price")}</TableHead>
-                <TableHead className="text-right">{t("patients.columns.sessions")}</TableHead>
-                <TableHead className="pr-4" />
-              </TableRow>
-            </TableHeader>
-          </Table>
-        </div>
-
-        <Card className="flex min-h-0 w-full flex-1 flex-col overflow-hidden p-0">
-          {filtered.length === 0 ? (
+      <div className="flex min-h-0 w-full flex-1 flex-col">
+        {filtered.length === 0 ? (
+          <Card className="flex min-h-0 w-full flex-1 flex-col overflow-hidden p-0">
             <div className="flex min-h-0 flex-1 flex-col p-4">
               <PatientsListEmptyState
                 hasPatients
@@ -307,117 +440,23 @@ export function PatientsPage({
                 }}
               />
             </div>
-          ) : (
-            <ScrollArea className="h-full min-h-0 flex-1">
-              <Table className="table-fixed">
-                <PatientCols />
-                <TableBody>
-                  {filtered.map((patient) => (
-                  <TableRow
-                    key={patient.id}
-                    className="cursor-pointer hover:bg-accent/50"
-                    onClick={() => openProfile(patient.id)}
-                  >
-                    <TableCell className="pl-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="size-9 rounded-lg after:rounded-lg">
-                          <AvatarFallback className="rounded-lg bg-background/40 text-xs text-foreground">
-                            {getInitials(patient.name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex min-w-0 flex-col">
-                          <span className="truncate text-sm font-medium">
-                            {patient.name}
-                          </span>
-                          <span className="truncate text-xs text-muted-foreground">
-                            {patient.email}
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {patient.complaint}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {getModalityLabel(t, patient.modality)}
-                    </TableCell>
-                    <TableCell>
-                      <span className="flex items-center gap-2 text-sm">
-                        <span
-                          className={cn(
-                            "size-2 shrink-0 rounded-full",
-                            patientStatusDotClass[patient.status]
-                          )}
-                        />
-                        {getPatientStatusLabel(t, patient.status)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {patient.nextSession ?? (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {patient.price ? (
-                        `R$ ${patient.price}`
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {patient.sessions}
-                    </TableCell>
-                    <TableCell
-                      className="pr-4"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8"
-                            aria-label={t("patients.actions.menuAria", {
-                              name: patient.name,
-                            })}
-                          >
-                            <MoreHorizontal />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuLabel>
-                            {t("patients.actions.menu")}
-                          </DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => openProfile(patient.id, "records")}
-                          >
-                            <Eye />
-                            {t("patients.actions.viewRecord")}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setSchedulePatientId(patient.id)}
-                          >
-                            <CalendarPlus />
-                            {t("patients.actions.schedule")}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setNotePatientId(patient.id)}
-                          >
-                            <FileText />
-                            {t("patients.actions.newNote")}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
-          )}
-        </Card>
+          </Card>
+        ) : (
+          <ScrollArea className="h-full min-h-0 flex-1">
+            <div className="flex flex-col gap-3 pr-1 pb-1">
+              {filtered.map((patient) => (
+                <PatientListCard
+                  key={patient.id}
+                  patient={patient}
+                  onOpen={() => openProfile(patient.id)}
+                  onViewRecord={() => openProfile(patient.id, "records")}
+                  onSchedule={() => setSchedulePatientId(patient.id)}
+                  onNewNote={() => setNotePatientId(patient.id)}
+                />
+              ))}
+            </div>
+          </ScrollArea>
+        )}
       </div>
 
       {newPatientDialogOpen ? (
