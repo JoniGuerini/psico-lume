@@ -264,7 +264,6 @@ function generateNotesForPatient(patient: Patient): SessionNote[] {
           id: `note-${patient.id}-0`,
           patientId: patient.id,
           date: formatNoteDate(new Date()),
-          sessionNumber: 0,
           summary: "Paciente em lista de espera. Contato inicial registrado.",
           evolution:
             "Aguardando vaga para primeira entrevista. Dados de contato e queixa principal confirmados no cadastro.",
@@ -354,4 +353,13 @@ export function getLatestRecord(
   patientId: string
 ): SessionNote | undefined {
   return getRecordsForPatient(records, patientId)[0]
+}
+
+export function getLatestLinkedRecord(
+  records: SessionNote[],
+  patientId: string
+): SessionNote | undefined {
+  return getRecordsForPatient(records, patientId).find((note) =>
+    Boolean(note.eventId)
+  )
 }

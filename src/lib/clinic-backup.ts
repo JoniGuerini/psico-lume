@@ -530,8 +530,16 @@ function sanitizeSessionNote(
     return `sessionNotes[${index}] referencia paciente inexistente`
   }
   if (typeof raw.date !== "string") return `sessionNotes[${index}].date inválido`
-  if (typeof raw.sessionNumber !== "number" || !Number.isFinite(raw.sessionNumber)) {
-    return `sessionNotes[${index}].sessionNumber inválido`
+  if (raw.sessionNumber !== undefined) {
+    if (
+      typeof raw.sessionNumber !== "number" ||
+      !Number.isFinite(raw.sessionNumber)
+    ) {
+      return `sessionNotes[${index}].sessionNumber inválido`
+    }
+  }
+  if (raw.eventId !== undefined && typeof raw.eventId !== "string") {
+    return `sessionNotes[${index}].eventId inválido`
   }
   if (typeof raw.summary !== "string") {
     return `sessionNotes[${index}].summary inválido`
@@ -544,9 +552,15 @@ function sanitizeSessionNote(
     id: raw.id.trim(),
     patientId: raw.patientId.trim(),
     date: raw.date,
-    sessionNumber: Math.max(0, Math.floor(raw.sessionNumber)),
     summary: raw.summary,
     evolution: raw.evolution,
+  }
+
+  if (typeof raw.eventId === "string" && raw.eventId.trim()) {
+    note.eventId = raw.eventId.trim()
+  }
+  if (typeof raw.sessionNumber === "number" && Number.isFinite(raw.sessionNumber)) {
+    note.sessionNumber = Math.max(0, Math.floor(raw.sessionNumber))
   }
 
   if (raw.plan !== undefined) {

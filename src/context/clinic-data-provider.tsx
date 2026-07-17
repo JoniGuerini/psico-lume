@@ -28,6 +28,10 @@ import {
   type GuestClinicSnapshot,
 } from "@/lib/guest-clinic-storage"
 import { buildClinicAlerts } from "@/lib/clinic-alerts"
+import {
+  linkNotesToUniquePatientDayEvents,
+  unlinkNotesFromDeletedEvent,
+} from "@/lib/session-notes"
 import { isAlertEnabled } from "@/lib/notification-preferences"
 import { useNotificationPreferences } from "@/context/notification-preferences-provider"
 import {
@@ -114,7 +118,7 @@ function maxSessionNumberFromNotes(
 ): number {
   return notes
     .filter((note) => note.patientId === patientId)
-    .reduce((max, note) => Math.max(max, note.sessionNumber), 0)
+    .reduce((max, note) => Math.max(max, note.sessionNumber ?? 0), 0)
 }
 
 function applyPatientSessionCountFromNotes(
@@ -188,18 +192,30 @@ function applySessionCountChange(
 export type ClinicDataMode = "demo" | "guest"
 
 function createDemoInitialState() {
-  return {
-    patients: mockPatients,
-    sessionNotes: buildClinicalRecords(mockPatients),
-    events: syncStaleEventStatuses(
-      buildCalendarEvents(mockPatients),
-      mockPatients
-    ),
-  }
+  const patients = mockPatients
+  const events = syncStaleEventStatuses(
+    buildCalendarEvents(patients),
+    patients
+  )
+  const sessionNotes = linkNotesToUniquePatientDayEvents(
+    buildClinicalRecords(patients),
+    events,
+    "pt-BR"
+  )
+  return { patients, sessionNotes, events }
 }
 
 function createGuestInitialState() {
-  return loadGuestClinicSnapshot() ?? createEmptyGuestClinicSnapshot()
+  const snapshot = loadGuestClinicSnapshot()
+  if (!snapshot) return createEmptyGuestClinicSnapshot()
+  return {
+    ...snapshot,
+    sessionNotes: linkNotesToUniquePatientDayEvents(
+      snapshot.sessionNotes,
+      snapshot.events,
+      "pt-BR"
+    ),
+  }
 }
 
 export function ClinicDataProvider({
@@ -522,6 +538,9 @@ export function ClinicDataProvider({
         if (!previous) return
 
         setEvents((current) => current.filter((event) => event.id !== eventId))
+        setSessionNotes((current) =>
+          unlinkNotesFromDeletedEvent(current, eventId)
+        )
 
         if (previous.status === "realizada") {
           applySessionCountChange(

@@ -26,9 +26,10 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { useClinicData } from "@/context/clinic-data-provider"
 import { useTranslation } from "@/context/locale-provider"
-import { getLatestRecord, getRecordsForPatient } from "@/data/clinical-records"
-import type { Patient, SessionNote } from "@/data/types"
+import { getLatestLinkedRecord, getLatestRecord, getRecordsForPatient } from "@/data/clinical-records"
+import type { CalendarEvent, Patient, SessionNote } from "@/data/types"
 import { getModalityLabel, getMoodLabel } from "@/lib/i18n-helpers"
+import { isLinkedSessionNote } from "@/lib/session-notes"
 
 type PatientRecordsTabProps = {
   patient: Patient
@@ -47,15 +48,18 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function NoteCard({
   note,
+  event,
   onEdit,
   onDelete,
 }: {
   note: SessionNote
+  event?: CalendarEvent
   onEdit: (note: SessionNote) => void
   onDelete: (note: SessionNote) => void
 }) {
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
+  const linked = isLinkedSessionNote(note)
 
   return (
     <Card className="gap-0 overflow-hidden p-0">
@@ -70,17 +74,33 @@ function NoteCard({
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-heading text-sm font-semibold">
-                {t("patients.records.sessionNumber", {
-                  number: note.sessionNumber,
-                })}
-              </span>
+              <Badge
+                variant="outline"
+                className="border-border bg-background/40 text-xs"
+              >
+                {linked
+                  ? t("patients.records.badgeLinked")
+                  : t("patients.records.badgeStandalone")}
+              </Badge>
+              {linked && note.sessionNumber != null ? (
+                <span className="font-heading text-sm font-semibold">
+                  {t("patients.records.sessionNumber", {
+                    number: note.sessionNumber,
+                  })}
+                </span>
+              ) : (
+                <span className="font-heading text-sm font-semibold">
+                  {t("patients.records.standaloneTitle")}
+                </span>
+              )}
               <Badge
                 variant="outline"
                 className="border-border bg-background/40 text-xs"
               >
                 <Calendar className="size-3" />
-                {note.date}
+                {event
+                  ? `${note.date} · ${event.start}`
+                  : note.date}
               </Badge>
               {note.mood ? (
                 <Badge
@@ -181,6 +201,7 @@ function NoteCard({
 export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
   const { t } = useTranslation()
   const {
+    events,
     sessionNotes,
     addSessionNote,
     updateSessionNote,
@@ -200,13 +221,16 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
     [sessionNotes, patient.id]
   )
 
-  const nextSessionNumber = useMemo(() => {
-    const maxNumber = notes.reduce(
-      (max, note) => Math.max(max, note.sessionNumber),
-      0
-    )
-    return Math.max(maxNumber + 1, patient.sessions + 1)
-  }, [notes, patient.sessions])
+  const latestLinked = useMemo(
+    () => getLatestLinkedRecord(sessionNotes, patient.id),
+    [sessionNotes, patient.id]
+  )
+
+  const eventsById = useMemo(() => {
+    const map = new Map<string, CalendarEvent>()
+    for (const event of events) map.set(event.id, event)
+    return map
+  }, [events])
 
   const uniqueTags = useMemo(() => {
     const set = new Set<string>()
@@ -242,6 +266,19 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
       ? t("patients.sessions.record_one", { count: notes.length })
       : t("patients.sessions.record_other", { count: notes.length })
 
+  const deleteDescription = deleteTarget
+    ? isLinkedSessionNote(deleteTarget) && deleteTarget.sessionNumber != null
+      ? t("patients.records.delete.descriptionLinked", {
+          number: deleteTarget.sessionNumber,
+          date: deleteTarget.date,
+          name: patient.name,
+        })
+      : t("patients.records.delete.descriptionStandalone", {
+          date: deleteTarget.date,
+          name: patient.name,
+        })
+    : ""
+
   return (
     <div className="flex flex-col gap-4">
       <Card className="flex flex-col gap-4 border-transparent bg-sidebar p-5 text-sidebar-foreground sm:flex-row sm:items-center sm:justify-between">
@@ -275,7 +312,7 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
         />
         <Stat
           label={t("patients.records.stats.lastSession")}
-          value={latest?.date ?? "—"}
+          value={latestLinked?.date ?? "—"}
         />
         <Stat
           label={t("patients.records.stats.tags")}
@@ -296,10 +333,14 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
               variant="outline"
               className="ml-auto border-border bg-background/40"
             >
-              {t("patients.records.sessionBadge", {
-                number: latest.sessionNumber,
-                date: latest.date,
-              })}
+              {isLinkedSessionNote(latest) && latest.sessionNumber != null
+                ? t("patients.records.sessionBadge", {
+                    number: latest.sessionNumber,
+                    date: latest.date,
+                  })
+                : t("patients.records.standaloneBadge", {
+                    date: latest.date,
+                  })}
             </Badge>
           </div>
           <Separator />
@@ -347,6 +388,7 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
               <NoteCard
                 key={note.id}
                 note={note}
+                event={note.eventId ? eventsById.get(note.eventId) : undefined}
                 onEdit={openEditDialog}
                 onDelete={setDeleteTarget}
               />
@@ -360,7 +402,8 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
         open={dialogOpen}
         onOpenChange={handleDialogOpenChange}
         patient={patient}
-        nextSessionNumber={nextSessionNumber}
+        events={events}
+        sessionNotes={sessionNotes}
         note={editingNote}
         onCreate={addSessionNote}
         onUpdate={updateSessionNote}
@@ -377,13 +420,7 @@ export function PatientRecordsTab({ patient }: PatientRecordsTabProps) {
             <DialogTitle className="text-lg">
               {t("patients.records.delete.title")}
             </DialogTitle>
-            <DialogDescription>
-              {t("patients.records.delete.description", {
-                number: deleteTarget?.sessionNumber ?? 0,
-                date: deleteTarget?.date ?? "",
-                name: patient.name,
-              })}
-            </DialogDescription>
+            <DialogDescription>{deleteDescription}</DialogDescription>
           </DialogHeader>
           <DialogFooter className="border-t border-border px-6 py-4">
             <Button

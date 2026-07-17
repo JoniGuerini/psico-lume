@@ -27,6 +27,7 @@ import {
   isSessionUnpaid,
 } from "@/lib/session-payment"
 import { getEventStatus } from "@/lib/session-status"
+import { noteMatchesEvent } from "@/lib/session-notes"
 
 export type ClinicAlertsContext = {
   patients: Patient[]
@@ -67,16 +68,6 @@ function formatSessionDay(date: Date, locale: Locale) {
     month: "short",
   })
   return label.charAt(0).toUpperCase() + label.slice(1)
-}
-
-function noteMatchesEvent(note: SessionNote, event: CalendarEvent, locale: Locale) {
-  if (note.patientId !== event.patientId) return false
-  const eventDate = formatLocaleDate(event.date, locale, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  })
-  return note.date === eventDate
 }
 
 function alertBase(

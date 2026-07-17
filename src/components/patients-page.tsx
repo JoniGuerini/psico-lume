@@ -44,7 +44,6 @@ import {
 } from "@/components/ui/table"
 import { useClinicData } from "@/context/clinic-data-provider"
 import { useTranslation } from "@/context/locale-provider"
-import { getRecordsForPatient } from "@/data/clinical-records"
 import { getInitials } from "@/data/patients"
 import type { Patient, PatientStatus } from "@/data/types"
 import {
@@ -124,7 +123,7 @@ export function PatientsPage({
   onNewPatientOpenChange?: (open: boolean) => void
 } = {}) {
   const { t } = useTranslation()
-  const { patients, activeCount, addPatient, addEvent, addSessionNote, sessionNotes } =
+  const { patients, activeCount, addPatient, addEvent, addSessionNote, sessionNotes, events } =
     useClinicData()
   const [query, setQuery] = useState("")
   const [status, setStatus] = useState<PatientStatus | "todos">("todos")
@@ -158,16 +157,6 @@ export function PatientsPage({
 
   const notePatient =
     patients.find((patient) => patient.id === notePatientId) ?? null
-
-  const notePatientNextSession = useMemo(() => {
-    if (!notePatient) return 1
-    const notes = getRecordsForPatient(sessionNotes, notePatient.id)
-    const maxNumber = notes.reduce(
-      (max, note) => Math.max(max, note.sessionNumber),
-      0
-    )
-    return Math.max(maxNumber + 1, notePatient.sessions + 1)
-  }, [notePatient, sessionNotes])
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase()
@@ -459,7 +448,8 @@ export function PatientsPage({
             if (!open) setNotePatientId(null)
           }}
           patient={notePatient}
-          nextSessionNumber={notePatientNextSession}
+          events={events}
+          sessionNotes={sessionNotes}
           onCreate={addSessionNote}
         />
       ) : null}

@@ -163,10 +163,10 @@ export function loadGuestClinicSnapshot(): GuestClinicSnapshot | null {
 
     return {
       patients: parsed.patients,
+      events: parsed.events.map(deserializeEvent),
       sessionNotes: Array.isArray(parsed.sessionNotes)
         ? parsed.sessionNotes
         : [],
-      events: parsed.events.map(deserializeEvent),
       notifications: Array.isArray(parsed.notifications)
         ? parsed.notifications.map(deserializeNotification)
         : [createWelcomeNotification()],

@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Save } from "lucide-react"
 
+import { SessionEventPicker } from "@/components/session-event-picker"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
@@ -20,11 +21,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { useTranslation } from "@/context/locale-provider"
-import type { Patient, PatientModality, SessionNote } from "@/data/types"
+import type {
+  CalendarEvent,
+  Patient,
+  PatientModality,
+  SessionNote,
+} from "@/data/types"
 import { formFieldClass } from "@/lib/form-input-styles"
 import {
   formatLocaleDate,
@@ -34,16 +41,27 @@ import {
 } from "@/lib/i18n-helpers"
 import type { Locale } from "@/lib/locale"
 import { fromDateInput, toDateInput } from "@/lib/session-scheduling"
+import {
+  formatEventNoteDate,
+  getLinkableSessionsForPatient,
+  getSessionOrdinalForEvent,
+  isEventClaimedByNote,
+  isLinkedSessionNote,
+} from "@/lib/session-notes"
+import { resolveSessionModality } from "@/lib/session-modality"
 import { useSelectDismissGuard } from "@/lib/use-select-dismiss-guard"
 import { cn } from "@/lib/utils"
 
 const fieldClass = formFieldClass
 
+type LinkMode = "linked" | "standalone"
+
 type NewSessionNoteDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   patient: Patient
-  nextSessionNumber: number
+  events: CalendarEvent[]
+  sessionNotes: SessionNote[]
   note?: SessionNote | null
   onCreate: (note: SessionNote) => void
   onUpdate?: (note: SessionNote) => void
@@ -118,13 +136,17 @@ function Field({
 
 function noteToFormState(note: SessionNote, patient: Patient) {
   return {
+    linkMode: (isLinkedSessionNote(note) ? "linked" : "standalone") as LinkMode,
+    eventId: note.eventId ?? "",
     date: storedDateToIso(note.date),
     summary: note.summary,
     evolution: note.evolution,
     plan: note.plan ?? "",
     tags: note.tags?.join(", ") ?? "",
     mood: note.mood ?? "",
-    modality: note.modality ?? (patient.modality === "hibrido" ? "online" : patient.modality),
+    modality:
+      note.modality ??
+      (patient.modality === "hibrido" ? "online" : patient.modality),
   }
 }
 
@@ -132,7 +154,8 @@ export function NewSessionNoteDialog({
   open,
   onOpenChange,
   patient,
-  nextSessionNumber,
+  events,
+  sessionNotes,
   note = null,
   onCreate,
   onUpdate,
@@ -141,19 +164,46 @@ export function NewSessionNoteDialog({
   const isEditing = note != null
   const summaryRef = useRef<HTMLTextAreaElement>(null)
   const initialState = note ? noteToFormState(note, patient) : null
-  const [date, setDate] = useState(
-    () => initialState?.date ?? toDateInput(new Date())
+  const initialLinkable = getLinkableSessionsForPatient(
+    events,
+    sessionNotes,
+    patient.id,
+    { exceptNoteId: note?.id }
   )
+  const [linkMode, setLinkMode] = useState<LinkMode>(
+    () => initialState?.linkMode ?? "linked"
+  )
+  const [eventId, setEventId] = useState(
+    () =>
+      initialState?.eventId ||
+      (initialState?.linkMode === "standalone"
+        ? ""
+        : (initialLinkable[0]?.id ?? ""))
+  )
+  const [date, setDate] = useState(() => {
+    if (initialState?.date) return initialState.date
+    const first = initialLinkable[0]
+    return first ? toDateInput(first.date) : toDateInput(new Date())
+  })
   const [summary, setSummary] = useState(() => initialState?.summary ?? "")
   const [evolution, setEvolution] = useState(() => initialState?.evolution ?? "")
   const [plan, setPlan] = useState(() => initialState?.plan ?? "")
   const [tags, setTags] = useState(() => initialState?.tags ?? "")
   const [mood, setMood] = useState(() => initialState?.mood ?? "")
-  const [modality, setModality] = useState<PatientModality>(
-    () =>
-      (initialState?.modality as PatientModality | undefined) ??
+  const [modality, setModality] = useState<PatientModality>(() => {
+    if (initialState?.modality) {
+      return initialState.modality as PatientModality
+    }
+    const first = initialLinkable[0]
+    const resolved = first
+      ? resolveSessionModality(first, patient)
+      : undefined
+    return (
+      resolved ??
       (patient.modality === "hibrido" ? "online" : patient.modality)
-  )
+    )
+  })
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const {
     onSelectOpenChange,
     shouldBlockDialogClose,
@@ -161,18 +211,45 @@ export function NewSessionNoteDialog({
     dialogContentHandlers,
   } = useSelectDismissGuard()
 
-  const sessionNumber = isEditing ? note.sessionNumber : nextSessionNumber
+  const linkableSessions = useMemo(
+    () =>
+      getLinkableSessionsForPatient(events, sessionNotes, patient.id, {
+        exceptNoteId: note?.id,
+      }),
+    [events, sessionNotes, patient.id, note?.id]
+  )
 
-  const canSubmit = summary.trim().length > 0 && evolution.trim().length > 0
+  const selectedEvent =
+    linkableSessions.find((event) => event.id === eventId) ??
+    events.find((event) => event.id === eventId && event.patientId === patient.id)
+
+  const sessionNumber =
+    linkMode === "linked" && eventId
+      ? getSessionOrdinalForEvent(events, patient.id, eventId)
+      : undefined
+
+  const canSubmit =
+    summary.trim().length > 0 &&
+    evolution.trim().length > 0 &&
+    (linkMode === "standalone" || Boolean(eventId))
 
   const parsedTags = tags
     .split(",")
     .map((tag) => tag.trim())
     .filter(Boolean)
 
+  function applyEventDefaults(event: CalendarEvent) {
+    setDate(toDateInput(event.date))
+    const resolved = resolveSessionModality(event, patient)
+    if (resolved) setModality(resolved)
+  }
+
   function resetForm() {
+    setSubmitError(null)
     if (isEditing && note) {
       const state = noteToFormState(note, patient)
+      setLinkMode(state.linkMode)
+      setEventId(state.eventId)
       setDate(state.date)
       setSummary(state.summary)
       setEvolution(state.evolution)
@@ -183,14 +260,23 @@ export function NewSessionNoteDialog({
       return
     }
 
-    setDate(toDateInput(new Date()))
+    const nextLinkable = getLinkableSessionsForPatient(
+      events,
+      sessionNotes,
+      patient.id
+    )
+    const first = nextLinkable[0]
+    setLinkMode("linked")
+    setEventId(first?.id ?? "")
+    setDate(first ? toDateInput(first.date) : toDateInput(new Date()))
     setSummary("")
     setEvolution("")
     setPlan("")
     setTags("")
     setMood("")
     setModality(
-      patient.modality === "hibrido" ? "online" : patient.modality
+      (first ? resolveSessionModality(first, patient) : undefined) ??
+        (patient.modality === "hibrido" ? "online" : patient.modality)
     )
   }
 
@@ -210,21 +296,64 @@ export function NewSessionNoteDialog({
     return () => window.clearTimeout(timer)
   }, [open])
 
-  function handleSubmit(event: React.FormEvent) {
-    event.preventDefault()
+  function handleLinkModeChange(next: LinkMode) {
+    setSubmitError(null)
+    setLinkMode(next)
+    if (next === "standalone") {
+      setEventId("")
+      return
+    }
+    if (!eventId && linkableSessions[0]) {
+      setEventId(linkableSessions[0].id)
+      applyEventDefaults(linkableSessions[0])
+    }
+  }
+
+  function handleEventChange(nextId: string) {
+    setSubmitError(null)
+    setEventId(nextId)
+    const event = linkableSessions.find((item) => item.id === nextId)
+    if (event) applyEventDefaults(event)
+  }
+
+  function handleSubmit(formEvent: React.FormEvent) {
+    formEvent.preventDefault()
     if (!canSubmit) return
+
+    if (linkMode === "linked") {
+      if (!eventId || !selectedEvent) {
+        setSubmitError(t("sessionNote.errors.selectSession"))
+        return
+      }
+      if (isEventClaimedByNote(sessionNotes, eventId, note?.id)) {
+        setSubmitError(t("sessionNote.errors.sessionAlreadyLinked"))
+        return
+      }
+    }
 
     const payload: SessionNote = {
       id: isEditing && note ? note.id : crypto.randomUUID(),
       patientId: patient.id,
-      date: isoToStoredDate(date, locale),
-      sessionNumber,
+      date:
+        linkMode === "linked" && selectedEvent
+          ? formatEventNoteDate(selectedEvent, locale)
+          : isoToStoredDate(date, locale),
       summary: summary.trim(),
       evolution: evolution.trim(),
       plan: plan.trim() || undefined,
       tags: parsedTags,
       mood: mood || undefined,
       modality,
+      ...(linkMode === "linked" && eventId
+        ? {
+            eventId,
+            sessionNumber: getSessionOrdinalForEvent(
+              events,
+              patient.id,
+              eventId
+            ),
+          }
+        : {}),
     }
 
     if (isEditing && note) {
@@ -262,70 +391,153 @@ export function NewSessionNoteDialog({
             <div className="flex flex-col gap-4 p-6">
               <FormSection
                 title={t("sessionNote.sections.identification.title")}
-                description={t("sessionNote.sections.identification.description")}
+                description={t(
+                  "sessionNote.sections.identification.description"
+                )}
               >
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label={t("sessionNote.sessionDate")} htmlFor="note-date">
-                    <DatePicker
-                      id="note-date"
-                      value={date}
-                      onChange={setDate}
-                      placeholder={t("sessionNote.placeholders.sessionDate")}
-                      className={fieldClass}
-                    />
-                  </Field>
-                  <Field label={t("sessionNote.sessionNumber")}>
-                    <div
-                      className="flex h-9 items-center rounded-xl border border-border bg-muted/50 px-3 font-heading text-sm font-semibold tabular-nums text-foreground"
-                      aria-live="polite"
-                    >
-                      {t("sessionNote.sessionNumberLabel", {
-                        number: sessionNumber,
-                      })}
-                    </div>
-                  </Field>
+                <div className="flex flex-col gap-3">
+                  <Tabs
+                    value={linkMode}
+                    onValueChange={(value) =>
+                      handleLinkModeChange(value as LinkMode)
+                    }
+                  >
+                    <TabsList className="h-auto min-h-9 w-full border border-border bg-background/40">
+                      <TabsTrigger value="linked" className="flex-1">
+                        {t("sessionNote.linkMode.linked")}
+                      </TabsTrigger>
+                      <TabsTrigger value="standalone" className="flex-1">
+                        {t("sessionNote.linkMode.standalone")}
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  <p className="text-xs text-muted-foreground">
+                    {linkMode === "linked"
+                      ? t("sessionNote.linkMode.linkedHint")
+                      : t("sessionNote.linkMode.standaloneHint")}
+                  </p>
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label={t("sessionNote.mood")} htmlFor="note-mood">
-                    <Select
-                      onOpenChange={onSelectOpenChange}
-                      value={mood}
-                      onValueChange={setMood}
-                    >
-                      <SelectTrigger id="note-mood" className={fieldClass}>
-                        <SelectValue placeholder={t("sessionNote.selectOptional")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {MOOD_KEYS.map((option) => (
-                          <SelectItem key={option} value={option}>
-                            {getMoodLabel(t, option)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                  <Field label={t("sessionNote.modality")} htmlFor="note-modality">
-                    <Select
-                      onOpenChange={onSelectOpenChange}
-                      value={modality}
-                      onValueChange={(value) =>
-                        setModality(value as PatientModality)
+                {linkMode === "linked" ? (
+                  <>
+                    <SessionEventPicker
+                      id="note-session"
+                      value={eventId}
+                      events={
+                        selectedEvent &&
+                        !linkableSessions.some(
+                          (event) => event.id === selectedEvent.id
+                        )
+                          ? [selectedEvent, ...linkableSessions]
+                          : linkableSessions
                       }
+                      patient={patient}
+                      onChange={handleEventChange}
+                      onOpenChange={onSelectOpenChange}
+                      required
+                    />
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field label={t("sessionNote.sessionDate")}>
+                        <div
+                          className="flex h-9 items-center rounded-xl border border-border bg-muted/50 px-3 text-sm text-foreground"
+                          aria-live="polite"
+                        >
+                          {selectedEvent
+                            ? formatLocaleDate(selectedEvent.date, locale, {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                              })
+                            : "—"}
+                        </div>
+                      </Field>
+                      <Field label={t("sessionNote.sessionNumber")}>
+                        <div
+                          className="flex h-9 items-center rounded-xl border border-border bg-muted/50 px-3 font-heading text-sm font-semibold tabular-nums text-foreground"
+                          aria-live="polite"
+                        >
+                          {sessionNumber != null
+                            ? t("sessionNote.sessionNumberLabel", {
+                                number: sessionNumber,
+                              })
+                            : "—"}
+                        </div>
+                      </Field>
+                    </div>
+
+                    <Field label={t("sessionNote.modality")}>
+                      <div className="flex h-9 items-center rounded-xl border border-border bg-muted/50 px-3 text-sm text-foreground">
+                        {selectedEvent
+                          ? getModalityLabel(
+                              t,
+                              resolveSessionModality(selectedEvent, patient) ??
+                                modality
+                            )
+                          : "—"}
+                      </div>
+                    </Field>
+                  </>
+                ) : (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field
+                      label={t("sessionNote.recordDate")}
+                      htmlFor="note-date"
                     >
-                      <SelectTrigger id="note-modality" className={fieldClass}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(["presencial", "online"] as const).map((value) => (
-                          <SelectItem key={value} value={value}>
-                            {getModalityLabel(t, value)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                </div>
+                      <DatePicker
+                        id="note-date"
+                        value={date}
+                        onChange={setDate}
+                        placeholder={t("sessionNote.placeholders.recordDate")}
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label={t("sessionNote.modality")}
+                      htmlFor="note-modality"
+                    >
+                      <Select
+                        onOpenChange={onSelectOpenChange}
+                        value={modality}
+                        onValueChange={(value) =>
+                          setModality(value as PatientModality)
+                        }
+                      >
+                        <SelectTrigger id="note-modality" className={fieldClass}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(["presencial", "online"] as const).map((value) => (
+                            <SelectItem key={value} value={value}>
+                              {getModalityLabel(t, value)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  </div>
+                )}
+
+                <Field label={t("sessionNote.mood")} htmlFor="note-mood">
+                  <Select
+                    onOpenChange={onSelectOpenChange}
+                    value={mood}
+                    onValueChange={setMood}
+                  >
+                    <SelectTrigger id="note-mood" className={fieldClass}>
+                      <SelectValue
+                        placeholder={t("sessionNote.selectOptional")}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MOOD_KEYS.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {getMoodLabel(t, option)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
               </FormSection>
 
               <FormSection
@@ -412,6 +624,17 @@ export function NewSessionNoteDialog({
               </FormSection>
             </div>
           </ScrollArea>
+
+          {submitError ? (
+            <div
+              role="alert"
+              className="mx-6 mb-2 rounded-xl border border-destructive/30 bg-destructive/10 px-3 py-2"
+            >
+              <p className="text-xs leading-relaxed text-destructive">
+                {submitError}
+              </p>
+            </div>
+          ) : null}
 
           <DialogFooter className="shrink-0 border-t border-border bg-card/60 px-6 py-4">
             <Button

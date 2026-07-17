@@ -112,6 +112,8 @@ function buildColumnLabels(t: TranslateFn) {
     originalStart: c("originalStart"),
     originalEnd: c("originalEnd"),
     sessionNumber: c("sessionNumber"),
+    linkedSession: c("linkedSession"),
+    eventId: c("eventId"),
     summary: c("summary"),
     evolution: c("evolution"),
     plan: c("plan"),
@@ -313,7 +315,11 @@ function buildRecordsRows(
       [cols.patientId]: note.patientId,
       [cols.patient]: patientNameById(patients, note.patientId),
       [cols.date]: note.date,
-      [cols.sessionNumber]: note.sessionNumber,
+      [cols.linkedSession]: note.eventId
+        ? ctx.t("common.yes")
+        : ctx.t("common.no"),
+      [cols.eventId]: note.eventId ?? "",
+      [cols.sessionNumber]: note.sessionNumber ?? "",
       [cols.summary]: note.summary,
       [cols.evolution]: note.evolution,
       [cols.plan]: note.plan ?? "",

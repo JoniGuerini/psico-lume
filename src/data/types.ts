@@ -128,7 +128,10 @@ export type SessionNote = {
   id: string
   patientId: string
   date: string
-  sessionNumber: number
+  /** Presente quando o registro está vinculado a uma sessão da agenda. */
+  eventId?: string
+  /** Nº da sessão na cronologia do paciente — só faz sentido quando vinculado. */
+  sessionNumber?: number
   summary: string
   evolution: string
   plan?: string
