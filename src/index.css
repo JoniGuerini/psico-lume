@@ -75,6 +75,24 @@
     font-family: var(--font-heading);
     }
 
+  /*
+   * Autofill do navegador pinta fundo azul/amarelo — forçamos o muted do tema.
+   * box-shadow inset cobre o fundo; transition longa evita o flash amarelo.
+   */
+  .form-field:-webkit-autofill,
+  .form-field:-webkit-autofill:hover,
+  .form-field:-webkit-autofill:focus,
+  .form-field:-webkit-autofill:active,
+  input.form-field:-webkit-autofill,
+  textarea.form-field:-webkit-autofill {
+    -webkit-text-fill-color: var(--foreground) !important;
+    caret-color: var(--foreground);
+    box-shadow: 0 0 0 1000px var(--muted) inset !important;
+    -webkit-box-shadow: 0 0 0 1000px var(--muted) inset !important;
+    border-color: transparent !important;
+    transition: background-color 99999s ease-out 0s;
+  }
+
   /* Oculta scrollbar nativa do SO — usamos ScrollArea (Radix) customizado */
   * {
     scrollbar-width: none;

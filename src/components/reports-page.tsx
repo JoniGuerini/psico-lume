@@ -251,7 +251,7 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Select value={monthValue} onValueChange={setMonthValue}>
-            <SelectTrigger className="border-border bg-card shadow-sm hover:bg-accent sm:w-52">
+            <SelectTrigger className="border-0 bg-muted shadow-none hover:bg-muted/80 sm:w-52">
               <SelectValue placeholder={t("reports.monthPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
@@ -263,7 +263,7 @@ export function ReportsPage({ onNewPatient }: { onNewPatient?: () => void } = {}
             </SelectContent>
           </Select>
           <Select value={historyRange} onValueChange={setHistoryRange}>
-            <SelectTrigger className="border-border bg-card shadow-sm hover:bg-accent sm:w-44">
+            <SelectTrigger className="border-0 bg-muted shadow-none hover:bg-muted/80 sm:w-44">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

@@ -8,10 +8,10 @@
 [data-theme="lume"] {
   --lume-navy-900: #1b3a5c;
   --lume-navy-800: #1c3351;
-  --lume-cream-100: #faf6ec;
-  --lume-cream-200: #f5f2ea;
-  --lume-sand-100: #efe7d5;
-  --lume-sand-200: #eae0cc;
+  --lume-cream-100: #faf7f0;
+  --lume-cream-200: #f7f4ec;
+  --lume-sand-100: #f4efe4;
+  --lume-sand-200: #f0ebe0;
   --lume-mint-400: #a0cfb1;
   --lume-mint-logo: #a8d5ba;
   --lume-white: #ffffff;
@@ -20,15 +20,15 @@
   --lume-mint-300: #8fb9a0;
   --lume-mint-on-accent: #184032;
   --lume-terracotta: #c97b63;
-  --lume-blue-accent: #dce7f2;
+  --lume-blue-accent: #e6eef6;
   --lume-navy-alpha-14: #1b3a5c24;
   --lume-navy-alpha-25: #1b3a5c40;
   --lume-navy-alpha-44: #1b3a5c70;
   --lume-white-alpha-10: #ffffff1a;
   --lume-white-alpha-12: #ffffff1f;
-  --lume-sheet-border: #e5e0d5;
-  --lume-sheet-zebra: #f8f6f0;
-  --lume-sheet-tab: #ede9df;
+  --lume-sheet-border: #ebe6db;
+  --lume-sheet-zebra: #f9f7f2;
+  --lume-sheet-tab: #f2eee5;
 
   --background: var(--lume-sand-100);
   --foreground: var(--lume-navy-800);

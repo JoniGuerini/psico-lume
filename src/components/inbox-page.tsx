@@ -83,7 +83,7 @@ export function InboxPage({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("inbox.searchPlaceholder")}
-            className="border-border bg-background/40 hover:bg-accent/50"
+            className="border-0 bg-muted hover:bg-muted/80"
           />
         </div>
         <Separator />

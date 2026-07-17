@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Search } from "lucide-react"
 import { AnimatePresence, MotionConfig, motion } from "motion/react"
 
@@ -46,6 +46,8 @@ import {
   APP_PAGE_ID,
   FILL_VIEWPORT_PAGE_IDS,
   IS_ROADMAP_VISIBLE,
+  readAppPageFromLocation,
+  writeAppPageToLocation,
   type AppPageId,
 } from "@/lib/app-pages"
 import { useTranslation } from "@/context/locale-provider"
@@ -64,7 +66,9 @@ export function App() {
   const user = authSession
     ? authSessionToUser(authSession)
     : authSessionToUser({ mode: "demo" })
-  const [activeItem, setActiveItem] = useState<AppPageId>(APP_PAGE_ID.inicio)
+  const [activeItem, setActiveItemState] = useState<AppPageId>(() =>
+    readAppPageFromLocation()
+  )
   const [accountOpen, setAccountOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [patientFocus, setPatientFocus] = useState<{
@@ -87,6 +91,19 @@ export function App() {
   const [sessionFormDockPreview, setSessionFormDockPreview] = useState(false)
 
   useGlobalSearchShortcut(() => setSearchOpen(true))
+
+  function setActiveItem(page: AppPageId) {
+    setActiveItemState(page)
+    writeAppPageToLocation(page)
+  }
+
+  useEffect(() => {
+    function onHashChange() {
+      setActiveItemState(readAppPageFromLocation())
+    }
+    window.addEventListener("hashchange", onHashChange)
+    return () => window.removeEventListener("hashchange", onHashChange)
+  }, [])
 
   function handleNavigate(page: AppPageId) {
     setActiveItem(page)

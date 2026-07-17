@@ -107,9 +107,8 @@ export function TimePicker({
   }
 
   const displayValue = formatTimeLabel(value)
-  const emptyFieldClass =
-    "border border-foreground/22 bg-card hover:border-foreground/35"
-  const filledFieldClass = "border-2 border-foreground/55 bg-card text-foreground"
+  const emptyFieldClass = "border-0 bg-muted hover:bg-muted/80"
+  const filledFieldClass = "border-0 bg-muted text-foreground"
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange} modal>
@@ -134,7 +133,7 @@ export function TimePicker({
               "truncate text-left text-sm tabular-nums",
               displayValue
                 ? "text-foreground"
-                : "text-muted-foreground/60"
+                : "text-muted-foreground/45"
             )}
           >
             {displayValue || resolvedPlaceholder}

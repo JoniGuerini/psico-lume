@@ -225,11 +225,10 @@ export function DatePicker({
   }
 
   const displayValue = formatDisplayDate(value, locale)
-  const emptyFieldClass =
-    "border border-foreground/22 bg-card hover:border-foreground/35"
-  const filledFieldClass = "border-2 border-foreground/55 bg-card text-foreground"
+  const emptyFieldClass = "border-0 bg-muted hover:bg-muted/80"
+  const filledFieldClass = "border-0 bg-muted text-foreground"
   const headerSelectTriggerClass =
-    "h-8 shrink-0 rounded-2xl border border-foreground/22 bg-card px-2.5 text-sm font-medium shadow-none hover:border-foreground/35 data-placeholder:text-muted-foreground/60"
+    "h-8 shrink-0 rounded-2xl border-0 bg-muted px-2.5 text-sm font-medium shadow-none hover:bg-muted/80 data-placeholder:text-muted-foreground/45"
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange} modal>
@@ -255,7 +254,7 @@ export function DatePicker({
               "truncate text-left text-sm",
               displayValue
                 ? "text-foreground"
-                : "text-muted-foreground/60"
+                : "text-muted-foreground/45"
             )}
           >
             {displayValue || resolvedPlaceholder}
@@ -368,7 +367,7 @@ export function DatePicker({
                     "size-9 rounded-xl text-sm font-normal tabular-nums",
                     !isSelected &&
                       isToday &&
-                      "border border-foreground/22 bg-background/60",
+                      "border-0 bg-muted",
                     disabledDay && "opacity-30"
                   )}
                   onClick={() => handleSelect(date)}

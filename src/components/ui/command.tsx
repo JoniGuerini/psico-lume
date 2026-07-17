@@ -103,7 +103,7 @@ function CommandInput({
         value={currentValue}
         onValueChange={handleValueChange}
         className={cn(
-          "flex h-full w-full flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
+          "flex h-full w-full flex-1 border-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground/45 disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
         {...props}

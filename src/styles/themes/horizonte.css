@@ -6,9 +6,9 @@
  */
 
 [data-theme="horizonte"] {
-  --horizonte-sky-100: #f0ebe3;
-  --horizonte-sky-200: #e8e0d6;
-  --horizonte-sky-300: #ded4c8;
+  --horizonte-sky-100: #f5f1eb;
+  --horizonte-sky-200: #f0ebe4;
+  --horizonte-sky-300: #ebe5dc;
   --horizonte-ocean-900: #1e3d4d;
   --horizonte-ocean-800: #243848;
   --horizonte-ocean-700: #2f5568;
@@ -16,10 +16,10 @@
   --horizonte-apricot: #e07a5f;
   --horizonte-coral: #c9543f;
   --horizonte-gold: #c9a86a;
-  --horizonte-dialog: #f7f4ef;
+  --horizonte-dialog: #f8f6f2;
   --horizonte-white: #ffffff;
   --horizonte-muted-text: #5a6d78;
-  --horizonte-accent-soft: #e4ddd2;
+  --horizonte-accent-soft: #efe9e1;
   --horizonte-chart-5: #7ba3b8;
   --horizonte-ocean-alpha-14: #2f556824;
   --horizonte-ocean-alpha-25: #2f556840;
@@ -65,9 +65,9 @@
   --surface-dialog: var(--horizonte-dialog);
   --surface-navy: var(--horizonte-ocean-900);
   --surface-navy-heading: var(--horizonte-ocean-cream);
-  --surface-sheet-border: #d8cfc4;
-  --surface-sheet-muted: #f5f0e8;
-  --surface-sheet-tab: #ebe3d8;
+  --surface-sheet-border: #e5ddd2;
+  --surface-sheet-muted: #f7f3ed;
+  --surface-sheet-tab: #f0ebe4;
   --surface-sheet-tab-active: var(--horizonte-white);
 
   --accent-brand: var(--horizonte-apricot);

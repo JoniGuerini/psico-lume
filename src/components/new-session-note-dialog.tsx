@@ -440,7 +440,7 @@ export function NewSessionNoteDialog({
                     <div className="grid gap-4 sm:grid-cols-2">
                       <Field label={t("sessionNote.sessionDate")}>
                         <div
-                          className="flex h-9 items-center rounded-xl border border-border bg-muted/50 px-3 text-sm text-foreground"
+                          className="flex h-9 items-center rounded-xl border-0 bg-muted px-3 text-sm text-foreground"
                           aria-live="polite"
                         >
                           {selectedEvent
@@ -454,7 +454,7 @@ export function NewSessionNoteDialog({
                       </Field>
                       <Field label={t("sessionNote.sessionNumber")}>
                         <div
-                          className="flex h-9 items-center rounded-xl border border-border bg-muted/50 px-3 font-heading text-sm font-semibold tabular-nums text-foreground"
+                          className="flex h-9 items-center rounded-xl border-0 bg-muted px-3 font-heading text-sm font-semibold tabular-nums text-foreground"
                           aria-live="polite"
                         >
                           {sessionNumber != null
@@ -467,7 +467,7 @@ export function NewSessionNoteDialog({
                     </div>
 
                     <Field label={t("sessionNote.modality")}>
-                      <div className="flex h-9 items-center rounded-xl border border-border bg-muted/50 px-3 text-sm text-foreground">
+                      <div className="flex h-9 items-center rounded-xl border-0 bg-muted px-3 text-sm text-foreground">
                         {selectedEvent
                           ? getModalityLabel(
                               t,

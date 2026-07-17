@@ -109,7 +109,7 @@ export function LoginFormContent({
                     placeholder={t("login.emailPlaceholder")}
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    className="border-border bg-background/40 pl-9 hover:bg-accent/50 focus-visible:bg-card"
+                    className="border-0 bg-muted pl-9 hover:bg-muted/80"
                   />
                 </div>
               </div>
@@ -133,7 +133,7 @@ export function LoginFormContent({
                     placeholder="••••••••"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    className="border-border bg-background/40 px-9 hover:bg-accent/50 focus-visible:bg-card"
+                    className="border-0 bg-muted px-9 hover:bg-muted/80"
                   />
                   <button
                     type="button"

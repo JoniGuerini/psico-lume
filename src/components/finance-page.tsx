@@ -211,7 +211,7 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
           <p className="text-sm text-muted-foreground">{t("finance.subtitle")}</p>
         </div>
         <Select value={range} onValueChange={setRange}>
-          <SelectTrigger className="border-border bg-card shadow-sm hover:bg-accent sm:w-44">
+          <SelectTrigger className="border-0 bg-muted shadow-none hover:bg-muted/80 sm:w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

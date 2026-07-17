@@ -529,6 +529,7 @@ export function NewPatientDialog({
 
         <form
           onSubmit={handleSubmit}
+          autoComplete="off"
           className="flex min-h-0 flex-col overflow-hidden"
         >
           <ScrollArea className="h-[calc(92vh-10rem)] shrink-0">
@@ -548,6 +549,7 @@ export function NewPatientDialog({
                         onChange={(event) => update("name", event.target.value)}
                         placeholder={t("patientForm.placeholders.fullName")}
                         className={fieldClass}
+                        autoComplete="lume-patient-name"
                         autoFocus
                       />
                     </Field>
@@ -579,6 +581,7 @@ export function NewPatientDialog({
                         inputMode="numeric"
                         maxLength={14}
                         className={fieldClass}
+                        autoComplete="lume-patient-cpf"
                       />
                     </Field>
                     <Field
@@ -651,6 +654,7 @@ export function NewPatientDialog({
                           placeholder={t("patientForm.placeholders.cep")}
                           inputMode="numeric"
                           maxLength={9}
+                          autoComplete="lume-patient-cep"
                           aria-busy={cepLookup.status === "loading"}
                           aria-invalid={cepLookup.status === "error"}
                           className={cn(
@@ -684,6 +688,7 @@ export function NewPatientDialog({
                         }
                         placeholder={t("patientForm.placeholders.street")}
                         className={fieldClass}
+                        autoComplete="lume-patient-street"
                       />
                     </Field>
                     <Field
@@ -699,6 +704,7 @@ export function NewPatientDialog({
                         }
                         placeholder={t("patientForm.placeholders.number")}
                         className={fieldClass}
+                        autoComplete="lume-patient-number"
                       />
                     </Field>
                     <Field
@@ -714,6 +720,7 @@ export function NewPatientDialog({
                         }
                         placeholder={t("patientForm.placeholders.complement")}
                         className={fieldClass}
+                        autoComplete="lume-patient-complement"
                       />
                     </Field>
                     <Field
@@ -729,6 +736,7 @@ export function NewPatientDialog({
                         }
                         placeholder={t("patientForm.placeholders.neighborhood")}
                         className={fieldClass}
+                        autoComplete="lume-patient-neighborhood"
                       />
                     </Field>
                     <Field
@@ -742,6 +750,7 @@ export function NewPatientDialog({
                         onChange={(event) => update("city", event.target.value)}
                         placeholder={t("patientForm.placeholders.city")}
                         className={fieldClass}
+                        autoComplete="lume-patient-city"
                       />
                     </Field>
                     <Field
@@ -761,6 +770,7 @@ export function NewPatientDialog({
                         placeholder={t("patientForm.placeholders.state")}
                         maxLength={2}
                         className={fieldClass}
+                        autoComplete="lume-patient-state"
                       />
                     </Field>
                   </div>
@@ -784,6 +794,7 @@ export function NewPatientDialog({
                         inputMode="numeric"
                         maxLength={15}
                         className={fieldClass}
+                        autoComplete="lume-patient-phone"
                       />
                     </Field>
                     <Field
@@ -798,6 +809,7 @@ export function NewPatientDialog({
                         onChange={(event) => update("email", event.target.value)}
                         placeholder={t("patientForm.placeholders.email")}
                         className={fieldClass}
+                        autoComplete="lume-patient-email"
                       />
                     </Field>
                     <Field
@@ -813,6 +825,7 @@ export function NewPatientDialog({
                         }
                         placeholder={t("patientForm.placeholders.optional")}
                         className={fieldClass}
+                        autoComplete="lume-patient-contact-name"
                       />
                     </Field>
                     <Field
@@ -831,6 +844,7 @@ export function NewPatientDialog({
                         inputMode="numeric"
                         maxLength={15}
                         className={fieldClass}
+                        autoComplete="lume-patient-contact-phone"
                       />
                     </Field>
                     <Field

@@ -5,14 +5,16 @@ export function isFormFieldFilled(value: unknown): boolean {
   return String(value).trim().length > 0
 }
 
-/** Estado vazio — fundo sólido e borda visível (não parecer disabled). */
+/** Campo vazio — sem borda; contraste pelo fundo muted. */
 export const formFieldEmptyClass =
-  "border border-foreground/22 bg-card hover:border-foreground/35 focus-visible:bg-card"
+  "border-0 bg-muted hover:bg-muted/80 focus-visible:bg-muted"
 
-/** Estado preenchido — borda mais forte que o vazio. */
-export const formFieldFilledClass =
-  "border-2 border-foreground/55 bg-card text-foreground"
+/** Campo preenchido — mesmo tratamento visual; o valor diferencia. */
+export const formFieldFilledClass = "border-0 bg-muted text-foreground"
 
 export const formFieldClass = `form-field ${formFieldEmptyClass}`
 
-export const formPlaceholderClass = "placeholder:text-muted-foreground/60"
+export const formPlaceholderClass = "placeholder:text-muted-foreground/45"
+
+/** Texto de placeholder / valor ausente em triggers (select, picker). */
+export const formEmptyTextClass = "text-muted-foreground/45"

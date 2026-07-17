@@ -74,11 +74,10 @@ export function PatientNamePicker({
             aria-expanded={open}
             aria-haspopup="listbox"
             className={cn(
-              "flex h-9 w-full cursor-pointer items-center justify-between gap-1.5 rounded-3xl px-3 py-2 text-sm whitespace-nowrap outline-none transition-[color,box-shadow,background-color,border-color,border-width] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30",
+              "flex h-9 w-full cursor-pointer items-center justify-between gap-1.5 rounded-3xl border-0 bg-muted px-3 py-2 text-sm whitespace-nowrap outline-none transition-[color,box-shadow,background-color] hover:bg-muted/80 focus-visible:ring-3 focus-visible:ring-ring/30",
               sessionFieldClass,
-              hasValue &&
-                "border-2 border-foreground/55 bg-card text-foreground",
-              !hasValue && "text-muted-foreground/60",
+              hasValue && "border-0 bg-muted text-foreground",
+              !hasValue && "text-muted-foreground/45",
               triggerClassName
             )}
           >

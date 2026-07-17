@@ -394,7 +394,7 @@ export function PatientsPage({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("patients.searchPlaceholder")}
-            className="border-border bg-background/40 hover:bg-accent/50"
+            className="border-0 bg-muted hover:bg-muted/80"
           />
           <Select
             value={status}
@@ -402,7 +402,7 @@ export function PatientsPage({
               setStatus(value as PatientStatus | "todos")
             }
           >
-            <SelectTrigger className="border-border bg-background/40 hover:bg-accent/50 sm:w-48">
+            <SelectTrigger className="border-0 bg-muted hover:bg-muted/80 sm:w-48">
               <SelectValue placeholder={t("patients.statusPlaceholder")} />
             </SelectTrigger>
             <SelectContent>

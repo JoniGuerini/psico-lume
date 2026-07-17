@@ -80,7 +80,7 @@ export function GuestLoginDialog({
                 placeholder={t("login.guest.namePlaceholder")}
                 autoComplete="name"
                 maxLength={80}
-                className="border-border bg-background/40 pl-9 hover:bg-accent/50 focus-visible:bg-card"
+                className="border-0 bg-muted pl-9 hover:bg-muted/80"
               />
             </div>
           </div>

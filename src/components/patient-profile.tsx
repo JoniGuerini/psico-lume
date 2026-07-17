@@ -526,7 +526,7 @@ function PatientOverview({
                   onSetPaymentOverdueManual(patient.id, manual)
                 }}
               >
-                <SelectTrigger className="h-8 w-full max-w-xs border-border bg-background/40 text-xs">
+                <SelectTrigger className="h-8 w-full max-w-xs border-0 bg-muted text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
