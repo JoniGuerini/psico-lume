@@ -5,7 +5,7 @@ export const en = {
     brand: "Lume",
     groups: {
       geral: "General",
-      atendimento: "Care",
+      atendimento: "Sessions",
       financeiro: "Finance",
       gestao: "Management",
     },
@@ -280,7 +280,7 @@ export const en = {
           "When a session passed and is still scheduled, or several sessions this week remain unclosed.",
       },
       sessionReminder: {
-        title: "Today's appointments",
+        title: "Today's sessions",
         description: "Sessions scheduled for today that still need follow-up.",
       },
       pendingEvolution: {
@@ -289,7 +289,7 @@ export const en = {
       },
       waitingList: {
         title: "Waitlist",
-        description: "Patients waiting for a slot or return to care.",
+        description: "Patients waiting for a slot or return to sessions.",
       },
       pausedPatient: {
         title: "Patient on pause",
@@ -420,8 +420,8 @@ export const en = {
         subtitle: "Register in the clinic",
       },
       newSession: {
-        title: "New appointment",
-        subtitle: "Schedule session",
+        title: "New session",
+        subtitle: "Schedule on the calendar",
       },
     },
   },
@@ -624,7 +624,7 @@ export const en = {
       navAgenda: {
         title: "Calendar",
         description:
-          "Schedule sessions, browse the calendar, and track each appointment status.",
+          "Schedule sessions, browse the calendar, and track each session status.",
       },
       navAReceber: {
         title: "Receivables",
@@ -672,19 +672,19 @@ export const en = {
       activeHint: "{{count}} active",
       scheduledHint: "{{count}} scheduled",
       perSession: "/session",
-      sessionsToday: "{{count}} appointment today",
-      sessionsToday_plural: "{{count}} appointments today",
+      sessionsToday: "{{count}} session today",
+      sessionsToday_plural: "{{count}} sessions today",
       inTreatmentHint: "{{count}} in treatment",
       recurringSessions: "Recurring sessions",
       forecast: "Forecast",
       overdueSession: "{{count}} session",
       overdueSessions: "{{count}} sessions",
     },
-    sessionsTodayLabel_one: "appointment today",
-    sessionsTodayLabel_other: "appointments today",
-    agendaSubtitle: "Your appointments on {{day}}",
+    sessionsTodayLabel_one: "session today",
+    sessionsTodayLabel_other: "sessions today",
+    agendaSubtitle: "Your sessions on {{day}}",
     noPatientsDescription:
-      "Register your first patient to start scheduling appointments.",
+      "Register your first patient to start scheduling sessions.",
     walkInSession: "Walk-in session",
     todayAgenda: "Today's schedule",
     viewAgenda: "View calendar",
@@ -692,7 +692,7 @@ export const en = {
     viewReceivables: "View receivables",
     noPatientsTitle: "No patients yet",
     freeDayTitle: "Free day",
-    freeDayDescription: "No appointments scheduled for today.",
+    freeDayDescription: "No sessions scheduled for today.",
     clickToEdit: "Click to edit",
   },
   inbox: {
@@ -746,8 +746,8 @@ export const en = {
         "Update attendance status on the calendar to keep history up to date.",
     },
     todaySession: {
-      title: "Appointment today — {{name}}",
-      description: "Session at {{time}}. Mark the status after the appointment.",
+      title: "Session today — {{name}}",
+      description: "Session at {{time}}. Mark the status after the session.",
     },
     overduePayment: {
       title: "Overdue payment — {{name}}",
@@ -781,7 +781,7 @@ export const en = {
     weeklySummary: {
       title: "Weekly summary available",
       description:
-        "Overview of appointments, pending statuses, and financial alerts for the week.",
+        "Overview of sessions, pending statuses, and financial alerts for the week.",
     },
   },
   receivables: {
@@ -851,7 +851,7 @@ export const en = {
       revenueHistoryHint: "Monthly earnings trend",
       thisMonth: "{{amount}} this month",
       revenueByModality: "Revenue by modality",
-      revenueByModalityHint: "Monthly split by care type",
+      revenueByModalityHint: "Monthly split by session type",
       topPatients: "Revenue by patient",
       topPatientsHint: "Patients with highest accumulated billing",
       sessionsPerSession: "{{count}} sessions · {{price}}/session",
@@ -896,9 +896,9 @@ export const en = {
         "Monthly rate of completed sessions vs completed + absences",
       selectedMonth: "{{rate}} in selected month",
       attendanceByModality: "Attendance by modality",
-      attendanceByModalityHint: "Presence rate by care type this month",
+      attendanceByModalityHint: "Presence rate by session type this month",
       revenueByModality: "Revenue by modality",
-      revenueByModalityHint: "Billable sessions by care type this month",
+      revenueByModalityHint: "Billable sessions by session type this month",
       sessionOutcomes: "Session outcomes",
       sessionOutcomesHint:
         "Status distribution for sessions that already occurred this month",
@@ -928,7 +928,7 @@ export const en = {
       week: "Week",
       day: "Day",
     },
-    newSession: "New appointment",
+    newSession: "New session",
     legend: "Legend",
     weekdays: {
       sun: "Sun",
@@ -943,9 +943,9 @@ export const en = {
     sessions_other: "{{count}} sessions",
     sessionSingular: "session",
     sessionPlural: "sessions",
-    events_one: "{{count}} event",
-    events_other: "{{count}} events",
-    noEventsDay: "No events on this day.",
+    events_one: "{{count}} session",
+    events_other: "{{count}} sessions",
+    noEventsDay: "No sessions on this day.",
     clickToEdit: "Click to edit",
     duplicateSessionTitle: "Duplicate session",
     duplicateSessionDescription:
@@ -1104,7 +1104,7 @@ export const en = {
     },
   },
   sessionForm: {
-    newSession: "New appointment",
+    newSession: "New session",
     newSessionHint: "Fill in date, time, and patient.",
     dragToMove: "Drag to move",
     patient: "Patient",
@@ -1171,7 +1171,7 @@ export const en = {
     otherSpecify: "Other (specify)",
     cepNotFound: "Postal code not found",
     noSchedules:
-      "No time slots registered. Add the day and time for the recurring appointment.",
+      "No time slots registered. Add the day and time for the recurring session.",
     durationMinutes: "{{count}} min",
     fields: {
       fullName: "Full name",
@@ -1199,7 +1199,7 @@ export const en = {
       modality: "Modality",
       referral: "Referral source",
       referralOther: "Specify referral",
-      sessionFrequency: "Appointment frequency",
+      sessionFrequency: "Session frequency",
       weekday: "Day of week",
       time: "Time",
       duration: "Duration",
@@ -1322,8 +1322,8 @@ export const en = {
           "The session on {{sessionDay}} at {{time}} passed with no attendance recorded.",
       },
       "3": {
-        title: "Appointment today — {{name}}",
-        description: "Session at {{time}}. Update the status after the visit.",
+        title: "Session today — {{name}}",
+        description: "Session at {{time}}. Update the status after the session.",
       },
       "4": {
         title: "Overdue payment — {{name}}",
@@ -1362,7 +1362,7 @@ export const en = {
       "11": {
         title: "Weekly summary available",
         description:
-          "Overview of visits, status pending items, and financial alerts for the week.",
+          "Overview of sessions, status pending items, and financial alerts for the week.",
       },
     },
     inbox: {
@@ -1678,7 +1678,7 @@ export const en = {
       calendar: {
         title: "Weekly calendar",
         description:
-          "Grid with drag-and-drop, status legend, appointment creation, and modal aligned with new patient identity.",
+          "Grid with drag-and-drop, status legend, session creation, and modal aligned with new patient identity.",
         phase: "Core screens",
       },
       finance: {
@@ -1870,7 +1870,7 @@ export const en = {
       "delete-session": {
         title: "Delete session on calendar",
         description:
-          "Remove mistakenly created appointment with confirmation and counter adjustment in guest mode.",
+          "Remove mistakenly created session with confirmation and counter adjustment in guest mode.",
         phase: "v1.1 — Guest mode",
       },
       "guest-empty-states": {

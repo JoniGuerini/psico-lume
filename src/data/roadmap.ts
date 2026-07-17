@@ -59,7 +59,7 @@ export const roadmapItems: RoadmapItem[] = [
     id: "home",
     title: "Início / painel do dia",
     description:
-      "Resumo de atendimentos, estatísticas da semana, receita prevista e alertas de inadimplência.",
+      "Resumo de sessões, estatísticas da semana, receita prevista e alertas de inadimplência.",
     icon: LayoutDashboard,
     status: "done",
     phase: "Telas core",
@@ -79,7 +79,7 @@ export const roadmapItems: RoadmapItem[] = [
     id: "calendar",
     title: "Agenda semanal",
     description:
-      "Grid com drag-and-drop, legenda de status, criação de atendimento e modal alinhado à identidade do novo paciente.",
+      "Grid com drag-and-drop, legenda de status, criação de sessão e modal alinhado à identidade do novo paciente.",
     icon: Calendar,
     status: "done",
     phase: "Telas core",
@@ -179,7 +179,7 @@ export const roadmapItems: RoadmapItem[] = [
     id: "session-history",
     title: "Histórico de sessões no perfil",
     description:
-      "Aba dedicada no perfil com timeline de atendimentos, remarcações conectadas e faixa lateral por status.",
+      "Aba dedicada no perfil com timeline de sessões, remarcações conectadas e faixa lateral por status.",
     icon: Calendar,
     status: "done",
     phase: "v1.0",
@@ -199,7 +199,7 @@ export const roadmapItems: RoadmapItem[] = [
     id: "unpaid-sessions",
     title: "Sessões a receber",
     description:
-      "Página consolidada de sessões realizadas não pagas, filtros, marcar como paga, navegação no Início e pagamento por sessão no evento.",
+      "Página consolidada de sessões realizadas não pagas, filtros, marcar como paga, navegação no Início e pagamento por sessão na agenda.",
     icon: CircleDollarSign,
     status: "done",
     phase: "v1.0",
@@ -329,7 +329,7 @@ export const roadmapItems: RoadmapItem[] = [
     id: "delete-patient",
     title: "Excluir paciente",
     description:
-      "Zona de perigo no perfil remove paciente, prontuário, agenda e eventos associados.",
+      "Zona de perigo no perfil remove paciente, prontuário, agenda e sessões associadas.",
     icon: Trash2,
     status: "done",
     phase: "v1.1 — Modo convidado",
@@ -399,7 +399,7 @@ export const roadmapItems: RoadmapItem[] = [
     id: "delete-session",
     title: "Excluir sessão na agenda",
     description:
-      "Remover atendimento criado por engano, com confirmação e ajuste de contadores no modo convidado.",
+      "Remover sessão criada por engano, com confirmação e ajuste de contadores no modo convidado.",
     icon: Trash2,
     status: "done",
     phase: "v1.1 — Modo convidado",

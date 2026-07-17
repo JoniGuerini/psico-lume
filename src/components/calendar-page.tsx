@@ -586,7 +586,7 @@ function TimeGrid({
                       className="absolute right-1 left-1 z-20 overflow-hidden rounded-lg border border-primary bg-primary/15 px-2 py-1 shadow-sm"
                     >
                       <p className="truncate text-xs font-medium">
-                        (Novo atendimento)
+                        ({t("calendar.newSession")})
                       </p>
                       <p className="truncate text-[11px] text-muted-foreground">
                         {minutesToTime(draft.startMin)} –{" "}
@@ -1258,7 +1258,7 @@ export function CalendarPage({
             >
               <Button className="w-full">
                 <CalendarPlus />
-                Novo atendimento
+                {t("calendar.newSession")}
               </Button>
             </NewSessionPopover>
           </div>

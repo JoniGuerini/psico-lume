@@ -3,7 +3,7 @@ export const ptBR = {
     brand: "Lume",
     groups: {
       geral: "Geral",
-      atendimento: "Atendimento",
+      atendimento: "Sessões",
       financeiro: "Financeiro",
       gestao: "Gestão",
     },
@@ -279,7 +279,7 @@ export const ptBR = {
           "Quando uma sessão passou e ainda não foi marcada na agenda, ou várias sessões da semana sem fechamento.",
       },
       sessionReminder: {
-        title: "Atendimentos de hoje",
+        title: "Sessões de hoje",
         description: "Sessões agendadas para hoje que ainda precisam de registro.",
       },
       pendingEvolution: {
@@ -288,7 +288,7 @@ export const ptBR = {
       },
       waitingList: {
         title: "Lista de espera",
-        description: "Pacientes aguardando vaga ou retorno ao atendimento.",
+        description: "Pacientes aguardando vaga ou retorno às sessões.",
       },
       pausedPatient: {
         title: "Paciente em pausa",
@@ -419,8 +419,8 @@ export const ptBR = {
         subtitle: "Cadastrar na clínica",
       },
       newSession: {
-        title: "Novo atendimento",
-        subtitle: "Agendar sessão",
+        title: "Nova sessão",
+        subtitle: "Agendar na agenda",
       },
     },
   },
@@ -624,7 +624,7 @@ export const ptBR = {
       navAgenda: {
         title: "Agenda",
         description:
-          "Agende sessões, veja o calendário e acompanhe o status de cada atendimento.",
+          "Agende sessões, veja o calendário e acompanhe o status de cada sessão.",
       },
       navAReceber: {
         title: "A receber",
@@ -666,25 +666,25 @@ export const ptBR = {
     },
     stats: {
       totalPatients: "Total de pacientes",
-      weekSessions: "Atendimentos da semana",
+      weekSessions: "Sessões da semana",
       weekRevenue: "Receita da semana",
       overduePayments: "Pagamentos em atraso",
       activeHint: "{{count}} ativos",
       scheduledHint: "{{count}} agendados",
       perSession: "/sessão",
-      sessionsToday: "{{count}} atendimento hoje",
-      sessionsToday_plural: "{{count}} atendimentos hoje",
+      sessionsToday: "{{count}} sessão hoje",
+      sessionsToday_plural: "{{count}} sessões hoje",
       inTreatmentHint: "{{count}} em acompanhamento",
       recurringSessions: "Sessões recorrentes",
       forecast: "Prevista",
       overdueSession: "{{count}} sessão",
       overdueSessions: "{{count}} sessões",
     },
-    sessionsTodayLabel_one: "atendimento hoje",
-    sessionsTodayLabel_other: "atendimentos hoje",
-    agendaSubtitle: "Seus atendimentos de {{day}}",
+    sessionsTodayLabel_one: "sessão hoje",
+    sessionsTodayLabel_other: "sessões hoje",
+    agendaSubtitle: "Suas sessões de {{day}}",
     noPatientsDescription:
-      "Cadastre seu primeiro paciente para começar a agendar atendimentos.",
+      "Cadastre seu primeiro paciente para começar a agendar sessões.",
     walkInSession: "Sessão avulsa",
     todayAgenda: "Agenda de hoje",
     viewAgenda: "Ver agenda",
@@ -692,7 +692,7 @@ export const ptBR = {
     viewReceivables: "Ver a receber",
     noPatientsTitle: "Nenhum paciente cadastrado",
     freeDayTitle: "Dia livre",
-    freeDayDescription: "Nenhum atendimento agendado para hoje.",
+    freeDayDescription: "Nenhuma sessão agendada para hoje.",
     clickToEdit: "Clique para editar",
   },
   inbox: {
@@ -746,8 +746,8 @@ export const ptBR = {
         "Atualize o status de comparecimento na agenda para manter o histórico em dia.",
     },
     todaySession: {
-      title: "Atendimento hoje — {{name}}",
-      description: "Sessão às {{time}}. Marque o status após o atendimento.",
+      title: "Sessão hoje — {{name}}",
+      description: "Sessão às {{time}}. Marque o status após a sessão.",
     },
     overduePayment: {
       title: "Pagamento em atraso — {{name}}",
@@ -781,7 +781,7 @@ export const ptBR = {
     weeklySummary: {
       title: "Resumo semanal disponível",
       description:
-        "Panorama de atendimentos, pendências de status e alertas financeiros da semana.",
+        "Panorama de sessões, pendências de status e alertas financeiros da semana.",
     },
   },
   receivables: {
@@ -851,7 +851,7 @@ export const ptBR = {
       revenueHistoryHint: "Evolução mensal dos ganhos",
       thisMonth: "{{amount}} este mês",
       revenueByModality: "Receita por modalidade",
-      revenueByModalityHint: "Distribuição mensal por tipo de atendimento",
+      revenueByModalityHint: "Distribuição mensal por tipo de sessão",
       topPatients: "Faturamento por paciente",
       topPatientsHint: "Acompanhamentos com maior faturamento acumulado",
       sessionsPerSession: "{{count}} sessões · {{price}}/sessão",
@@ -896,9 +896,9 @@ export const ptBR = {
         "Taxa mensal de sessões realizadas sobre realizadas + faltas",
       selectedMonth: "{{rate}} no mês selecionado",
       attendanceByModality: "Comparecimento por modalidade",
-      attendanceByModalityHint: "Taxa de presença no mês por tipo de atendimento",
+      attendanceByModalityHint: "Taxa de presença no mês por tipo de sessão",
       revenueByModality: "Receita por modalidade",
-      revenueByModalityHint: "Sessões cobráveis do mês por tipo de atendimento",
+      revenueByModalityHint: "Sessões cobráveis do mês por tipo de sessão",
       sessionOutcomes: "Desfecho das sessões",
       sessionOutcomesHint:
         "Distribuição de status nas sessões já ocorridas no mês",
@@ -928,7 +928,7 @@ export const ptBR = {
       week: "Semana",
       day: "Dia",
     },
-    newSession: "Novo atendimento",
+    newSession: "Nova sessão",
     legend: "Legenda",
     weekdays: {
       sun: "Dom",
@@ -943,9 +943,9 @@ export const ptBR = {
     sessions_other: "{{count}} sessões",
     sessionSingular: "sessão",
     sessionPlural: "sessões",
-    events_one: "{{count}} evento",
-    events_other: "{{count}} eventos",
-    noEventsDay: "Nenhum evento neste dia.",
+    events_one: "{{count}} sessão",
+    events_other: "{{count}} sessões",
+    noEventsDay: "Nenhuma sessão neste dia.",
     clickToEdit: "Clique para editar",
     duplicateSessionTitle: "Sessão duplicada",
     duplicateSessionDescription:
@@ -1105,7 +1105,7 @@ export const ptBR = {
     },
   },
   sessionForm: {
-    newSession: "Novo atendimento",
+    newSession: "Nova sessão",
     newSessionHint: "Preencha data, horário e paciente.",
     dragToMove: "Arraste para mover",
     patient: "Paciente",
@@ -1172,7 +1172,7 @@ export const ptBR = {
     otherSpecify: "Outro (especificar)",
     cepNotFound: "CEP não encontrado",
     noSchedules:
-      "Nenhum horário cadastrado. Adicione o dia e horário do atendimento recorrente.",
+      "Nenhum horário cadastrado. Adicione o dia e horário da sessão recorrente.",
     durationMinutes: "{{count}} min",
     fields: {
       fullName: "Nome completo",
@@ -1200,7 +1200,7 @@ export const ptBR = {
       modality: "Modalidade",
       referral: "Indicação",
       referralOther: "Especifique a indicação",
-      sessionFrequency: "Frequência do atendimento",
+      sessionFrequency: "Frequência das sessões",
       weekday: "Dia da semana",
       time: "Horário",
       duration: "Duração",
@@ -1325,9 +1325,9 @@ export const ptBR = {
           "A sessão de {{sessionDay}} às {{time}} passou sem comparecimento registrado.",
       },
       "3": {
-        title: "Atendimento hoje — {{name}}",
+        title: "Sessão hoje — {{name}}",
         description:
-          "Sessão às {{time}}. Marque o status após o atendimento.",
+          "Sessão às {{time}}. Marque o status após a sessão.",
       },
       "4": {
         title: "Inadimplência — {{name}}",
@@ -1366,7 +1366,7 @@ export const ptBR = {
       "11": {
         title: "Resumo semanal disponível",
         description:
-          "Panorama de atendimentos, pendências de status e alertas financeiros da semana.",
+          "Panorama de sessões, pendências de status e alertas financeiros da semana.",
       },
     },
     inbox: {
@@ -1673,7 +1673,7 @@ export const ptBR = {
       home: {
         title: "Início / painel do dia",
         description:
-          "Resumo de atendimentos, estatísticas da semana, receita prevista e alertas de inadimplência.",
+          "Resumo de sessões, estatísticas da semana, receita prevista e alertas de inadimplência.",
         phase: "Telas core",
       },
       patients: {
@@ -1685,7 +1685,7 @@ export const ptBR = {
       calendar: {
         title: "Agenda semanal",
         description:
-          "Grid com drag-and-drop, legenda de status, criação de atendimento e modal alinhado à identidade do novo paciente.",
+          "Grid com drag-and-drop, legenda de status, criação de sessão e modal alinhado à identidade do novo paciente.",
         phase: "Telas core",
       },
       finance: {
@@ -1745,7 +1745,7 @@ export const ptBR = {
       "session-history": {
         title: "Histórico de sessões no perfil",
         description:
-          "Aba dedicada no perfil com timeline de atendimentos, remarcações conectadas e faixa lateral por status.",
+          "Aba dedicada no perfil com timeline de sessões, remarcações conectadas e faixa lateral por status.",
         phase: "v1.0",
       },
       export: {
@@ -1757,7 +1757,7 @@ export const ptBR = {
       "unpaid-sessions": {
         title: "Sessões a receber",
         description:
-          "Página consolidada de sessões realizadas não pagas, filtros, marcar como paga, navegação no Início e pagamento por sessão no evento.",
+          "Página consolidada de sessões realizadas não pagas, filtros, marcar como paga, navegação no Início e pagamento por sessão.",
         phase: "v1.0",
       },
       "login-transition": {
@@ -1835,7 +1835,7 @@ export const ptBR = {
       "delete-patient": {
         title: "Excluir paciente",
         description:
-          "Zona de perigo no perfil remove paciente, prontuário, agenda e eventos associados.",
+          "Zona de perigo no perfil remove paciente, prontuário, agenda e sessões associadas.",
         phase: "v1.1 — Modo convidado",
       },
       "guest-profile-name": {
@@ -1877,7 +1877,7 @@ export const ptBR = {
       "delete-session": {
         title: "Excluir sessão na agenda",
         description:
-          "Remover atendimento criado por engano, com confirmação e ajuste de contadores no modo convidado.",
+          "Remover sessão criada por engano, com confirmação e ajuste de contadores no modo convidado.",
         phase: "v1.1 — Modo convidado",
       },
       "guest-empty-states": {

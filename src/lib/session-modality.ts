@@ -56,7 +56,7 @@ function matchScheduleModality(
   return undefined
 }
 
-/** Modalidade efetiva de uma sessão (evento salvo ou horário do paciente). */
+/** Modalidade efetiva de uma sessão (sessão salva ou horário do paciente). */
 export function resolveSessionModality(
   event: Pick<CalendarEvent, "modality" | "date" | "start" | "patientId">,
   patient?: Patient | null

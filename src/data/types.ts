@@ -2,7 +2,7 @@ export type PatientStatus = "ativo" | "em-pausa" | "lista-espera" | "alta"
 
 export type PatientModality = "presencial" | "online" | "hibrido"
 
-/** Frequência do atendimento recorrente na agenda (sessões por mês). */
+/** Frequência da sessão recorrente na agenda (sessões por mês). */
 export type SessionFrequency =
   | "1x-mes"
   | "2x-mes"
