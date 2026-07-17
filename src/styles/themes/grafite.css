@@ -1,0 +1,104 @@
+/**
+ * Tema Grafite — pretos e cinzas quentes + cobre discreto.
+ *
+ * Arquivo independente: edite SÓ este arquivo para mudar este tema.
+ * Não altere refugio.css, lume.css nem horizonte.css daqui.
+ *
+ * Hierarquia (contraste):
+ *   inset (muted) < deep/sidebar < surface (bg) < raised (card) < overlay
+ */
+
+[data-theme="grafite"] {
+  --grafite-surface-deep: #141312;
+  --grafite-surface: #1c1b1a;
+  --grafite-surface-raised: #2a2826;
+  --grafite-surface-overlay: #3a3734;
+  --grafite-surface-inset: #161514;
+  --grafite-dialog: #22201e;
+  --grafite-foreground: #eceae6;
+  --grafite-foreground-muted: #a8a59e;
+  --grafite-foreground-subtle: #8a8780;
+  --grafite-copper: #c48a5a;
+  --grafite-copper-bright: #d4a06e;
+  --grafite-on-copper: #1a120c;
+  --grafite-attention: #d4a06e;
+  --grafite-sage: #6d8f7a;
+  --grafite-fg-alpha-10: #eceae61a;
+  --grafite-fg-alpha-12: #eceae61f;
+  --grafite-fg-alpha-14: #eceae624;
+  --grafite-fg-alpha-20: #eceae633;
+  --grafite-fg-alpha-25: #eceae640;
+  --grafite-fg-alpha-44: #eceae670;
+  /* Borda em tom de superfície — some no header escuro como nos temas claros */
+  --grafite-border: #32302d;
+
+  --background: var(--grafite-surface);
+  --foreground: var(--grafite-foreground);
+  --card: var(--grafite-surface-raised);
+  --card-foreground: var(--grafite-foreground);
+  --popover: var(--grafite-surface-raised);
+  --popover-foreground: var(--grafite-foreground);
+  --primary: var(--grafite-copper);
+  --primary-foreground: var(--grafite-on-copper);
+  --secondary: var(--grafite-surface-overlay);
+  --secondary-foreground: var(--grafite-foreground);
+  --muted: var(--grafite-surface-inset);
+  --muted-foreground: var(--grafite-foreground-muted);
+  --accent: var(--grafite-surface-overlay);
+  --accent-foreground: var(--grafite-foreground);
+  --destructive: oklch(0.637 0.237 25.331);
+  --attention: var(--grafite-attention);
+  --border: var(--grafite-border);
+  --input: var(--grafite-fg-alpha-25);
+  --ring: var(--grafite-copper-bright);
+  --chart-1: var(--grafite-copper-bright);
+  --chart-2: var(--grafite-foreground);
+  --chart-3: var(--grafite-sage);
+  --chart-4: var(--grafite-foreground-muted);
+  --chart-5: var(--grafite-foreground-subtle);
+
+  --sidebar: var(--grafite-surface-deep);
+  --sidebar-foreground: var(--grafite-foreground);
+  --sidebar-primary: var(--grafite-copper);
+  --sidebar-primary-foreground: var(--grafite-on-copper);
+  --sidebar-accent: var(--grafite-fg-alpha-10);
+  --sidebar-accent-foreground: var(--grafite-foreground);
+  --sidebar-border: var(--grafite-fg-alpha-12);
+  --sidebar-ring: var(--grafite-copper-bright);
+
+  --scrollbar-thumb: var(--grafite-fg-alpha-25);
+  --scrollbar-thumb-hover: var(--grafite-fg-alpha-44);
+
+  --surface-dialog: var(--grafite-dialog);
+  --surface-navy: var(--grafite-surface-deep);
+  --surface-navy-heading: var(--grafite-foreground);
+  --surface-sheet-border: #45423e;
+  --surface-sheet-muted: #181716;
+  --surface-sheet-tab: #1f1e1c;
+  --surface-sheet-tab-active: var(--grafite-surface-raised);
+
+  --accent-brand: var(--grafite-copper-bright);
+  --theme-logo-mark: var(--grafite-copper-bright);
+
+  /* Status de sessão — fills escuros (não pastéis claros) */
+  --session-agendada-bg: #eceae6;
+  --session-agendada-border: #c8c5bf;
+  --session-agendada-fg: #1c1b1a;
+  --session-agendada-fg-muted: #45423e;
+  --session-realizada-bg: #2f4538;
+  --session-realizada-border: #4a8264;
+  --session-realizada-fg: #eceae6;
+  --session-realizada-fg-muted: #b0c4b8;
+  --session-faltou-bg: #4a3028;
+  --session-faltou-border: var(--grafite-copper-bright);
+  --session-faltou-fg: #eceae6;
+  --session-faltou-fg-muted: #c5b0a8;
+  --session-remarcada-bg: #3a3428;
+  --session-remarcada-border: #c9a86a;
+  --session-remarcada-fg: #eceae6;
+  --session-remarcada-fg-muted: #c5b8a0;
+  --session-cancelada-bg: #2e2c2a;
+  --session-cancelada-border: #4a4742;
+  --session-cancelada-fg: #a8a59e;
+  --session-cancelada-fg-muted: #8a8780;
+}

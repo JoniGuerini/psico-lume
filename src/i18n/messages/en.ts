@@ -358,17 +358,13 @@ export const en = {
         label: "Lume",
         description: "Warm sand, navy, and mint — classic identity.",
       },
-      forja: {
-        label: "Forja",
-        description: "Warm charcoal with ember amber accent.",
-      },
       horizonte: {
         label: "Horizonte",
         description: "Warm linen, deep ocean, and sunset glow.",
       },
-      entardecer: {
-        label: "Entardecer",
-        description: "Deep warm charcoal with sunset glow.",
+      grafite: {
+        label: "Grafite",
+        description: "Warm blacks and grays with a discreet copper accent.",
       },
     },
     density: {
@@ -1107,6 +1103,7 @@ export const en = {
   sessionForm: {
     newSession: "New appointment",
     newSessionHint: "Fill in date, time, and patient.",
+    dragToMove: "Drag to move",
     patient: "Patient",
     date: "Date",
     start: "Start",

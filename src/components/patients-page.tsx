@@ -291,7 +291,7 @@ export function PatientsPage({
         <div className="overflow-hidden rounded-2xl bg-sidebar shadow-sm">
           <Table className="table-fixed">
             <PatientCols />
-            <TableHeader className="[&_th]:text-sidebar-foreground/75">
+            <TableHeader className="[&_tr]:border-b-0 [&_th]:text-sidebar-foreground/75">
               <TableRow className="border-0 hover:bg-transparent">
                 <TableHead className="pl-4">{t("patients.columns.patient")}</TableHead>
                 <TableHead>{t("patients.columns.complaint")}</TableHead>

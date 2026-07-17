@@ -55,7 +55,7 @@ function SheetTable({
         className
       )}
     >
-      <table className="w-max min-w-full border-collapse text-sm leading-snug text-foreground">
+      <table className="w-max min-w-full border-collapse bg-card text-sm leading-snug text-foreground">
         <thead>
           <tr className="bg-sidebar">
             {headers.map((header) => (
@@ -246,21 +246,26 @@ export function ClinicSheetsPage() {
       <Dialog open={fullscreen} onOpenChange={setFullscreen}>
         <DialogContent
           showCloseButton={false}
-          className="inset-[10px] flex h-auto max-h-none w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-3xl bg-surface-dialog p-0 sm:max-w-none"
+          className="inset-[10px] flex h-auto max-h-none w-auto max-w-none translate-x-0 translate-y-0 flex-col gap-4 overflow-hidden rounded-3xl bg-background p-4 sm:max-w-none"
         >
-          <div className="flex shrink-0 flex-col gap-3 border-b border-border px-4 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <DialogTitle className="font-heading text-base font-semibold">
-                  {t("export.sheetsView.title")}
-                </DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground">
-                  {rowLabel}
-                  <span className="mx-1.5 text-border">·</span>
-                  {t("export.sheetsView.subtitle")}
-                </DialogDescription>
+          <Card className="shrink-0 gap-4 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                  <FileSpreadsheet className="size-5 text-primary" />
+                </div>
+                <div className="min-w-0 flex flex-col gap-0.5">
+                  <DialogTitle className="font-heading text-lg font-semibold tracking-tight text-foreground">
+                    {t("export.sheetsView.title")}
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-muted-foreground">
+                    {rowLabel}
+                    <span className="mx-1.5 text-border">·</span>
+                    {t("export.sheetsView.subtitle")}
+                  </DialogDescription>
+                </div>
               </div>
-              <div className="flex shrink-0 items-center gap-2">
+              <div className="flex shrink-0 flex-wrap items-center gap-2">
                 <Button
                   type="button"
                   size="sm"
@@ -274,7 +279,7 @@ export function ClinicSheetsPage() {
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="border-border bg-background/40"
+                  className="border-border bg-background/40 shadow-sm hover:bg-accent/50"
                   onClick={() => setFullscreen(false)}
                 >
                   <Minimize2 />
@@ -300,12 +305,14 @@ export function ClinicSheetsPage() {
                 ))}
               </TabsList>
             </Tabs>
-          </div>
-          <SheetTable
-            key={`fullscreen-${resolvedSheetKey}`}
-            config={activeConfig}
-            emptyLabel={t("export.sheetsView.empty")}
-          />
+          </Card>
+          <Card className="flex min-h-0 flex-1 flex-col gap-0 overflow-hidden p-0">
+            <SheetTable
+              key={`fullscreen-${resolvedSheetKey}`}
+              config={activeConfig}
+              emptyLabel={t("export.sheetsView.empty")}
+            />
+          </Card>
         </DialogContent>
       </Dialog>
     </div>

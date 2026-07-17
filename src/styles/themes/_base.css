@@ -1,0 +1,16 @@
+/**
+ * Tokens de layout compartilhados (sem cores de tema).
+ * Densidade e radius — não misturar paletas aqui.
+ */
+
+:root {
+  --radius: 0.625rem;
+  --density-page-gap: 1rem;
+  --density-table-cell-py: 0.375rem;
+  --density-table-cell-py-compact: 0.25rem;
+}
+
+[data-density="compact"] {
+  --density-page-gap: 0.75rem;
+  --density-table-cell-py: var(--density-table-cell-py-compact);
+}

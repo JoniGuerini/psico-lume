@@ -1,0 +1,96 @@
+/**
+ * Tema Horizonte — linho quente + oceano + pôr do sol.
+ *
+ * Arquivo independente: edite SÓ este arquivo para mudar este tema.
+ * Não altere refugio.css nem lume.css daqui.
+ */
+
+[data-theme="horizonte"] {
+  --horizonte-sky-100: #f0ebe3;
+  --horizonte-sky-200: #e8e0d6;
+  --horizonte-sky-300: #ded4c8;
+  --horizonte-ocean-900: #1e3d4d;
+  --horizonte-ocean-800: #243848;
+  --horizonte-ocean-700: #2f5568;
+  --horizonte-ocean-cream: #f5f8fa;
+  --horizonte-apricot: #e07a5f;
+  --horizonte-coral: #c9543f;
+  --horizonte-gold: #c9a86a;
+  --horizonte-dialog: #f7f4ef;
+  --horizonte-white: #ffffff;
+  --horizonte-muted-text: #5a6d78;
+  --horizonte-accent-soft: #e4ddd2;
+  --horizonte-chart-5: #7ba3b8;
+  --horizonte-ocean-alpha-14: #2f556824;
+  --horizonte-ocean-alpha-25: #2f556840;
+  --horizonte-ocean-alpha-44: #2f556870;
+
+  --background: var(--horizonte-sky-100);
+  --foreground: var(--horizonte-ocean-800);
+  --card: var(--horizonte-white);
+  --card-foreground: var(--horizonte-ocean-800);
+  --popover: var(--horizonte-white);
+  --popover-foreground: var(--horizonte-ocean-800);
+  --primary: var(--horizonte-ocean-700);
+  --primary-foreground: var(--horizonte-ocean-cream);
+  --secondary: var(--horizonte-sky-200);
+  --secondary-foreground: var(--horizonte-ocean-800);
+  --muted: var(--horizonte-sky-300);
+  --muted-foreground: var(--horizonte-muted-text);
+  --accent: var(--horizonte-accent-soft);
+  --accent-foreground: var(--horizonte-ocean-800);
+  --destructive: oklch(0.577 0.245 27.325);
+  --attention: var(--horizonte-coral);
+  --border: var(--horizonte-ocean-alpha-14);
+  --input: var(--horizonte-ocean-alpha-25);
+  --ring: var(--horizonte-ocean-700);
+  --chart-1: var(--horizonte-ocean-700);
+  --chart-2: var(--horizonte-apricot);
+  --chart-3: var(--horizonte-gold);
+  --chart-4: var(--horizonte-muted-text);
+  --chart-5: var(--horizonte-chart-5);
+
+  --sidebar: var(--horizonte-ocean-900);
+  --sidebar-foreground: var(--horizonte-ocean-cream);
+  --sidebar-primary: var(--accent-brand);
+  --sidebar-primary-foreground: #fffaf7;
+  --sidebar-accent: #ffffff14;
+  --sidebar-accent-foreground: var(--horizonte-ocean-cream);
+  --sidebar-border: #ffffff1a;
+  --sidebar-ring: var(--accent-brand);
+
+  --scrollbar-thumb: var(--horizonte-ocean-alpha-25);
+  --scrollbar-thumb-hover: var(--horizonte-ocean-alpha-44);
+
+  --surface-dialog: var(--horizonte-dialog);
+  --surface-navy: var(--horizonte-ocean-900);
+  --surface-navy-heading: var(--horizonte-ocean-cream);
+  --surface-sheet-border: #d8cfc4;
+  --surface-sheet-muted: #f5f0e8;
+  --surface-sheet-tab: #ebe3d8;
+  --surface-sheet-tab-active: var(--horizonte-white);
+
+  --accent-brand: var(--horizonte-apricot);
+  --theme-logo-mark: var(--horizonte-apricot);
+
+  --session-agendada-bg: #f5f0e8;
+  --session-agendada-border: #d8cfc4;
+  --session-agendada-fg: var(--horizonte-ocean-800);
+  --session-agendada-fg-muted: var(--horizonte-muted-text);
+  --session-realizada-bg: #e4f0ec;
+  --session-realizada-border: #7eb8a8;
+  --session-realizada-fg: #1a4844;
+  --session-realizada-fg-muted: #2f6b5e;
+  --session-faltou-bg: #fce8e4;
+  --session-faltou-border: var(--horizonte-apricot);
+  --session-faltou-fg: #8f2f20;
+  --session-faltou-fg-muted: var(--horizonte-coral);
+  --session-remarcada-bg: #e0ecf4;
+  --session-remarcada-border: #6a9ec4;
+  --session-remarcada-fg: var(--horizonte-ocean-800);
+  --session-remarcada-fg-muted: var(--horizonte-ocean-700);
+  --session-cancelada-bg: #ede8e2;
+  --session-cancelada-border: #c8bfb4;
+  --session-cancelada-fg: #6a757d;
+  --session-cancelada-fg-muted: #8a949c;
+}

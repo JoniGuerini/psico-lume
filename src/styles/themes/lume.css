@@ -1,0 +1,101 @@
+/**
+ * Tema Lume — areia quente, navy e menta.
+ *
+ * Arquivo independente: edite SÓ este arquivo para mudar este tema.
+ * Não altere refugio.css nem horizonte.css daqui.
+ */
+
+[data-theme="lume"] {
+  --lume-navy-900: #1b3a5c;
+  --lume-navy-800: #1c3351;
+  --lume-cream-100: #faf6ec;
+  --lume-cream-200: #f5f2ea;
+  --lume-sand-100: #efe7d5;
+  --lume-sand-200: #eae0cc;
+  --lume-mint-400: #a0cfb1;
+  --lume-mint-logo: #a8d5ba;
+  --lume-white: #ffffff;
+  --lume-slate-500: #5e6b7e;
+  --lume-gold-400: #c9a86a;
+  --lume-mint-300: #8fb9a0;
+  --lume-mint-on-accent: #184032;
+  --lume-terracotta: #c97b63;
+  --lume-blue-accent: #dce7f2;
+  --lume-navy-alpha-14: #1b3a5c24;
+  --lume-navy-alpha-25: #1b3a5c40;
+  --lume-navy-alpha-44: #1b3a5c70;
+  --lume-white-alpha-10: #ffffff1a;
+  --lume-white-alpha-12: #ffffff1f;
+  --lume-sheet-border: #e5e0d5;
+  --lume-sheet-zebra: #f8f6f0;
+  --lume-sheet-tab: #ede9df;
+
+  --background: var(--lume-sand-100);
+  --foreground: var(--lume-navy-800);
+  --card: var(--lume-white);
+  --card-foreground: var(--lume-navy-800);
+  --popover: var(--lume-white);
+  --popover-foreground: var(--lume-navy-800);
+  --primary: var(--lume-navy-900);
+  --primary-foreground: var(--lume-cream-100);
+  --secondary: var(--lume-sand-100);
+  --secondary-foreground: var(--lume-navy-800);
+  --muted: var(--lume-sand-200);
+  --muted-foreground: var(--lume-slate-500);
+  --accent: var(--lume-blue-accent);
+  --accent-foreground: var(--lume-navy-800);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: var(--lume-navy-alpha-14);
+  --input: var(--lume-navy-alpha-25);
+  --ring: var(--lume-navy-900);
+  --chart-1: var(--lume-navy-900);
+  --chart-2: var(--lume-mint-400);
+  --chart-3: var(--lume-gold-400);
+  --chart-4: var(--lume-slate-500);
+  --chart-5: var(--lume-mint-300);
+
+  --sidebar: var(--lume-navy-900);
+  --sidebar-foreground: var(--lume-cream-200);
+  --sidebar-primary: var(--accent-brand);
+  --sidebar-primary-foreground: var(--lume-mint-on-accent);
+  --sidebar-accent: var(--lume-white-alpha-10);
+  --sidebar-accent-foreground: var(--lume-cream-200);
+  --sidebar-border: var(--lume-white-alpha-12);
+  --sidebar-ring: var(--accent-brand);
+
+  --scrollbar-thumb: var(--lume-navy-alpha-25);
+  --scrollbar-thumb-hover: var(--lume-navy-alpha-44);
+
+  --surface-dialog: var(--lume-cream-100);
+  --surface-navy: var(--lume-navy-900);
+  --surface-navy-heading: var(--lume-cream-100);
+  --surface-sheet-border: var(--lume-sheet-border);
+  --surface-sheet-muted: var(--lume-sheet-zebra);
+  --surface-sheet-tab: var(--lume-sheet-tab);
+  --surface-sheet-tab-active: var(--lume-white);
+
+  --accent-brand: var(--lume-mint-400);
+  --theme-logo-mark: var(--lume-mint-logo);
+  --attention: var(--lume-terracotta);
+
+  --session-agendada-bg: #f8f6f0;
+  --session-agendada-border: #e5e0d5;
+  --session-agendada-fg: #1c3351;
+  --session-agendada-fg-muted: #5e6b7e;
+  --session-realizada-bg: #eaf5ef;
+  --session-realizada-border: #8fb9a0;
+  --session-realizada-fg: #184032;
+  --session-realizada-fg-muted: #3d6b52;
+  --session-faltou-bg: #fee2e2;
+  --session-faltou-border: #f87171;
+  --session-faltou-fg: #991b1b;
+  --session-faltou-fg-muted: #b91c1c;
+  --session-remarcada-bg: #e8eef5;
+  --session-remarcada-border: #7ba3d4;
+  --session-remarcada-fg: #1e3a5f;
+  --session-remarcada-fg-muted: #4a6fa5;
+  --session-cancelada-bg: #f3f4f6;
+  --session-cancelada-border: #d1d5db;
+  --session-cancelada-fg: #6b7280;
+  --session-cancelada-fg-muted: #9ca3af;
+}

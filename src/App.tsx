@@ -4,7 +4,7 @@ import { AnimatePresence, MotionConfig, motion } from "motion/react"
 
 import { AccountDialog } from "@/components/account-dialog"
 import { AppSidebar } from "@/components/app-sidebar"
-import { CalendarPage } from "@/components/calendar-page"
+import { CalendarPage, SESSION_FORM_DOCK_COLUMN_CLASS, SESSION_FORM_DOCK_PREVIEW_EXTRA_CLASS } from "@/components/calendar-page"
 import { FinancePage } from "@/components/finance-page"
 import {
   GlobalSearchDialog,
@@ -83,6 +83,8 @@ export function App() {
   const [calendarDateFocus, setCalendarDateFocus] = useState<number | null>(
     null
   )
+  const [sessionFormDocked, setSessionFormDocked] = useState(false)
+  const [sessionFormDockPreview, setSessionFormDockPreview] = useState(false)
 
   useGlobalSearchShortcut(() => setSearchOpen(true))
 
@@ -95,6 +97,8 @@ export function App() {
     setReceivablesFilter("todas")
     setCalendarView("semana")
     setCalendarDateFocus(null)
+    setSessionFormDocked(false)
+    setSessionFormDockPreview(false)
   }
 
   function handleViewAgendaWeek() {
@@ -193,6 +197,8 @@ export function App() {
     setEmailFocus(null)
     setAccountOpen(false)
     setSearchOpen(false)
+    setSessionFormDocked(false)
+    setSessionFormDockPreview(false)
   }
 
   function handleUpdateGuestProfile(name: string) {
@@ -255,12 +261,47 @@ export function App() {
                   exit={{ opacity: 0 }}
                   transition={authFadeTransition}
                 >
-                  <AppSidebar
-                    activeItem={activeItem}
-                    onSelect={handleNavigate}
-                    onOpenAccount={() => setAccountOpen(true)}
-                    user={user}
-                  />
+                  {sessionFormDocked ? (
+                    <div
+                      data-session-form-dock-slot
+                      className={cn(
+                        "hidden shrink-0 md:block",
+                        SESSION_FORM_DOCK_COLUMN_CLASS
+                      )}
+                      aria-hidden
+                    />
+                  ) : (
+                    <>
+                      <div
+                        className={cn(
+                          "hidden shrink-0 md:block",
+                          "transition-opacity duration-200 ease-out",
+                          sessionFormDockPreview &&
+                            "pointer-events-none opacity-0"
+                        )}
+                      >
+                        <AppSidebar
+                          activeItem={activeItem}
+                          onSelect={handleNavigate}
+                          onOpenAccount={() => setAccountOpen(true)}
+                          user={user}
+                        />
+                      </div>
+                      <div
+                        data-session-form-dock-slot={
+                          sessionFormDockPreview ? "" : undefined
+                        }
+                        className={cn(
+                          "hidden shrink-0 overflow-hidden md:block",
+                          "transition-[width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                          sessionFormDockPreview
+                            ? SESSION_FORM_DOCK_PREVIEW_EXTRA_CLASS
+                            : "w-0"
+                        )}
+                        aria-hidden
+                      />
+                    </>
+                  )}
                   <main
                     data-slot="sidebar-inset"
                     className={LUME_MAIN_SURFACE_CLASS}
@@ -321,7 +362,17 @@ export function App() {
                           initialSelectedDateTimestamp={calendarDateFocus}
                           initialView={calendarView}
                           openNewSession={openNewSession}
-                          onNewSessionOpenChange={setOpenNewSession}
+                          onNewSessionOpenChange={(open) => {
+                            setOpenNewSession(open)
+                            if (!open) {
+                              setSessionFormDocked(false)
+                              setSessionFormDockPreview(false)
+                            }
+                          }}
+                          onSessionFormDockedChange={setSessionFormDocked}
+                          onSessionFormDockPreviewChange={
+                            setSessionFormDockPreview
+                          }
                         />
                       ) : null}
                       {activeItem === APP_PAGE_ID.pacientes ? (

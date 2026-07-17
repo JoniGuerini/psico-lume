@@ -1,0 +1,97 @@
+/**
+ * Tema Refúgio (padrão) — ardósia fria + terracota.
+ *
+ * Arquivo independente: edite SÓ este arquivo para mudar este tema.
+ * Não altere lume.css nem horizonte.css daqui.
+ */
+
+:root:not([data-theme]),
+[data-theme="refugio"] {
+  --refugio-slate-900: #2d3a4a;
+  --refugio-slate-800: #2a3544;
+  --refugio-slate-700: #3d5166;
+  --refugio-mist-100: #e8edf2;
+  --refugio-mist-200: #dce4ec;
+  --refugio-mist-300: #d5dde6;
+  --refugio-dialog: #f4f6f9;
+  --refugio-cream: #f5f7fa;
+  --refugio-slate-alpha-14: #3d516624;
+  --refugio-slate-alpha-20: #3d516633;
+  --refugio-slate-alpha-25: #3d516640;
+  --refugio-slate-alpha-44: #3d516670;
+  --refugio-blue-accent: #cddaea;
+  --refugio-terracotta: #c97b63;
+  --refugio-lavender: #9a8fc1;
+  --refugio-white: #ffffff;
+  --refugio-muted-text: #5a6578;
+  --refugio-chart-5: #8fa3b8;
+
+  --background: var(--refugio-mist-100);
+  --foreground: var(--refugio-slate-800);
+  --card: var(--refugio-white);
+  --card-foreground: var(--refugio-slate-800);
+  --popover: var(--refugio-white);
+  --popover-foreground: var(--refugio-slate-800);
+  --primary: var(--refugio-slate-700);
+  --primary-foreground: var(--refugio-cream);
+  --secondary: var(--refugio-mist-200);
+  --secondary-foreground: var(--refugio-slate-800);
+  --muted: var(--refugio-mist-300);
+  --muted-foreground: var(--refugio-muted-text);
+  --accent: var(--refugio-blue-accent);
+  --accent-foreground: var(--refugio-slate-800);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: var(--refugio-slate-alpha-14);
+  --input: var(--refugio-slate-alpha-25);
+  --ring: var(--refugio-slate-700);
+  --chart-1: var(--refugio-slate-700);
+  --chart-2: var(--refugio-terracotta);
+  --chart-3: var(--refugio-lavender);
+  --chart-4: var(--refugio-muted-text);
+  --chart-5: var(--refugio-chart-5);
+
+  --sidebar: var(--refugio-slate-900);
+  --sidebar-foreground: var(--refugio-cream);
+  --sidebar-primary: var(--accent-brand);
+  --sidebar-primary-foreground: #fffaf7;
+  --sidebar-accent: #ffffff14;
+  --sidebar-accent-foreground: var(--refugio-cream);
+  --sidebar-border: #ffffff1a;
+  --sidebar-ring: var(--accent-brand);
+
+  --scrollbar-thumb: var(--refugio-slate-alpha-25);
+  --scrollbar-thumb-hover: var(--refugio-slate-alpha-44);
+
+  --surface-dialog: var(--refugio-dialog);
+  --surface-navy: var(--refugio-slate-900);
+  --surface-navy-heading: var(--refugio-cream);
+  --surface-sheet-border: #d5dde6;
+  --surface-sheet-muted: #eef1f5;
+  --surface-sheet-tab: #e2e8ef;
+  --surface-sheet-tab-active: var(--refugio-white);
+
+  --accent-brand: var(--refugio-terracotta);
+  --theme-logo-mark: var(--refugio-terracotta);
+  --attention: var(--refugio-terracotta);
+
+  --session-agendada-bg: #f8f6f0;
+  --session-agendada-border: #e5e0d5;
+  --session-agendada-fg: #1c3351;
+  --session-agendada-fg-muted: #5e6b7e;
+  --session-realizada-bg: #eaf5ef;
+  --session-realizada-border: #8fb9a0;
+  --session-realizada-fg: #184032;
+  --session-realizada-fg-muted: #3d6b52;
+  --session-faltou-bg: #fee2e2;
+  --session-faltou-border: #f87171;
+  --session-faltou-fg: #991b1b;
+  --session-faltou-fg-muted: #b91c1c;
+  --session-remarcada-bg: #e8eef5;
+  --session-remarcada-border: #7ba3d4;
+  --session-remarcada-fg: #1e3a5f;
+  --session-remarcada-fg-muted: #4a6fa5;
+  --session-cancelada-bg: #f3f4f6;
+  --session-cancelada-border: #d1d5db;
+  --session-cancelada-fg: #6b7280;
+  --session-cancelada-fg-muted: #9ca3af;
+}

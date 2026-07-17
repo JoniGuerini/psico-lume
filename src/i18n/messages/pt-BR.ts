@@ -357,17 +357,13 @@ export const ptBR = {
         label: "Lume",
         description: "Areia quente, navy e menta — identidade clássica.",
       },
-      forja: {
-        label: "Forja",
-        description: "Carvão quente com destaque âmbar de brasa.",
-      },
       horizonte: {
         label: "Horizonte",
         description: "Linho quente, oceano profundo e pôr do sol.",
       },
-      entardecer: {
-        label: "Entardecer",
-        description: "Carvão quente profundo com brilho de pôr do sol.",
+      grafite: {
+        label: "Grafite",
+        description: "Pretos e cinzas quentes com destaque cobre discreto.",
       },
     },
     density: {
@@ -1108,6 +1104,7 @@ export const ptBR = {
   sessionForm: {
     newSession: "Novo atendimento",
     newSessionHint: "Preencha data, horário e paciente.",
+    dragToMove: "Arraste para mover",
     patient: "Paciente",
     date: "Data",
     start: "Início",

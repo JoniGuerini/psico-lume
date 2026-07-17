@@ -1,14 +1,17 @@
 export const THEME_STORAGE_KEY = "lume-theme"
 export const DENSITY_STORAGE_KEY = "lume-density"
 
-export type ThemeId = "lume" | "refugio" | "forja" | "horizonte" | "entardecer"
+export type ThemeId = "lume" | "refugio" | "horizonte" | "grafite"
 export type DensityId = "comfortable" | "compact"
 
 export const DEFAULT_THEME: ThemeId = "refugio"
 export const DEFAULT_DENSITY: DensityId = "comfortable"
 
-const VALID_THEMES = new Set<ThemeId>(["lume", "refugio", "forja", "horizonte", "entardecer"])
+const VALID_THEMES = new Set<ThemeId>(["lume", "refugio", "horizonte", "grafite"])
 const VALID_DENSITIES = new Set<DensityId>(["comfortable", "compact"])
+
+/** Temas removidos — quem ainda tiver no storage volta ao padrão (ou ao sucessor). */
+const REMOVED_THEMES = new Set(["forja", "entardecer", "profundo", "luar"])
 
 export function isThemeId(value: string | null | undefined): value is ThemeId {
   return value != null && VALID_THEMES.has(value as ThemeId)
@@ -21,7 +24,14 @@ export function isDensityId(value: string | null | undefined): value is DensityI
 export function readStoredTheme(): ThemeId {
   try {
     const raw = localStorage.getItem(THEME_STORAGE_KEY)
-    if (raw === "profundo") return "entardecer"
+    if (raw === "luar") {
+      persistTheme("grafite")
+      return "grafite"
+    }
+    if (raw != null && REMOVED_THEMES.has(raw)) {
+      persistTheme(DEFAULT_THEME)
+      return DEFAULT_THEME
+    }
     return isThemeId(raw) ? raw : DEFAULT_THEME
   } catch {
     return DEFAULT_THEME

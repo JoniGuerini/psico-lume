@@ -131,6 +131,15 @@
   }
 }
 
+/* Formulário de sessão: o Radix Popper posiciona via transform no wrapper.
+   Em encaixe ou arraste com position:fixed, neutraliza o wrapper. */
+[data-radix-popper-content-wrapper]:has([data-session-form-docked]),
+[data-radix-popper-content-wrapper]:has([data-session-form-dragging]) {
+  transform: none !important;
+  will-change: auto !important;
+  inset: 0 auto auto 0 !important;
+}
+
 @keyframes toast-progress-shrink {
   from {
     transform: scaleX(1);

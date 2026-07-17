@@ -4,7 +4,8 @@
  * Regras:
  * - UI: use `lumeSurfaces` e tokens Tailwind (bg-background, text-primary-foreground…).
  * - JS (export, charts): use `lumePrimitives` / `sheetPalette`.
- * - Não use hex inline em componentes — adicione token em lume-tokens.css se faltar.
+ * - Não use hex inline em componentes — adicione token no arquivo do tema
+ *   (`src/styles/themes/<tema>.css`) se faltar.
  */
 
 import type { PatientStatus, SessionStatus } from "@/data/types"
@@ -45,19 +46,16 @@ export const lumePrimitives = {
   mint400: "#A0CFB1",
   mintLogo: "#A8D5BA",
   terracotta: "#C97B63",
-  forgeSurface: "#383736",
-  forgeForeground: "#E8E6DF",
-  forgeAccent: "#F0A65C",
   horizonteSky: "#F0EBE3",
   horizonteOcean: "#1E3D4D",
   horizonteApricot: "#E07A5F",
-  entardecerSurface: "#161514",
-  entardecerDeep: "#0E0D0C",
-  entardecerAccent: "#E07A5F",
+  grafiteSurface: "#1C1B1A",
+  grafiteDeep: "#141312",
+  grafiteCopper: "#C48A5A",
   white: "#FFFFFF",
 } as const
 
-/** Paleta da exportação XLSX e visão Dados — espelha lume-tokens.css */
+/** Paleta da exportação XLSX e visão Dados — espelha a paleta clássica Lume. */
 export const sheetPalette = {
   headerBg: lumePrimitives.navy900,
   headerText: lumePrimitives.cream100,
@@ -121,16 +119,6 @@ export const themePresets: ThemePreset[] = [
     },
   },
   {
-    id: "forja",
-    label: "Forja",
-    description: "Carvão quente com destaque âmbar de brasa.",
-    preview: {
-      sidebar: "#2A2928",
-      background: lumePrimitives.forgeSurface,
-      accent: lumePrimitives.forgeAccent,
-    },
-  },
-  {
     id: "horizonte",
     label: "Horizonte",
     description: "Linho quente, oceano profundo e pôr do sol.",
@@ -141,13 +129,13 @@ export const themePresets: ThemePreset[] = [
     },
   },
   {
-    id: "entardecer",
-    label: "Entardecer",
-    description: "Carvão quente profundo com brilho de pôr do sol.",
+    id: "grafite",
+    label: "Grafite",
+    description: "Pretos e cinzas quentes com destaque cobre discreto.",
     preview: {
-      sidebar: lumePrimitives.entardecerDeep,
-      background: lumePrimitives.entardecerSurface,
-      accent: lumePrimitives.entardecerAccent,
+      sidebar: lumePrimitives.grafiteDeep,
+      background: lumePrimitives.grafiteSurface,
+      accent: lumePrimitives.grafiteCopper,
     },
   },
 ]

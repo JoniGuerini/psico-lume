@@ -628,6 +628,15 @@ function sanitizePreferences(raw: unknown): ClinicBackupPreferences | string {
     theme = DEFAULT_THEME
   } else if (typeof raw.theme === "string" && isThemeId(raw.theme)) {
     theme = raw.theme
+  } else if (
+    typeof raw.theme === "string" &&
+    (raw.theme === "forja" ||
+      raw.theme === "entardecer" ||
+      raw.theme === "profundo")
+  ) {
+    theme = DEFAULT_THEME
+  } else if (typeof raw.theme === "string" && raw.theme === "luar") {
+    theme = "grafite"
   } else {
     return "preferences.theme inválido"
   }

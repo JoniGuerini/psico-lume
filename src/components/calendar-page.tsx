@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { CalendarPlus, ChevronLeft, ChevronRight } from "lucide-react"
 
 import { ScheduleSessionForm } from "@/components/schedule-session-form"
@@ -19,6 +20,8 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useClinicData } from "@/context/clinic-data-provider"
 import { useTranslation } from "@/context/locale-provider"
+import { useDraggableOffset, isLeftDockZone } from "@/hooks/use-draggable-offset"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { eventsOfDay } from "@/data/calendar"
 import { addDays, isSameDay } from "@/data/patients"
 import type { CalendarEvent, Patient } from "@/data/types"
@@ -117,6 +120,61 @@ type Draft = {
   durationMin: number
 }
 
+/** Coluna do formulário encaixado: inset 0.5rem + card 20rem + folga 0.5rem. */
+export const SESSION_FORM_DOCK_COLUMN_CLASS = "w-[21rem]"
+/** Extra além da sidebar (16rem) no preview — anima a retração da main. */
+export const SESSION_FORM_DOCK_PREVIEW_EXTRA_CLASS = "w-[5rem]"
+
+const DOCK_INSET = "0.5rem"
+const DOCK_CARD_WIDTH = "20rem"
+const DOCK_GHOST_LEAVE_MS = 70
+const DOCK_GHOST_FADE_MS = 200
+
+const dockedPopoverStyle = {
+  position: "fixed",
+  left: DOCK_INSET,
+  top: DOCK_INSET,
+  bottom: DOCK_INSET,
+  width: DOCK_CARD_WIDTH,
+  maxWidth: DOCK_CARD_WIDTH,
+  transform: "none",
+  margin: 0,
+} as const
+
+/** Fantasma do encaixe: silhueta do card com fade suave. */
+function SessionFormDockGhost({ visible }: { visible: boolean }) {
+  const [rendered, setRendered] = useState(visible)
+
+  useEffect(() => {
+    if (visible) {
+      setRendered(true)
+      return
+    }
+    const id = window.setTimeout(() => setRendered(false), DOCK_GHOST_FADE_MS)
+    return () => window.clearTimeout(id)
+  }, [visible])
+
+  if (!rendered || typeof document === "undefined") return null
+
+  return createPortal(
+    <div
+      aria-hidden
+      className={cn(
+        "pointer-events-none fixed z-[70] hidden rounded-3xl border-2 border-primary bg-primary/20 md:block",
+        "transition-opacity duration-200 ease-out",
+        visible ? "opacity-100" : "opacity-0"
+      )}
+      style={{
+        left: DOCK_INSET,
+        top: DOCK_INSET,
+        bottom: DOCK_INSET,
+        width: DOCK_CARD_WIDTH,
+      }}
+    />,
+    document.body
+  )
+}
+
 type TimeGridProps = {
   days: Date[]
   events: CalendarEvent[]
@@ -127,6 +185,9 @@ type TimeGridProps = {
   onCreate: (event: CalendarEvent) => void
   onMoveEvent: (id: string, date: Date, startMinutes: number) => void
   onSelectEvent: (event: CalendarEvent) => void
+  formDocked?: boolean
+  onFormDockedChange?: (docked: boolean) => void
+  onDockGhostChange?: (visible: boolean) => void
 }
 
 function TimeGrid({
@@ -139,8 +200,12 @@ function TimeGrid({
   onCreate,
   onMoveEvent,
   onSelectEvent,
+  formDocked = false,
+  onFormDockedChange,
+  onDockGhostChange,
 }: TimeGridProps) {
   const { t } = useTranslation()
+  const isMobile = useIsMobile()
   const now = useNow()
   const scrollRef = useRef<HTMLDivElement>(null)
   const columnsRef = useRef<HTMLDivElement>(null)
@@ -151,6 +216,45 @@ function TimeGrid({
   const [preview, setPreview] = useState<DragPreview | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [selectOpen, setSelectOpen] = useState(false)
+
+  const resetDragOffsetRef = useRef(() => {})
+  const popoverDrag = useDraggableOffset(!!draft, {
+    enabled: !isMobile,
+    onDragMove: ({ clientX }) => {
+      if (isMobile) return
+      if (formDocked) {
+        // Saiu da coluna: desencaixa e volta ao flutuante seguindo o ponteiro.
+        if (!isLeftDockZone(clientX)) {
+          onFormDockedChange?.(false)
+          onDockGhostChange?.(false)
+        }
+        return
+      }
+      onDockGhostChange?.(isLeftDockZone(clientX))
+    },
+    onDragEnd: ({ clientX, moved }) => {
+      onDockGhostChange?.(false)
+      if (!moved || isMobile) {
+        if (formDocked) resetDragOffsetRef.current()
+        return
+      }
+      if (isLeftDockZone(clientX)) {
+        onFormDockedChange?.(true)
+        resetDragOffsetRef.current()
+      } else {
+        onFormDockedChange?.(false)
+      }
+    },
+  })
+  resetDragOffsetRef.current = popoverDrag.resetOffset
+
+  const dockedLayout = formDocked && !popoverDrag.isDragging
+
+  function closeDraft() {
+    setDraft(null)
+    onDockGhostChange?.(false)
+    onFormDockedChange?.(false)
+  }
 
   const nowTop = useMemo(() => {
     const minutes = now.getHours() * 60 + now.getMinutes()
@@ -316,9 +420,7 @@ function TimeGrid({
     <Popover
       open={!!draft}
       onOpenChange={(open) => {
-        if (!open) {
-          setDraft(null)
-        }
+        if (!open) closeDraft()
       }}
     >
     <div className="flex min-h-0 flex-1 flex-col">
@@ -487,35 +589,63 @@ function TimeGrid({
       <PopoverContent
         side="right"
         align="start"
-        className="w-80 gap-0 overflow-hidden bg-surface-dialog p-0"
+        data-session-form-docked={dockedLayout ? "" : undefined}
+        data-session-form-dragging={
+          popoverDrag.isDragging || popoverDrag.usesFixed ? "" : undefined
+        }
+        style={dockedLayout ? dockedPopoverStyle : undefined}
+        className={cn(
+          "z-[80] w-80 gap-0 overflow-visible bg-transparent p-0 shadow-none ring-0",
+          dockedLayout && "data-[state=open]:animate-none"
+        )}
         onOpenAutoFocus={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => {
-          if (selectOpen) event.preventDefault()
+          if (selectOpen || formDocked) event.preventDefault()
         }}
         onInteractOutside={(event) => {
-          if (selectOpen) event.preventDefault()
+          if (selectOpen || formDocked) event.preventDefault()
         }}
         onEscapeKeyDown={(event) => {
           if (selectOpen) event.preventDefault()
         }}
       >
         {draft ? (
-          <ScheduleSessionForm
-            key={`${draft.dayIndex}-${draft.startMin}`}
-            patientNames={patientNames}
-            patients={patients}
-            defaults={{
-              date: days[draft.dayIndex],
-              start: minutesToTime(draft.startMin),
-              duration: draft.durationMin,
-            }}
-            onSubmit={(event) => {
-              onCreate(event)
-              setDraft(null)
-            }}
-            onCancel={() => setDraft(null)}
-            onSelectOpenChange={setSelectOpen}
-          />
+          <div
+            data-session-form-panel=""
+            data-session-form-dragging={
+              popoverDrag.isDragging || popoverDrag.usesFixed ? "" : undefined
+            }
+            style={dockedLayout ? undefined : popoverDrag.style}
+            className={cn(
+              "overflow-hidden rounded-3xl bg-surface-dialog shadow-lg ring-1 ring-foreground/5",
+              dockedLayout && "flex h-full flex-col"
+            )}
+          >
+            <div
+              className={cn(dockedLayout && "min-h-0 flex-1 overflow-y-auto")}
+            >
+              <ScheduleSessionForm
+                key={`${draft.dayIndex}-${draft.startMin}`}
+                patientNames={patientNames}
+                patients={patients}
+                expanded={formDocked}
+                defaults={{
+                  date: days[draft.dayIndex],
+                  start: minutesToTime(draft.startMin),
+                  duration: draft.durationMin,
+                }}
+                dragHandleProps={
+                  isMobile ? undefined : popoverDrag.handleProps
+                }
+                onSubmit={(event) => {
+                  onCreate(event)
+                  closeDraft()
+                }}
+                onCancel={closeDraft}
+                onSelectOpenChange={setSelectOpen}
+              />
+            </div>
+          </div>
         ) : null}
       </PopoverContent>
     </Popover>
@@ -530,6 +660,9 @@ type NewSessionPopoverProps = {
   align?: "start" | "center" | "end"
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  formDocked?: boolean
+  onFormDockedChange?: (docked: boolean) => void
+  onDockGhostChange?: (visible: boolean) => void
   children: React.ReactNode
 }
 
@@ -541,8 +674,12 @@ function NewSessionPopover({
   align = "end",
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
+  formDocked = false,
+  onFormDockedChange,
+  onDockGhostChange,
   children,
 }: NewSessionPopoverProps) {
+  const isMobile = useIsMobile()
   const [internalOpen, setInternalOpen] = useState(false)
   const [selectOpen, setSelectOpen] = useState(false)
   const open = controlledOpen ?? internalOpen
@@ -553,37 +690,101 @@ function NewSessionPopover({
     } else {
       setInternalOpen(next)
     }
+    if (!next) {
+      onDockGhostChange?.(false)
+      onFormDockedChange?.(false)
+    }
   }
+
+  const resetDragOffsetRef = useRef(() => {})
+  const popoverDrag = useDraggableOffset(open, {
+    enabled: !isMobile,
+    onDragMove: ({ clientX }) => {
+      if (isMobile) return
+      if (formDocked) {
+        if (!isLeftDockZone(clientX)) {
+          onFormDockedChange?.(false)
+          onDockGhostChange?.(false)
+        }
+        return
+      }
+      onDockGhostChange?.(isLeftDockZone(clientX))
+    },
+    onDragEnd: ({ clientX, moved }) => {
+      onDockGhostChange?.(false)
+      if (!moved || isMobile) {
+        if (formDocked) resetDragOffsetRef.current()
+        return
+      }
+      if (isLeftDockZone(clientX)) {
+        onFormDockedChange?.(true)
+        resetDragOffsetRef.current()
+      } else {
+        onFormDockedChange?.(false)
+      }
+    },
+  })
+  resetDragOffsetRef.current = popoverDrag.resetOffset
+
+  const dockedLayout = formDocked && !popoverDrag.isDragging
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
         align={align}
-        className="w-80 gap-0 overflow-hidden bg-surface-dialog p-0"
+        data-session-form-docked={dockedLayout ? "" : undefined}
+        data-session-form-dragging={
+          popoverDrag.isDragging || popoverDrag.usesFixed ? "" : undefined
+        }
+        style={dockedLayout ? dockedPopoverStyle : undefined}
+        className={cn(
+          "z-[80] w-80 gap-0 overflow-visible bg-transparent p-0 shadow-none ring-0",
+          dockedLayout && "data-[state=open]:animate-none"
+        )}
         onOpenAutoFocus={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => {
-          if (selectOpen) event.preventDefault()
+          if (selectOpen || formDocked) event.preventDefault()
         }}
         onInteractOutside={(event) => {
-          if (selectOpen) event.preventDefault()
+          if (selectOpen || formDocked) event.preventDefault()
         }}
         onEscapeKeyDown={(event) => {
           if (selectOpen) event.preventDefault()
         }}
       >
         {open ? (
-          <ScheduleSessionForm
-            patientNames={patientNames}
-            patients={patients}
-            defaults={{ date: selectedDate, start: "09:00", duration: 50 }}
-            onSubmit={(event) => {
-              onCreate(event)
-              setOpen(false)
-            }}
-            onCancel={() => setOpen(false)}
-            onSelectOpenChange={setSelectOpen}
-          />
+          <div
+            data-session-form-panel=""
+            data-session-form-dragging={
+              popoverDrag.isDragging || popoverDrag.usesFixed ? "" : undefined
+            }
+            style={dockedLayout ? undefined : popoverDrag.style}
+            className={cn(
+              "overflow-hidden rounded-3xl bg-surface-dialog shadow-lg ring-1 ring-foreground/5",
+              dockedLayout && "flex h-full flex-col"
+            )}
+          >
+            <div
+              className={cn(dockedLayout && "min-h-0 flex-1 overflow-y-auto")}
+            >
+              <ScheduleSessionForm
+                patientNames={patientNames}
+                patients={patients}
+                expanded={formDocked}
+                defaults={{ date: selectedDate, start: "09:00", duration: 50 }}
+                dragHandleProps={
+                  isMobile ? undefined : popoverDrag.handleProps
+                }
+                onSubmit={(event) => {
+                  onCreate(event)
+                  setOpen(false)
+                }}
+                onCancel={() => setOpen(false)}
+                onSelectOpenChange={setSelectOpen}
+              />
+            </div>
+          </div>
         ) : null}
       </PopoverContent>
     </Popover>
@@ -595,11 +796,15 @@ export function CalendarPage({
   initialView = "semana",
   openNewSession = false,
   onNewSessionOpenChange,
+  onSessionFormDockedChange,
+  onSessionFormDockPreviewChange,
 }: {
   initialSelectedDateTimestamp?: number | null
   initialView?: "mes" | "semana" | "dia"
   openNewSession?: boolean
   onNewSessionOpenChange?: (open: boolean) => void
+  onSessionFormDockedChange?: (docked: boolean) => void
+  onSessionFormDockPreviewChange?: (preview: boolean) => void
 } = {}) {
   const { t, locale } = useTranslation()
   const intl = intlLocale(locale)
@@ -618,6 +823,8 @@ export function CalendarPage({
     [patients]
   )
   const [view, setView] = useState(initialView)
+  const [formDocked, setFormDocked] = useState(false)
+  const [dockGhostVisible, setDockGhostVisible] = useState(false)
   const [currentMonth, setCurrentMonth] = useState(() => {
     if (initialSelectedDateTimestamp != null) {
       const date = new Date(initialSelectedDateTimestamp)
@@ -635,9 +842,53 @@ export function CalendarPage({
   const [createSessionOpen, setCreateSessionOpen] = useState(false)
   const sessionDialogOpen = createSessionOpen || openNewSession
 
+  useEffect(() => {
+    onSessionFormDockedChange?.(formDocked)
+    return () => onSessionFormDockedChange?.(false)
+  }, [formDocked, onSessionFormDockedChange])
+
+  useEffect(() => {
+    onSessionFormDockPreviewChange?.(dockGhostVisible && !formDocked)
+    return () => onSessionFormDockPreviewChange?.(false)
+  }, [dockGhostVisible, formDocked, onSessionFormDockPreviewChange])
+
+  const dockGhostLeaveTimerRef = useRef(0)
+
+  useEffect(() => {
+    return () => window.clearTimeout(dockGhostLeaveTimerRef.current)
+  }, [])
+
+  function handleFormDockedChange(docked: boolean) {
+    window.clearTimeout(dockGhostLeaveTimerRef.current)
+    setFormDocked(docked)
+    if (docked) setDockGhostVisible(false)
+  }
+
+  function handleDockGhostChange(visible: boolean) {
+    if (formDocked) {
+      window.clearTimeout(dockGhostLeaveTimerRef.current)
+      setDockGhostVisible(false)
+      return
+    }
+    window.clearTimeout(dockGhostLeaveTimerRef.current)
+    if (visible) {
+      setDockGhostVisible(true)
+      return
+    }
+    // Pequena histerese ao sair da zona evita flicker na borda.
+    dockGhostLeaveTimerRef.current = window.setTimeout(() => {
+      setDockGhostVisible(false)
+    }, DOCK_GHOST_LEAVE_MS)
+  }
+
   function handleCreateSessionOpenChange(open: boolean) {
     setCreateSessionOpen(open)
-    if (!open) onNewSessionOpenChange?.(false)
+    if (!open) {
+      onNewSessionOpenChange?.(false)
+      window.clearTimeout(dockGhostLeaveTimerRef.current)
+      setFormDocked(false)
+      setDockGhostVisible(false)
+    }
   }
 
   const editingEvent = useMemo(
@@ -789,6 +1040,9 @@ export function CalendarPage({
               align="end"
               open={sessionDialogOpen}
               onOpenChange={handleCreateSessionOpenChange}
+              formDocked={formDocked}
+              onFormDockedChange={handleFormDockedChange}
+              onDockGhostChange={handleDockGhostChange}
             >
               <Button size="sm">
                 <CalendarPlus />
@@ -871,6 +1125,9 @@ export function CalendarPage({
               onCreate={handleCreate}
               onMoveEvent={handleMoveEvent}
               onSelectEvent={handleSelectEvent}
+              formDocked={formDocked}
+              onFormDockedChange={handleFormDockedChange}
+              onDockGhostChange={handleDockGhostChange}
             />
           ) : null}
 
@@ -885,6 +1142,9 @@ export function CalendarPage({
               onCreate={handleCreate}
               onMoveEvent={handleMoveEvent}
               onSelectEvent={handleSelectEvent}
+              formDocked={formDocked}
+              onFormDockedChange={handleFormDockedChange}
+              onDockGhostChange={handleDockGhostChange}
             />
           ) : null}
         </Card>
@@ -948,6 +1208,9 @@ export function CalendarPage({
               patients={patients}
               onCreate={handleCreate}
               align="center"
+              formDocked={formDocked}
+              onFormDockedChange={handleFormDockedChange}
+              onDockGhostChange={handleDockGhostChange}
             >
               <Button className="w-full">
                 <CalendarPlus />
@@ -957,6 +1220,8 @@ export function CalendarPage({
           </div>
         </Card>
       </div>
+
+      <SessionFormDockGhost visible={dockGhostVisible && !formDocked} />
 
       <EditSessionDialog
         open={!!editingEvent}
