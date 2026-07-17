@@ -188,6 +188,8 @@ type TimeGridProps = {
   formDocked?: boolean
   onFormDockedChange?: (docked: boolean) => void
   onDockGhostChange?: (visible: boolean) => void
+  /** Incrementa para forçar realinhar o scroll ao horário atual (ex.: botão Hoje). */
+  scrollToNowTick?: number
 }
 
 function TimeGrid({
@@ -203,6 +205,7 @@ function TimeGrid({
   formDocked = false,
   onFormDockedChange,
   onDockGhostChange,
+  scrollToNowTick = 0,
 }: TimeGridProps) {
   const { t } = useTranslation()
   const isMobile = useIsMobile()
@@ -267,6 +270,8 @@ function TimeGrid({
     [days]
   )
 
+  const prevScrollToNowTickRef = useRef(scrollToNowTick)
+
   useEffect(() => {
     const viewport = scrollRef.current?.closest(
       "[data-slot=scroll-area-viewport]"
@@ -274,11 +279,21 @@ function TimeGrid({
     if (!(viewport instanceof HTMLElement)) return
 
     // Posiciona o horário atual ~1/3 abaixo do topo, com contexto acima e abaixo.
-    const offset = Math.max(0, nowTop - viewport.clientHeight / 3)
-    viewport.scrollTop = offset
-    // Ancorar ao entrar/trocar a grade — não a cada minuto.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- nowTop só na troca de visão
-  }, [daysKey])
+    const minutes = new Date().getHours() * 60 + new Date().getMinutes()
+    const currentTop = (minutes - START_HOUR * 60) * PX_PER_MIN
+    const offset = Math.max(0, currentTop - viewport.clientHeight / 3)
+
+    const fromTodayButton =
+      scrollToNowTick !== prevScrollToNowTickRef.current
+    prevScrollToNowTickRef.current = scrollToNowTick
+
+    // Suave só no realinhamento explícito (botão Hoje); troca de visão/dia é instantânea.
+    if (fromTodayButton) {
+      viewport.scrollTo({ top: offset, behavior: "smooth" })
+    } else {
+      viewport.scrollTop = offset
+    }
+  }, [daysKey, scrollToNowTick])
 
   function pointToGrid(clientX: number, clientY: number) {
     const rect = columnsRef.current?.getBoundingClientRect()
@@ -838,6 +853,7 @@ export function CalendarPage({
   const [view, setView] = useState(initialView)
   const [formDocked, setFormDocked] = useState(false)
   const [dockGhostVisible, setDockGhostVisible] = useState(false)
+  const [scrollToNowTick, setScrollToNowTick] = useState(0)
   const [currentMonth, setCurrentMonth] = useState(() => {
     if (initialSelectedDateTimestamp != null) {
       const date = new Date(initialSelectedDateTimestamp)
@@ -985,8 +1001,11 @@ export function CalendarPage({
   }
 
   function goToToday() {
-    setCurrentMonth(new Date(baseYear, baseMonth, 1))
-    setSelectedDate(today)
+    const now = new Date()
+    setCurrentMonth(new Date(now.getFullYear(), now.getMonth(), 1))
+    setSelectedDate(now)
+    // Realinha a grade ao horário atual mesmo se já estiver em "hoje".
+    setScrollToNowTick((tick) => tick + 1)
   }
 
   function handleCreate(event: CalendarEvent): boolean {
@@ -1151,6 +1170,7 @@ export function CalendarPage({
               formDocked={formDocked}
               onFormDockedChange={handleFormDockedChange}
               onDockGhostChange={handleDockGhostChange}
+              scrollToNowTick={scrollToNowTick}
             />
           ) : null}
 
@@ -1168,6 +1188,7 @@ export function CalendarPage({
               formDocked={formDocked}
               onFormDockedChange={handleFormDockedChange}
               onDockGhostChange={handleDockGhostChange}
+              scrollToNowTick={scrollToNowTick}
             />
           ) : null}
         </Card>
