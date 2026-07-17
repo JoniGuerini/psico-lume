@@ -947,6 +947,9 @@ export const en = {
     events_other: "{{count}} events",
     noEventsDay: "No events on this day.",
     clickToEdit: "Click to edit",
+    duplicateSessionTitle: "Duplicate session",
+    duplicateSessionDescription:
+      "You just created a session with the same information (patient, date, and time).",
   },
   patients: {
     title: "Patients",

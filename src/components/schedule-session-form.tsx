@@ -1,5 +1,5 @@
 import { useMemo, useState, type HTMLAttributes } from "react"
-import { CalendarPlus, CheckCircle2, GripHorizontal } from "lucide-react"
+import { AlertCircle, CalendarPlus, CheckCircle2, GripHorizontal } from "lucide-react"
 
 import { PatientNamePicker } from "@/components/patient-name-picker"
 import { SessionStatusControl } from "@/components/session-status-control"
@@ -65,7 +65,7 @@ type ScheduleSessionFormProps = {
   /** Handle só no topo para arrastar o popover (estilo Google Calendar). */
   dragHandleProps?: HTMLAttributes<HTMLDivElement>
   submitLabel?: string
-  onSubmit: (event: CalendarEvent) => void
+  onSubmit: (event: CalendarEvent) => boolean | void
   onCancel: () => void
   onSelectOpenChange?: (open: boolean) => void
   idPrefix?: string
@@ -87,17 +87,13 @@ export function ScheduleSessionForm({
 }: ScheduleSessionFormProps) {
   const { t, locale } = useTranslation()
   const resolvedSubmitLabel = submitLabel ?? t("common.save")
-  const [patient, setPatient] = useState(
-    lockedPatient?.name ?? patientNames[0] ?? ""
-  )
+  const [patient, setPatient] = useState(lockedPatient?.name ?? "")
   const [date, setDate] = useState(toDateInput(defaults.date))
   const [start, setStart] = useState(defaults.start)
   const [duration, setDuration] = useState(String(defaults.duration))
-  const initialPatientName = lockedPatient?.name ?? patientNames[0] ?? ""
-  const initialPatient =
-    (lockedPatient
-      ? patients.find((item) => item.id === lockedPatient.id)
-      : patients.find((item) => item.name === initialPatientName)) ?? null
+  const initialPatient = lockedPatient
+    ? patients.find((item) => item.id === lockedPatient.id) ?? null
+    : null
   const [amountInput, setAmountInput] = useState(() => {
     return initialPatient
       ? formatAmountInput(parsePrice(initialPatient.price))
@@ -116,6 +112,7 @@ export function ScheduleSessionForm({
       initialPatient
     ) ?? ""
   )
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const selectedPatient = useMemo(() => {
     if (lockedPatient) {
@@ -126,6 +123,7 @@ export function ScheduleSessionForm({
 
   function handlePatientChange(name: string) {
     setPatient(name)
+    setSubmitError(null)
     const next = patients.find((item) => item.name === name)
     if (next) {
       setAmountInput(formatAmountInput(parsePrice(next.price)))
@@ -206,7 +204,7 @@ export function ScheduleSessionForm({
           selectedPatient
         )
 
-    onSubmit({
+    const result = onSubmit({
       id: crypto.randomUUID(),
       patientId: lockedPatient?.id ?? selectedPatient?.id ?? "",
       title: patientName,
@@ -220,6 +218,13 @@ export function ScheduleSessionForm({
         expanded && status === "faltou" ? absenceWithNotice : undefined,
       paid: expanded && billablePreview ? paid : undefined,
     })
+    if (result === false) {
+      setSubmitError(
+        `${t("calendar.duplicateSessionTitle")}. ${t("calendar.duplicateSessionDescription")}`
+      )
+      return
+    }
+    setSubmitError(null)
   }
 
   const showScheduleIcon = resolvedSubmitLabel !== t("common.save")
@@ -319,7 +324,10 @@ export function ScheduleSessionForm({
             <DatePicker
               id={`${idPrefix}-date`}
               value={date}
-              onChange={setDate}
+              onChange={(next) => {
+                setDate(next)
+                setSubmitError(null)
+              }}
               placeholder={t("sessionForm.selectDate")}
               className={sessionFieldClass}
             />
@@ -333,7 +341,10 @@ export function ScheduleSessionForm({
               <TimePicker
                 id={`${idPrefix}-start`}
                 value={start}
-                onChange={setStart}
+                onChange={(next) => {
+                  setStart(next)
+                  setSubmitError(null)
+                }}
                 placeholder={t("sessionForm.selectTime")}
                 startHour={6}
                 endHour={22}
@@ -462,6 +473,16 @@ export function ScheduleSessionForm({
               </div>
             ) : null}
           </section>
+        ) : null}
+
+        {submitError ? (
+          <div
+            role="alert"
+            className="flex items-start gap-2.5 rounded-2xl border border-destructive/30 bg-destructive/10 px-3 py-2.5 text-destructive"
+          >
+            <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <p className="text-xs leading-relaxed">{submitError}</p>
+          </div>
         ) : null}
 
         <div className="flex justify-end gap-2">

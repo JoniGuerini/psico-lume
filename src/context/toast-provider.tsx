@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react"
+import { createPortal } from "react-dom"
 import {
   AlertCircle,
   CheckCircle2,
@@ -91,10 +92,10 @@ function Toaster({
   const { t } = useTranslation()
   if (toasts.length === 0) return null
 
-  return (
+  return createPortal(
     <div
       className={cn(
-        "pointer-events-none fixed z-[200] flex w-[min(100%-2rem,26rem)] flex-col gap-2",
+        "pointer-events-none fixed z-[9999] flex w-[min(100%-2rem,26rem)] flex-col gap-2",
         toastPositionClassName(position),
         toastStackClassName(position)
       )}
@@ -115,7 +116,9 @@ function Toaster({
             )}
           >
             <div className="flex items-start gap-3 px-4 py-3 text-sm">
-              <Icon className={cn("mt-0.5 size-4 shrink-0", config.iconClassName)} />
+              <Icon
+                className={cn("mt-0.5 size-4 shrink-0", config.iconClassName)}
+              />
               <div className="min-w-0 flex-1">
                 <p className="font-medium leading-snug">{item.title}</p>
                 {item.description ? (
@@ -147,7 +150,8 @@ function Toaster({
           </div>
         )
       })}
-    </div>
+    </div>,
+    document.body
   )
 }
 

@@ -1,7 +1,7 @@
 import { ArrowRight, CalendarDays, UserPlus, Users } from "lucide-react"
 import { useMemo } from "react"
 
-import { SessionStatusBadge } from "@/components/session-status-control"
+import { SessionStatusIndicator } from "@/components/session-status-control"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useClinicData } from "@/context/clinic-data-provider"
@@ -273,7 +273,7 @@ export function HomePage({
                       <span className="truncate text-sm font-semibold">
                         {event.title}
                       </span>
-                      <SessionStatusBadge status={status} />
+                      <SessionStatusIndicator status={status} />
                     </div>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       {patient ? (

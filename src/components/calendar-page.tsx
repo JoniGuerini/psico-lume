@@ -182,7 +182,7 @@ type TimeGridProps = {
   patients: Patient[]
   sessionStatusOptions: SessionStatusOptions
   onSelectDay: (date: Date) => void
-  onCreate: (event: CalendarEvent) => void
+  onCreate: (event: CalendarEvent) => boolean
   onMoveEvent: (id: string, date: Date, startMinutes: number) => void
   onSelectEvent: (event: CalendarEvent) => void
   formDocked?: boolean
@@ -216,6 +216,7 @@ function TimeGrid({
   const [preview, setPreview] = useState<DragPreview | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [selectOpen, setSelectOpen] = useState(false)
+  const [formResetKey, setFormResetKey] = useState(0)
 
   const resetDragOffsetRef = useRef(() => {})
   const popoverDrag = useDraggableOffset(!!draft, {
@@ -625,7 +626,7 @@ function TimeGrid({
               className={cn(dockedLayout && "min-h-0 flex-1 overflow-y-auto")}
             >
               <ScheduleSessionForm
-                key={`${draft.dayIndex}-${draft.startMin}`}
+                key={`${draft.dayIndex}-${draft.startMin}-${formResetKey}`}
                 patientNames={patientNames}
                 patients={patients}
                 expanded={formDocked}
@@ -638,8 +639,13 @@ function TimeGrid({
                   isMobile ? undefined : popoverDrag.handleProps
                 }
                 onSubmit={(event) => {
-                  onCreate(event)
-                  closeDraft()
+                  if (!onCreate(event)) return false
+                  if (formDocked) {
+                    // Encaixado: mantém o card para criar sessões em série.
+                    setFormResetKey((current) => current + 1)
+                  } else {
+                    closeDraft()
+                  }
                 }}
                 onCancel={closeDraft}
                 onSelectOpenChange={setSelectOpen}
@@ -656,7 +662,7 @@ type NewSessionPopoverProps = {
   selectedDate: Date
   patientNames: string[]
   patients: Patient[]
-  onCreate: (event: CalendarEvent) => void
+  onCreate: (event: CalendarEvent) => boolean
   align?: "start" | "center" | "end"
   open?: boolean
   onOpenChange?: (open: boolean) => void
@@ -682,6 +688,7 @@ function NewSessionPopover({
   const isMobile = useIsMobile()
   const [internalOpen, setInternalOpen] = useState(false)
   const [selectOpen, setSelectOpen] = useState(false)
+  const [formResetKey, setFormResetKey] = useState(0)
   const open = controlledOpen ?? internalOpen
 
   function setOpen(next: boolean) {
@@ -769,6 +776,7 @@ function NewSessionPopover({
               className={cn(dockedLayout && "min-h-0 flex-1 overflow-y-auto")}
             >
               <ScheduleSessionForm
+                key={formResetKey}
                 patientNames={patientNames}
                 patients={patients}
                 expanded={formDocked}
@@ -777,8 +785,13 @@ function NewSessionPopover({
                   isMobile ? undefined : popoverDrag.handleProps
                 }
                 onSubmit={(event) => {
-                  onCreate(event)
-                  setOpen(false)
+                  if (!onCreate(event)) return false
+                  if (formDocked) {
+                    // Encaixado: mantém o card para criar sessões em série.
+                    setFormResetKey((current) => current + 1)
+                  } else {
+                    setOpen(false)
+                  }
                 }}
                 onCancel={() => setOpen(false)}
                 onSelectOpenChange={setSelectOpen}
@@ -976,9 +989,19 @@ export function CalendarPage({
     setSelectedDate(today)
   }
 
-  function handleCreate(event: CalendarEvent) {
+  function handleCreate(event: CalendarEvent): boolean {
+    const duplicate = events.some(
+      (existing) =>
+        existing.start === event.start &&
+        isSameDay(existing.date, event.date) &&
+        (existing.patientId
+          ? existing.patientId === event.patientId
+          : existing.title === event.title)
+    )
+    if (duplicate) return false
     addEvent(event)
     setSelectedDate(event.date)
+    return true
   }
 
   function handleMoveEvent(id: string, date: Date, startMinutes: number) {

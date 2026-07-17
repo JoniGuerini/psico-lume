@@ -6,8 +6,7 @@ import {
   History,
 } from "lucide-react"
 
-import { SessionStatusBadge } from "@/components/session-status-control"
-import { Badge } from "@/components/ui/badge"
+import { SessionStatusIndicator } from "@/components/session-status-control"
 import { Card } from "@/components/ui/card"
 import { useClinicData } from "@/context/clinic-data-provider"
 import { useTranslation } from "@/context/locale-provider"
@@ -15,7 +14,7 @@ import { getEventsForPatientProfile } from "@/data/calendar"
 import type { CalendarEvent, Patient, RescheduledFrom } from "@/data/types"
 import { formatLocaleDate, getModalityLabel } from "@/lib/i18n-helpers"
 import { resolveSessionModality } from "@/lib/session-modality"
-import { getEventStatus, sessionStatusConfig } from "@/lib/session-status"
+import { getEventStatus } from "@/lib/session-status"
 import { cn } from "@/lib/utils"
 
 type PatientSessionsTabProps = {
@@ -106,7 +105,7 @@ function SessionHistoryCard({
             </span>
           ) : null}
         </div>
-        <SessionStatusBadge status={status} />
+        <SessionStatusIndicator status={status} className="mt-0.5" />
       </div>
     </Card>
   )
@@ -137,15 +136,7 @@ function RescheduledSessionGroup({ event }: { event: CalendarEvent }) {
               locale={locale}
             />
           </div>
-          <Badge
-            variant="outline"
-            className={cn(
-              "font-normal",
-              sessionStatusConfig.remarcada.badge
-            )}
-          >
-            {t("enums.sessionStatus.remarcada")}
-          </Badge>
+          <SessionStatusIndicator status="remarcada" className="mt-0.5" />
         </div>
       </div>
 
@@ -186,12 +177,9 @@ function OriginalSessionCard({
             locale={locale}
           />
         </div>
-        <Badge
-          variant="outline"
-          className="border-border bg-background/60 font-normal text-muted-foreground"
-        >
+        <span className="text-xs font-medium text-muted-foreground">
           {t("patients.sessions.replaced")}
-        </Badge>
+        </span>
       </div>
     </div>
   )

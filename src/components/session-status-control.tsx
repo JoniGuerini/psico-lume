@@ -16,6 +16,41 @@ type SessionStatusControlProps = {
   className?: string
 }
 
+const statusDotClass: Record<SessionStatus, string> = {
+  agendada: "bg-[var(--session-agendada-border)]",
+  realizada: "bg-[var(--session-realizada-border)]",
+  faltou: "bg-[var(--session-faltou-border)]",
+  remarcada: "bg-[var(--session-remarcada-border)]",
+  cancelada: "bg-[var(--session-cancelada-border)]",
+}
+
+export function SessionStatusIndicator({
+  status,
+  className,
+}: {
+  status: SessionStatus
+  className?: string
+}) {
+  const { t } = useTranslation()
+  const config = sessionStatusConfig[status]
+
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center gap-1.5 text-xs font-medium",
+        config.blockMuted,
+        className
+      )}
+    >
+      <span
+        className={cn("size-1.5 rounded-full", statusDotClass[status])}
+        aria-hidden
+      />
+      {getSessionStatusLabel(t, status)}
+    </span>
+  )
+}
+
 export function SessionStatusBadge({
   status,
   className,

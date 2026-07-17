@@ -947,6 +947,9 @@ export const ptBR = {
     events_other: "{{count}} eventos",
     noEventsDay: "Nenhum evento neste dia.",
     clickToEdit: "Clique para editar",
+    duplicateSessionTitle: "Sessão duplicada",
+    duplicateSessionDescription:
+      "Você acabou de criar uma sessão com as mesmas informações (paciente, data e horário).",
   },
   patients: {
     title: "Pacientes",
