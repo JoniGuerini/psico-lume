@@ -15,6 +15,7 @@ import type {
   Patient,
   SessionNote,
 } from "@/data/types"
+import type { ActivityEntry } from "@/lib/activity-log"
 import { clearOnboardingTourCompleted } from "@/lib/onboarding-tour"
 
 export const GUEST_CLINIC_STORAGE_KEY = "lume-guest-clinic"
@@ -63,6 +64,7 @@ export type GuestClinicSnapshot = {
   events: CalendarEvent[]
   sessionNotes: SessionNote[]
   notifications: Notification[]
+  activity: ActivityEntry[]
 }
 
 type StoredGuestClinicSnapshot = {
@@ -70,6 +72,7 @@ type StoredGuestClinicSnapshot = {
   events: StoredCalendarEvent[]
   sessionNotes: SessionNote[]
   notifications: StoredNotification[]
+  activity?: ActivityEntry[]
 }
 
 const notificationIcons: Record<NotificationCategory, LucideIcon> = {
@@ -148,6 +151,7 @@ export function createEmptyGuestClinicSnapshot(): GuestClinicSnapshot {
     events: [],
     sessionNotes: [],
     notifications: [createWelcomeNotification()],
+    activity: [],
   }
 }
 
@@ -170,6 +174,7 @@ export function loadGuestClinicSnapshot(): GuestClinicSnapshot | null {
       notifications: Array.isArray(parsed.notifications)
         ? parsed.notifications.map(deserializeNotification)
         : [createWelcomeNotification()],
+      activity: Array.isArray(parsed.activity) ? parsed.activity : [],
     }
   } catch {
     return null
@@ -182,6 +187,7 @@ export function saveGuestClinicSnapshot(snapshot: GuestClinicSnapshot) {
     sessionNotes: snapshot.sessionNotes,
     events: snapshot.events.map(serializeEvent),
     notifications: snapshot.notifications.map(serializeNotification),
+    activity: snapshot.activity,
   }
   localStorage.setItem(GUEST_CLINIC_STORAGE_KEY, JSON.stringify(stored))
 }

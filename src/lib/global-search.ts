@@ -6,6 +6,7 @@ import {
   CalendarPlus,
   CircleDollarSign,
   FileSpreadsheet,
+  History,
   Home,
   Inbox,
   Mail,
@@ -46,6 +47,7 @@ const NAV_PAGE_CONFIG: {
   { id: "nav-notifications", pageId: APP_PAGE_ID.notificacoes, icon: Bell },
   { id: "nav-relatorios", pageId: APP_PAGE_ID.relatorios, icon: BarChart3 },
   { id: "nav-dados", pageId: APP_PAGE_ID.dados, icon: FileSpreadsheet },
+  { id: "nav-atividade", pageId: APP_PAGE_ID.atividade, icon: History },
   ...(IS_ROADMAP_VISIBLE
     ? [{ id: "nav-roadmap", pageId: APP_PAGE_ID.roteiro, icon: MapIcon }]
     : []),

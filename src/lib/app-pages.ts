@@ -9,6 +9,7 @@ export const APP_PAGE_ID = {
   relatorios: "relatorios",
   notificacoes: "notificacoes",
   dados: "dados",
+  atividade: "atividade",
   roteiro: "roteiro",
 } as const
 
@@ -28,6 +29,7 @@ export const FILL_VIEWPORT_PAGE_IDS = new Set<AppPageId>([
   APP_PAGE_ID.pacientes,
   APP_PAGE_ID.notificacoes,
   APP_PAGE_ID.dados,
+  APP_PAGE_ID.atividade,
 ])
 
 export function isAppPageId(value: string): value is AppPageId {

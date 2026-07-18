@@ -27,6 +27,15 @@ import {
   saveGuestClinicSnapshot,
   type GuestClinicSnapshot,
 } from "@/lib/guest-clinic-storage"
+import {
+  classifySessionUpdate,
+  createActivityEntry,
+  formatActivityDateTime,
+  prependActivity,
+  prependActivityMany,
+  type ActivityEntry,
+} from "@/lib/activity-log"
+import { buildDemoActivityLog } from "@/data/activity-demo"
 import { buildClinicAlerts } from "@/lib/clinic-alerts"
 import {
   linkNotesToUniquePatientDayEvents,
@@ -51,6 +60,7 @@ import {
   isPatientOverdue,
   resolveEventBilling,
 } from "@/lib/session-payment"
+import { getSessionStatusLabel } from "@/lib/i18n-helpers"
 
 type ClinicDataContextValue = {
   mode: ClinicDataMode
@@ -59,6 +69,7 @@ type ClinicDataContextValue = {
   notifications: Notification[]
   emails: InboxEmail[]
   sessionNotes: SessionNote[]
+  activity: ActivityEntry[]
   activeCount: number
   scheduledCount: number
   todaysAppointments: Patient[]
@@ -202,7 +213,12 @@ function createDemoInitialState() {
     events,
     "pt-BR"
   )
-  return { patients, sessionNotes, events }
+  return {
+    patients,
+    sessionNotes,
+    events,
+    activity: buildDemoActivityLog(patients),
+  }
 }
 
 function createGuestInitialState() {
@@ -210,6 +226,7 @@ function createGuestInitialState() {
   if (!snapshot) return createEmptyGuestClinicSnapshot()
   return {
     ...snapshot,
+    activity: snapshot.activity ?? [],
     sessionNotes: linkNotesToUniquePatientDayEvents(
       snapshot.sessionNotes,
       snapshot.events,
@@ -237,6 +254,9 @@ export function ClinicDataProvider({
     initialState.sessionNotes
   )
   const [events, setEvents] = useState<CalendarEvent[]>(initialState.events)
+  const [activity, setActivity] = useState<ActivityEntry[]>(
+    () => initialState.activity ?? []
+  )
   const [notifications, setNotifications] = useState<Notification[]>(() =>
     mode === "guest"
       ? (loadGuestClinicSnapshot()?.notifications ?? [])
@@ -307,8 +327,9 @@ export function ClinicDataProvider({
       events,
       sessionNotes,
       notifications,
+      activity,
     })
-  }, [mode, patients, events, sessionNotes, notifications])
+  }, [mode, patients, events, sessionNotes, notifications, activity])
 
   const activeCount = useMemo(() => getActivePatients(patients).length, [patients])
   const scheduledCount = useMemo(
@@ -357,6 +378,7 @@ export function ClinicDataProvider({
       notifications,
       emails,
       sessionNotes,
+      activity,
       activeCount,
       scheduledCount,
       todaysAppointments,
@@ -372,6 +394,17 @@ export function ClinicDataProvider({
           setEvents((events) => rebuildRecurringEvents(next, events, mode))
           return next
         })
+        setActivity((current) =>
+          prependActivity(
+            current,
+            createActivityEntry({
+              action: "patient.created",
+              category: "patient",
+              params: { patientName: patient.name },
+              patientId: patient.id,
+            })
+          )
+        )
       },
       updatePatient: (patient) => {
         setPatients((current) => {
@@ -381,8 +414,20 @@ export function ClinicDataProvider({
           setEvents((events) => rebuildRecurringEvents(next, events, mode))
           return next
         })
+        setActivity((current) =>
+          prependActivity(
+            current,
+            createActivityEntry({
+              action: "patient.updated",
+              category: "patient",
+              params: { patientName: patient.name },
+              patientId: patient.id,
+            })
+          )
+        )
       },
       setPatientPaymentOverdueManual: (patientId, manual) => {
+        const patient = findPatientById(patients, patientId)
         setPatients((current) =>
           current.map((item) =>
             item.id === patientId
@@ -390,15 +435,50 @@ export function ClinicDataProvider({
               : item
           )
         )
+        if (!patient) return
+        const action =
+          manual === true
+            ? "payment.overdue_manual_on"
+            : manual === false
+              ? "payment.overdue_manual_off"
+              : "payment.overdue_manual_auto"
+        setActivity((current) =>
+          prependActivity(
+            current,
+            createActivityEntry({
+              action,
+              category: "payment",
+              params: { patientName: patient.name },
+              patientId,
+            })
+          )
+        )
       },
       addSessionNote: (note) => {
+        const patient = findPatientById(patients, note.patientId)
         setSessionNotes((current) => {
           const next = [note, ...current]
           applyPatientSessionCountFromNotes(setPatients, note.patientId, next)
           return next
         })
+        setActivity((current) =>
+          prependActivity(
+            current,
+            createActivityEntry({
+              action: "record.created",
+              category: "record",
+              params: {
+                patientName: patient?.name ?? note.patientId,
+              },
+              patientId: note.patientId,
+              noteId: note.id,
+              eventId: note.eventId,
+            })
+          )
+        )
       },
       updateSessionNote: (updated) => {
+        const patient = findPatientById(patients, updated.patientId)
         setSessionNotes((current) => {
           const next = current.map((note) =>
             note.id === updated.id ? updated : note
@@ -410,9 +490,27 @@ export function ClinicDataProvider({
           )
           return next
         })
+        setActivity((current) =>
+          prependActivity(
+            current,
+            createActivityEntry({
+              action: "record.updated",
+              category: "record",
+              params: {
+                patientName: patient?.name ?? updated.patientId,
+              },
+              patientId: updated.patientId,
+              noteId: updated.id,
+              eventId: updated.eventId,
+            })
+          )
+        )
       },
       deleteSessionNote: (noteId) => {
         const target = sessionNotes.find((note) => note.id === noteId)
+        const patient = target
+          ? findPatientById(patients, target.patientId)
+          : undefined
 
         setSessionNotes((current) => {
           const next = current.filter((note) => note.id !== noteId)
@@ -425,8 +523,26 @@ export function ClinicDataProvider({
           }
           return next
         })
+        if (target) {
+          setActivity((current) =>
+            prependActivity(
+              current,
+              createActivityEntry({
+                action: "record.deleted",
+                category: "record",
+                params: {
+                  patientName: patient?.name ?? target.patientId,
+                },
+                patientId: target.patientId,
+                noteId: target.id,
+                eventId: target.eventId,
+              })
+            )
+          )
+        }
       },
       deletePatient: (patientId) => {
+        const patient = findPatientById(patients, patientId)
         setPatients((current) => {
           const next = current.filter((item) => item.id !== patientId)
           setSessionNotes((notes) =>
@@ -440,6 +556,19 @@ export function ClinicDataProvider({
           })
           return next
         })
+        if (patient) {
+          setActivity((current) =>
+            prependActivity(
+              current,
+              createActivityEntry({
+                action: "patient.deleted",
+                category: "patient",
+                params: { patientName: patient.name },
+                patientId,
+              })
+            )
+          )
+        }
       },
       addEvent: (event) => {
         const patient = findPatientById(patients, event.patientId)
@@ -456,6 +585,22 @@ export function ClinicDataProvider({
             amount,
           },
         ])
+        setActivity((current) =>
+          prependActivity(
+            current,
+            createActivityEntry({
+              action: "session.created",
+              category: "session",
+              params: {
+                patientName: patient?.name ?? event.title,
+                when: formatActivityDateTime(event.date, event.start, locale),
+              },
+              patientId: event.patientId,
+              eventId: event.id,
+              eventDateTimestamp: event.date.getTime(),
+            })
+          )
+        )
       },
       moveEvent: (id, date, startMinutes) => {
         const previous = events.find((event) => event.id === id)
@@ -501,6 +646,25 @@ export function ClinicDataProvider({
             }
           })
         )
+        setActivity((current) =>
+          prependActivity(
+            current,
+            createActivityEntry({
+              action:
+                currentStatus === "faltou" && nextStatus === "remarcada"
+                  ? "session.rescheduled"
+                  : "session.updated",
+              category: "session",
+              params: {
+                patientName: patient?.name ?? previous.title,
+                when: formatActivityDateTime(date, nextStart, locale),
+              },
+              patientId: previous.patientId,
+              eventId: previous.id,
+              eventDateTimestamp: date.getTime(),
+            })
+          )
+        )
       },
       updateEvent: (updated) => {
         const previous = events.find((event) => event.id === updated.id)
@@ -520,6 +684,17 @@ export function ClinicDataProvider({
               : undefined,
         }
 
+        const action = classifySessionUpdate({
+          previousDate: previous.date,
+          previousStart: previous.start,
+          previousEnd: previous.end,
+          previousStatus: previous.status,
+          nextDate: updated.date,
+          nextStart: updated.start,
+          nextEnd: updated.end,
+          nextStatus: updated.status,
+        })
+
         setEvents((current) => {
           applySessionCountChange(
             setPatients,
@@ -532,10 +707,43 @@ export function ClinicDataProvider({
             event.id === updated.id ? merged : event
           )
         })
+
+        const patientName = patient?.name ?? updated.title
+        const when = formatActivityDateTime(updated.date, updated.start, locale)
+        const params: Record<string, string | number> =
+          action === "session.status_changed"
+            ? {
+                patientName,
+                fromStatus: getSessionStatusLabel(
+                  t,
+                  previous.status ?? "agendada"
+                ),
+                toStatus: getSessionStatusLabel(
+                  t,
+                  updated.status ?? "agendada"
+                ),
+              }
+            : { patientName, when }
+
+        setActivity((current) =>
+          prependActivity(
+            current,
+            createActivityEntry({
+              action,
+              category: "session",
+              params,
+              patientId: updated.patientId || previous.patientId,
+              eventId: updated.id,
+              eventDateTimestamp: updated.date.getTime(),
+            })
+          )
+        )
       },
       deleteEvent: (eventId) => {
         const previous = events.find((event) => event.id === eventId)
         if (!previous) return
+
+        const patient = findPatientById(patients, previous.patientId)
 
         setEvents((current) => current.filter((event) => event.id !== eventId))
         setSessionNotes((current) =>
@@ -550,6 +758,27 @@ export function ClinicDataProvider({
             "agendada"
           )
         }
+
+        setActivity((current) =>
+          prependActivity(
+            current,
+            createActivityEntry({
+              action: "session.deleted",
+              category: "session",
+              params: {
+                patientName: patient?.name ?? previous.title,
+                when: formatActivityDateTime(
+                  previous.date,
+                  previous.start,
+                  locale
+                ),
+              },
+              patientId: previous.patientId,
+              eventId: previous.id,
+              eventDateTimestamp: previous.date.getTime(),
+            })
+          )
+        )
       },
       updateEventStatus: (id, status) => {
         const previous = events.find((event) => event.id === id)
@@ -573,6 +802,27 @@ export function ClinicDataProvider({
 
           return current.map((event) => (event.id === id ? merged : event))
         })
+
+        setActivity((current) =>
+          prependActivity(
+            current,
+            createActivityEntry({
+              action: "session.status_changed",
+              category: "session",
+              params: {
+                patientName: patient?.name ?? previous.title,
+                fromStatus: getSessionStatusLabel(
+                  t,
+                  previous.status ?? "agendada"
+                ),
+                toStatus: getSessionStatusLabel(t, status),
+              },
+              patientId: previous.patientId,
+              eventId: previous.id,
+              eventDateTimestamp: previous.date.getTime(),
+            })
+          )
+        )
       },
       markEventPaid: (id, paid = true) => {
         const previous = events.find((event) => event.id === id)
@@ -580,8 +830,30 @@ export function ClinicDataProvider({
           return
         }
 
+        const patient = findPatientById(patients, previous.patientId)
+
         setEvents((current) =>
           current.map((event) => (event.id === id ? { ...event, paid } : event))
+        )
+        setActivity((current) =>
+          prependActivity(
+            current,
+            createActivityEntry({
+              action: paid ? "payment.marked_paid" : "payment.marked_unpaid",
+              category: "payment",
+              params: {
+                patientName: patient?.name ?? previous.title,
+                when: formatActivityDateTime(
+                  previous.date,
+                  previous.start,
+                  locale
+                ),
+              },
+              patientId: previous.patientId,
+              eventId: previous.id,
+              eventDateTimestamp: previous.date.getTime(),
+            })
+          )
         )
       },
       markAllEventsPaid: (ids) => {
@@ -599,6 +871,23 @@ export function ClinicDataProvider({
               : event
           )
         )
+
+        const entries = targets.map((target) => {
+          const patient = findPatientById(patients, target.patientId)
+          return createActivityEntry({
+            action: "payment.marked_paid",
+            category: "payment",
+            params: {
+              patientName: patient?.name ?? target.title,
+              when: formatActivityDateTime(target.date, target.start, locale),
+            },
+            patientId: target.patientId,
+            eventId: target.id,
+            eventDateTimestamp: target.date.getTime(),
+          })
+        })
+
+        setActivity((current) => prependActivityMany(current, entries))
       },
       markNotificationAsRead: (id) =>
         setNotifications((current) =>
@@ -618,11 +907,13 @@ export function ClinicDataProvider({
         events,
         sessionNotes,
         notifications,
+        activity,
       }),
       replaceClinicSnapshot: (snapshot) => {
         setPatients(snapshot.patients)
         setEvents(snapshot.events)
         setSessionNotes(snapshot.sessionNotes)
+        setActivity(snapshot.activity ?? [])
         setNotifications(
           snapshot.notifications.length > 0
             ? snapshot.notifications
@@ -637,6 +928,7 @@ export function ClinicDataProvider({
       notifications,
       emails,
       sessionNotes,
+      activity,
       activeCount,
       scheduledCount,
       todaysAppointments,
@@ -646,6 +938,8 @@ export function ClinicDataProvider({
       overdueSessionCount,
       unpaidSessions,
       unpaidSessionsTotal,
+      locale,
+      t,
     ]
   )
 

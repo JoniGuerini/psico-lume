@@ -44,6 +44,11 @@ import {
 } from "@/lib/toast-preferences"
 import { persistGuestProfileName, readGuestProfileName } from "@/lib/guest-clinic-storage"
 import {
+  mergeActivityLogs,
+  sanitizeActivityEntry,
+  type ActivityEntry,
+} from "@/lib/activity-log"
+import {
   AlertCircle,
   CalendarClock,
   ClipboardList,
@@ -709,6 +714,7 @@ export function buildClinicBackupFile(input: {
       events: input.clinic.events.map(serializeEvent),
       sessionNotes: input.clinic.sessionNotes,
       notifications: input.clinic.notifications.map(serializeNotification),
+      activity: input.clinic.activity ?? [],
     },
     preferences,
   }
@@ -768,6 +774,12 @@ export function parseClinicBackupJson(raw: string): BackupParseResult {
   if (!Array.isArray(parsed.clinic.notifications)) {
     return { ok: false, error: "invalidNotifications" }
   }
+  if (
+    parsed.clinic.activity !== undefined &&
+    !Array.isArray(parsed.clinic.activity)
+  ) {
+    return { ok: false, error: "invalidActivity" }
+  }
 
   const preferencesResult = sanitizePreferences(parsed.preferences)
   if (typeof preferencesResult === "string") {
@@ -816,6 +828,21 @@ export function parseClinicBackupJson(raw: string): BackupParseResult {
     notifications.push(result)
   }
 
+  const activity: ActivityEntry[] = []
+  const activityIds = new Set<string>()
+  const rawActivity = Array.isArray(parsed.clinic.activity)
+    ? parsed.clinic.activity
+    : []
+  for (let i = 0; i < rawActivity.length; i++) {
+    const result = sanitizeActivityEntry(rawActivity[i], i)
+    if (typeof result === "string") return { ok: false, error: "invalidActivity" }
+    if (activityIds.has(result.id)) {
+      return { ok: false, error: "duplicateActivityIds" }
+    }
+    activityIds.add(result.id)
+    activity.push(result)
+  }
+
   const clinicNotifications =
     notifications.length > 0
       ? notifications.map(deserializeNotification)
@@ -834,6 +861,7 @@ export function parseClinicBackupJson(raw: string): BackupParseResult {
         events: events.map(deserializeEvent),
         sessionNotes,
         notifications: clinicNotifications,
+        activity,
       },
     },
   }
@@ -914,6 +942,11 @@ export function mergeClinicSnapshots(
     events: Array.from(eventsById.values()),
     sessionNotes: Array.from(notesById.values()),
     notifications: Array.from(notificationsById.values()),
+    activity: mergeActivityLogs(
+      current.activity ?? [],
+      incoming.activity ?? [],
+      overwriteConflicts
+    ),
   }
 }
 

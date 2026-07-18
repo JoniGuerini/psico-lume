@@ -17,6 +17,7 @@ export const ptBR = {
       relatorios: "Relatórios",
       notificacoes: "Notificações",
       dados: "Dados",
+      atividade: "Atividade",
       roteiro: "Roteiro",
     },
     subtitles: {
@@ -29,6 +30,7 @@ export const ptBR = {
       notificacoes: "Alertas da clínica",
       relatorios: "Comparecimento e receita por modalidade",
       dados: "Visão em planilha dos dados da clínica",
+      atividade: "Histórico de ações na clínica",
       roteiro: "Progresso do produto",
     },
     keywords: {
@@ -41,6 +43,7 @@ export const ptBR = {
       notificacoes: "notificações alertas avisos",
       relatorios: "relatórios comparecimento presença modalidade taxa",
       dados: "dados planilha tabela export xlsx",
+      atividade: "atividade log histórico ações auditoria",
       roteiro: "roteiro roadmap progresso versão",
     },
   },
@@ -236,11 +239,13 @@ export const ptBR = {
         invalidEvents: "Lista de sessões inválida no backup.",
         invalidSessionNotes: "Lista de prontuários inválida no backup.",
         invalidNotifications: "Lista de notificações inválida no backup.",
+        invalidActivity: "Lista de atividades inválida no backup.",
         invalidPreferences: "Preferências do backup inválidas.",
         duplicatePatientIds: "Há IDs de pacientes duplicados no backup.",
         duplicateEventIds: "Há IDs de sessões duplicados no backup.",
         duplicateSessionNoteIds: "Há IDs de prontuários duplicados no backup.",
         duplicateNotificationIds: "Há IDs de notificações duplicados no backup.",
+        duplicateActivityIds: "Há IDs de atividades duplicados no backup.",
         invalidFileType: "Selecione um arquivo .json.",
         fileTooLarge: "O arquivo é grande demais (máx. 8 MB).",
         readFailed: "Não foi possível ler o arquivo.",
@@ -697,6 +702,56 @@ export const ptBR = {
     favorite: "Favoritar",
     reply: "Responder",
     forward: "Encaminhar",
+  },
+  activity: {
+    title: "Atividade",
+    subtitle: "Histórico das ações feitas na clínica neste dispositivo.",
+    filters: {
+      all: "Todas",
+      patients: "Pacientes",
+      sessions: "Sessões",
+      records: "Prontuário",
+      payments: "Pagamentos",
+    },
+    categories: {
+      patient: "Paciente",
+      session: "Sessão",
+      record: "Prontuário",
+      payment: "Pagamento",
+    },
+    empty: {
+      title: "Nenhuma atividade ainda",
+      description:
+        "Cadastros, sessões, prontuário e pagamentos aparecerão aqui.",
+      filter: "Nenhuma atividade neste filtro.",
+      searchTitle: "Nenhum resultado",
+      search: "Nenhuma atividade corresponde à busca.",
+    },
+    searchPlaceholder: "Buscar por paciente, ação ou data…",
+    summaries: {
+      patientCreated: "Cadastrou o paciente {{patientName}}",
+      patientUpdated: "Atualizou o paciente {{patientName}}",
+      patientDeleted: "Removeu o paciente {{patientName}}",
+      sessionCreated: "Agendou sessão de {{patientName}} para {{when}}",
+      sessionUpdated: "Atualizou a sessão de {{patientName}} ({{when}})",
+      sessionRescheduled: "Remarcou a sessão de {{patientName}} para {{when}}",
+      sessionStatusChanged:
+        "Alterou o status da sessão de {{patientName}} de {{fromStatus}} para {{toStatus}}",
+      sessionDeleted: "Removeu a sessão de {{patientName}} ({{when}})",
+      recordCreated: "Registrou evolução no prontuário de {{patientName}}",
+      recordUpdated: "Atualizou evolução no prontuário de {{patientName}}",
+      recordDeleted: "Removeu evolução do prontuário de {{patientName}}",
+      paymentMarkedPaid: "Marcou como pago a sessão de {{patientName}} ({{when}})",
+      paymentMarkedUnpaid:
+        "Marcou como não pago a sessão de {{patientName}} ({{when}})",
+      paymentMarkedPaidBatch: "Marcou {{count}} sessões como pagas",
+      paymentOverdueManualOn:
+        "Marcou inadimplência manual para {{patientName}}",
+      paymentOverdueManualOff:
+        "Removeu inadimplência manual de {{patientName}}",
+      paymentOverdueManualAuto:
+        "Voltou o controle de inadimplência de {{patientName}} para automático",
+    },
   },
   notifications: {
     title: "Notificações",

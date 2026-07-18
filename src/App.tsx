@@ -3,6 +3,7 @@ import { Search } from "lucide-react"
 import { AnimatePresence, MotionConfig, motion } from "motion/react"
 
 import { AccountDialog } from "@/components/account-dialog"
+import { ActivityPage } from "@/components/activity-page"
 import { AppSidebar } from "@/components/app-sidebar"
 import { CalendarPage, SESSION_FORM_DOCK_COLUMN_CLASS, SESSION_FORM_DOCK_PREVIEW_EXTRA_CLASS } from "@/components/calendar-page"
 import { FinancePage } from "@/components/finance-page"
@@ -442,6 +443,15 @@ export function App() {
                         />
                       ) : null}
                       {activeItem === APP_PAGE_ID.dados ? <ClinicSheetsPage /> : null}
+                      {activeItem === APP_PAGE_ID.atividade ? (
+                        <ActivityPage
+                          onOpenPatient={(patientId) => {
+                            setPatientFocus({ id: patientId })
+                            setActiveItem(APP_PAGE_ID.pacientes)
+                          }}
+                          onOpenAgendaDay={handleOpenAgendaDay}
+                        />
+                      ) : null}
                       {activeItem === APP_PAGE_ID.aReceber ? (
                         <UnpaidSessionsPage
                           key={receivablesFilter}

@@ -19,6 +19,7 @@ export const en = {
       relatorios: "Reports",
       notificacoes: "Notifications",
       dados: "Data",
+      atividade: "Activity",
       roteiro: "Roadmap",
     },
     subtitles: {
@@ -31,6 +32,7 @@ export const en = {
       notificacoes: "Clinic alerts",
       relatorios: "Attendance and revenue by modality",
       dados: "Spreadsheet view of clinic data",
+      atividade: "History of clinic actions",
       roteiro: "Product progress",
     },
     keywords: {
@@ -43,6 +45,7 @@ export const en = {
       notificacoes: "notifications alerts warnings",
       relatorios: "reports attendance presence modality rate",
       dados: "data spreadsheet table export xlsx",
+      atividade: "activity log history actions audit",
       roteiro: "roadmap progress version plan",
     },
   },
@@ -238,11 +241,13 @@ export const en = {
         invalidEvents: "Invalid session list in the backup.",
         invalidSessionNotes: "Invalid records list in the backup.",
         invalidNotifications: "Invalid notifications list in the backup.",
+        invalidActivity: "Invalid activity list in the backup.",
         invalidPreferences: "Invalid preferences in the backup.",
         duplicatePatientIds: "The backup has duplicate patient IDs.",
         duplicateEventIds: "The backup has duplicate session IDs.",
         duplicateSessionNoteIds: "The backup has duplicate record IDs.",
         duplicateNotificationIds: "The backup has duplicate notification IDs.",
+        duplicateActivityIds: "The backup has duplicate activity IDs.",
         invalidFileType: "Please select a .json file.",
         fileTooLarge: "The file is too large (max 8 MB).",
         readFailed: "Could not read the file.",
@@ -697,6 +702,57 @@ export const en = {
     favorite: "Favorite",
     forward: "Forward",
     reply: "Reply",
+  },
+  activity: {
+    title: "Activity",
+    subtitle: "History of actions taken in the clinic on this device.",
+    filters: {
+      all: "All",
+      patients: "Patients",
+      sessions: "Sessions",
+      records: "Chart",
+      payments: "Payments",
+    },
+    categories: {
+      patient: "Patient",
+      session: "Session",
+      record: "Chart",
+      payment: "Payment",
+    },
+    empty: {
+      title: "No activity yet",
+      description:
+        "Patient records, sessions, chart notes, and payments will show up here.",
+      filter: "No activity in this filter.",
+      searchTitle: "No results",
+      search: "No activity matches your search.",
+    },
+    searchPlaceholder: "Search by patient, action, or date…",
+    summaries: {
+      patientCreated: "Created patient {{patientName}}",
+      patientUpdated: "Updated patient {{patientName}}",
+      patientDeleted: "Deleted patient {{patientName}}",
+      sessionCreated: "Scheduled a session for {{patientName}} on {{when}}",
+      sessionUpdated: "Updated the session for {{patientName}} ({{when}})",
+      sessionRescheduled:
+        "Rescheduled the session for {{patientName}} to {{when}}",
+      sessionStatusChanged:
+        "Changed the session status for {{patientName}} from {{fromStatus}} to {{toStatus}}",
+      sessionDeleted: "Deleted the session for {{patientName}} ({{when}})",
+      recordCreated: "Added a chart note for {{patientName}}",
+      recordUpdated: "Updated a chart note for {{patientName}}",
+      recordDeleted: "Deleted a chart note for {{patientName}}",
+      paymentMarkedPaid:
+        "Marked the session for {{patientName}} as paid ({{when}})",
+      paymentMarkedUnpaid:
+        "Marked the session for {{patientName}} as unpaid ({{when}})",
+      paymentMarkedPaidBatch: "Marked {{count}} sessions as paid",
+      paymentOverdueManualOn: "Set manual overdue status for {{patientName}}",
+      paymentOverdueManualOff:
+        "Cleared manual overdue status for {{patientName}}",
+      paymentOverdueManualAuto:
+        "Restored automatic overdue control for {{patientName}}",
+    },
   },
   notifications: {
     title: "Notifications",

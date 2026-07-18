@@ -4,6 +4,7 @@ import {
   Calendar,
   CircleDollarSign,
   FileSpreadsheet,
+  History,
   Home,
   Inbox,
   Map,
@@ -65,6 +66,7 @@ const navGroups: NavGroup[] = [
     labelKey: "nav.groups.gestao",
     items: [
       { id: APP_PAGE_ID.dados, icon: FileSpreadsheet },
+      { id: APP_PAGE_ID.atividade, icon: History },
       ...(IS_ROADMAP_VISIBLE
         ? [{ id: APP_PAGE_ID.roteiro, icon: Map }]
         : []),

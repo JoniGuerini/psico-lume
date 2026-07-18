@@ -147,14 +147,14 @@ export function syncStaleEventStatuses(
   return changed ? next : events
 }
 
-/** Ao arrastar no grid: qualquer status vira remarcada, exceto realizada. */
+/** Ao arrastar no grid: só "faltou" vira "remarcada"; demais status permanecem. */
 export function resolveStatusAfterMove(
   currentStatus: SessionStatus
 ): SessionStatus {
-  if (currentStatus === "realizada") {
-    return currentStatus
+  if (currentStatus === "faltou") {
+    return "remarcada"
   }
-  return "remarcada"
+  return currentStatus
 }
 
 export function captureRescheduledFrom(event: CalendarEvent): RescheduledFrom {
@@ -174,7 +174,7 @@ export function resolveRescheduledFromAfterMove(
   currentStatus: SessionStatus,
   nextStatus: SessionStatus
 ): RescheduledFrom | undefined {
-  if (nextStatus !== "remarcada" || currentStatus === "realizada") {
+  if (nextStatus !== "remarcada" || currentStatus !== "faltou") {
     return event.rescheduledFrom
   }
   if (event.rescheduledFrom) {
