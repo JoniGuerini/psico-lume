@@ -339,10 +339,6 @@ export const en = {
         title: "App theme",
         description: "Shell, background, and accent colors across the app.",
       },
-      density: {
-        title: "Density",
-        description: "Adjust spacing in lists and tables.",
-      },
       toastPosition: {
         title: "Toast position",
         description:
@@ -365,16 +361,6 @@ export const en = {
       grafite: {
         label: "Grafite",
         description: "Warm blacks and grays with a discreet copper accent.",
-      },
-    },
-    density: {
-      comfortable: {
-        label: "Comfortable",
-        description: "More space between items.",
-      },
-      compact: {
-        label: "Compact",
-        description: "Show more content on screen.",
       },
     },
     toastUpdated: "Toast position updated",

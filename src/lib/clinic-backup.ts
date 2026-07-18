@@ -22,15 +22,10 @@ import {
   type NotificationPreferences,
 } from "@/lib/notification-preferences"
 import {
-  DEFAULT_DENSITY,
   DEFAULT_THEME,
-  isDensityId,
   isThemeId,
-  persistDensity,
   persistTheme,
-  readStoredDensity,
   readStoredTheme,
-  type DensityId,
   type ThemeId,
 } from "@/lib/theme"
 import {
@@ -138,7 +133,6 @@ type StoredNotification = {
 export type ClinicBackupPreferences = {
   notifications: NotificationPreferences
   theme: ThemeId
-  density: DensityId
   locale: Locale
   toastPosition: ToastPosition
 }
@@ -655,14 +649,7 @@ function sanitizePreferences(raw: unknown): ClinicBackupPreferences | string {
     return "preferences.theme inválido"
   }
 
-  let density: DensityId
-  if (raw.density === undefined) {
-    density = DEFAULT_DENSITY
-  } else if (typeof raw.density === "string" && isDensityId(raw.density)) {
-    density = raw.density
-  } else {
-    return "preferences.density inválido"
-  }
+  // density legado em backups antigos é ignorado (preferência removida)
 
   let locale: Locale
   if (raw.locale === undefined) {
@@ -688,7 +675,6 @@ function sanitizePreferences(raw: unknown): ClinicBackupPreferences | string {
   return {
     notifications,
     theme,
-    density,
     locale,
     toastPosition,
   }
@@ -704,7 +690,6 @@ export function buildClinicBackupFile(input: {
     ({
       notifications: readStoredNotificationPreferences(),
       theme: readStoredTheme(),
-      density: readStoredDensity(),
       locale: readStoredLocale(),
       toastPosition: readStoredToastPosition(),
     } satisfies ClinicBackupPreferences)
@@ -935,7 +920,6 @@ export function mergeClinicSnapshots(
 export function applyBackupPreferences(preferences: ClinicBackupPreferences) {
   persistNotificationPreferences(preferences.notifications)
   persistTheme(preferences.theme)
-  persistDensity(preferences.density)
   persistLocale(preferences.locale)
   persistToastPosition(preferences.toastPosition)
 }
@@ -955,7 +939,6 @@ export function currentBackupPreferences(): ClinicBackupPreferences {
   return {
     notifications: readStoredNotificationPreferences(),
     theme: readStoredTheme(),
-    density: readStoredDensity(),
     locale: readStoredLocale(),
     toastPosition: readStoredToastPosition(),
   }

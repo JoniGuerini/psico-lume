@@ -338,10 +338,6 @@ export const ptBR = {
         title: "Tema do aplicativo",
         description: "Cores do shell, fundo e destaques em todo o app.",
       },
-      density: {
-        title: "Densidade",
-        description: "Ajuste o espaçamento das listas e tabelas.",
-      },
       toastPosition: {
         title: "Posição dos toasts",
         description:
@@ -364,16 +360,6 @@ export const ptBR = {
       grafite: {
         label: "Grafite",
         description: "Pretos e cinzas quentes com destaque cobre discreto.",
-      },
-    },
-    density: {
-      comfortable: {
-        label: "Confortável",
-        description: "Mais respiro entre os itens.",
-      },
-      compact: {
-        label: "Compacto",
-        description: "Mostra mais conteúdo na tela.",
       },
     },
     toastUpdated: "Posição dos toasts atualizada",

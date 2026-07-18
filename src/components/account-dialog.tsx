@@ -39,7 +39,7 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
-import { densityPresets, themePresets } from "@/lib/design-system"
+import { themePresets } from "@/lib/design-system"
 import { useTheme } from "@/context/theme-provider"
 import { useTranslation } from "@/context/locale-provider"
 import { LOCALE_OPTIONS } from "@/lib/locale"
@@ -211,7 +211,7 @@ export function AccountDialog({
     setPreferences: setAllNotificationPreferences,
   } = useNotificationPreferences()
 
-  const { theme, density, setTheme, setDensity } = useTheme()
+  const { theme, setTheme } = useTheme()
   const { toast, position: toastPosition, setPosition: setToastPosition } =
     useToast()
 
@@ -368,8 +368,7 @@ export function AccountDialog({
     const { preferences } = backup
     setAllNotificationPreferences(preferences.notifications)
     setTheme(preferences.theme)
-    setDensity(preferences.density)
-    applyThemeToDocument(preferences.theme, preferences.density)
+    applyThemeToDocument(preferences.theme)
     setLocale(preferences.locale)
     setToastPosition(preferences.toastPosition)
     if (backup.profileName.trim().length >= 2) {
@@ -400,7 +399,6 @@ export function AccountDialog({
       preferences: {
         notifications: notificationPreferences,
         theme,
-        density,
         locale,
         toastPosition,
       },
@@ -1140,45 +1138,6 @@ export function AccountDialog({
                           </span>
                           <span className="text-xs text-muted-foreground">
                             {t(`account.themes.${preset.id}.description`)}
-                          </span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </Panel>
-
-                <Panel className="gap-4">
-                  <div className="flex flex-col gap-1">
-                    <h4 className="font-heading text-base font-semibold">
-                      {t("account.appearance.density.title")}
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      {t("account.appearance.density.description")}
-                    </p>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {densityPresets.map((option) => {
-                      const isActive = density === option.id
-                      return (
-                        <button
-                          key={option.id}
-                          type="button"
-                          onClick={() => setDensity(option.id)}
-                          className={cn(
-                            "flex flex-col items-start gap-1 rounded-xl border p-4 text-left transition-colors",
-                            isActive
-                              ? "border-primary bg-accent/50"
-                              : "border-border hover:bg-accent/50"
-                          )}
-                        >
-                          <span className="flex w-full items-center justify-between text-sm font-medium">
-                            {t(`account.density.${option.id}.label`)}
-                            {isActive ? (
-                              <Check className="size-4 text-primary" />
-                            ) : null}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {t(`account.density.${option.id}.description`)}
                           </span>
                         </button>
                       )

@@ -139,24 +139,3 @@ export const themePresets: ThemePreset[] = [
     },
   },
 ]
-
-export type DensityPresetId = "comfortable" | "compact"
-
-export type DensityPreset = {
-  id: DensityPresetId
-  label: string
-  description: string
-}
-
-export const densityPresets: DensityPreset[] = [
-  {
-    id: "comfortable",
-    label: "Confortável",
-    description: "Mais respiro entre os itens.",
-  },
-  {
-    id: "compact",
-    label: "Compacto",
-    description: "Mostra mais conteúdo na tela.",
-  },
-]

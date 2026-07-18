@@ -9,6 +9,10 @@ import { FinancePage } from "@/components/finance-page"
 import {
   GlobalSearchDialog,
 } from "@/components/global-search-dialog"
+import {
+  HeaderBreadcrumb,
+  type HeaderBreadcrumbItem,
+} from "@/components/header-breadcrumb"
 import { HomePage } from "@/components/home-page"
 import { InboxPage } from "@/components/inbox-page"
 import { LoginFormContent } from "@/components/login-page"
@@ -89,6 +93,9 @@ export function App() {
   )
   const [sessionFormDocked, setSessionFormDocked] = useState(false)
   const [sessionFormDockPreview, setSessionFormDockPreview] = useState(false)
+  const [headerBreadcrumb, setHeaderBreadcrumb] = useState<
+    HeaderBreadcrumbItem[] | null
+  >(null)
 
   useGlobalSearchShortcut(() => setSearchOpen(true))
 
@@ -100,6 +107,7 @@ export function App() {
   useEffect(() => {
     function onHashChange() {
       setActiveItemState(readAppPageFromLocation())
+      setHeaderBreadcrumb(null)
     }
     window.addEventListener("hashchange", onHashChange)
     return () => window.removeEventListener("hashchange", onHashChange)
@@ -116,6 +124,7 @@ export function App() {
     setCalendarDateFocus(null)
     setSessionFormDocked(false)
     setSessionFormDockPreview(false)
+    setHeaderBreadcrumb(null)
   }
 
   function handleViewAgendaWeek() {
@@ -125,6 +134,7 @@ export function App() {
     setOpenNewSession(false)
     setReceivablesFilter("todas")
     setCalendarView("semana")
+    setHeaderBreadcrumb(null)
     setActiveItem(APP_PAGE_ID.agenda)
   }
 
@@ -134,6 +144,7 @@ export function App() {
     setOpenNewPatient(false)
     setOpenNewSession(false)
     setReceivablesFilter("atraso")
+    setHeaderBreadcrumb(null)
     setActiveItem(APP_PAGE_ID.aReceber)
   }
 
@@ -145,6 +156,7 @@ export function App() {
     setReceivablesFilter("todas")
     setCalendarView("dia")
     setCalendarDateFocus(date.getTime())
+    setHeaderBreadcrumb(null)
     setActiveItem(APP_PAGE_ID.agenda)
   }
 
@@ -158,6 +170,7 @@ export function App() {
         setEmailFocus(null)
         setOpenNewPatient(false)
         setOpenNewSession(false)
+        setHeaderBreadcrumb(null)
         setActiveItem(APP_PAGE_ID.pacientes)
         break
       case "event":
@@ -168,6 +181,7 @@ export function App() {
         setPatientFocus(null)
         setOpenNewPatient(false)
         setOpenNewSession(false)
+        setHeaderBreadcrumb(null)
         setActiveItem(APP_PAGE_ID.caixaEntrada)
         break
       case "notification":
@@ -175,11 +189,13 @@ export function App() {
         setEmailFocus(null)
         setOpenNewPatient(false)
         setOpenNewSession(false)
+        setHeaderBreadcrumb(null)
         setActiveItem(APP_PAGE_ID.notificacoes)
         break
       case "quick":
         setPatientFocus(null)
         setEmailFocus(null)
+        setHeaderBreadcrumb(null)
         if (action.id === "new-patient") {
           setOpenNewSession(false)
           setOpenNewPatient(true)
@@ -216,6 +232,7 @@ export function App() {
     setSearchOpen(false)
     setSessionFormDocked(false)
     setSessionFormDockPreview(false)
+    setHeaderBreadcrumb(null)
   }
 
   function handleUpdateGuestProfile(name: string) {
@@ -329,7 +346,13 @@ export function App() {
                         orientation="vertical"
                         className="mr-2 data-[orientation=vertical]:h-4"
                       />
-                      <h1 className="text-base font-medium">{pageLabel(activeItem)}</h1>
+                      {headerBreadcrumb && headerBreadcrumb.length > 1 ? (
+                        <HeaderBreadcrumb items={headerBreadcrumb} />
+                      ) : (
+                        <h1 className="text-base font-medium">
+                          {pageLabel(activeItem)}
+                        </h1>
+                      )}
                       <div className="ml-auto flex items-center gap-1">
                         <Button
                           variant="outline"
@@ -348,7 +371,7 @@ export function App() {
                     </header>
                     <main
                       className={cn(
-                        "flex min-h-0 flex-1 flex-col p-4 gap-[var(--density-page-gap)]",
+                        "flex min-h-0 flex-1 flex-col gap-[var(--page-gap)] p-4",
                         FILL_VIEWPORT_PAGE_IDS.has(activeItem)
                           ? "overflow-hidden"
                           : "overflow-x-hidden overflow-y-auto overscroll-contain"
@@ -399,6 +422,7 @@ export function App() {
                           initialProfileTab={patientFocus?.tab ?? "overview"}
                           openNewPatient={openNewPatient}
                           onNewPatientOpenChange={setOpenNewPatient}
+                          onBreadcrumbChange={setHeaderBreadcrumb}
                         />
                       ) : null}
                       {activeItem === APP_PAGE_ID.financeiro ? (

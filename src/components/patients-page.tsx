@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useState, type ReactNode } from "react"
 import {
   CalendarPlus,
   Eye,
@@ -13,6 +13,7 @@ import { NewPatientDialog } from "@/components/new-patient-dialog"
 import { NewSessionNoteDialog } from "@/components/new-session-note-dialog"
 import { PatientProfile } from "@/components/patient-profile"
 import { ScheduleSessionDialog } from "@/components/schedule-session-dialog"
+import type { HeaderBreadcrumbItem } from "@/components/header-breadcrumb"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -38,6 +39,7 @@ import { useClinicData } from "@/context/clinic-data-provider"
 import { useTranslation } from "@/context/locale-provider"
 import { getInitials } from "@/data/patients"
 import type { Patient, PatientStatus } from "@/data/types"
+import { APP_PAGE_ID } from "@/lib/app-pages"
 import {
   getModalityLabel,
   getPatientStatusLabel,
@@ -258,13 +260,15 @@ export function PatientsPage({
   initialProfileTab = "overview",
   openNewPatient = false,
   onNewPatientOpenChange,
+  onBreadcrumbChange,
 }: {
   initialPatientId?: string | null
   initialProfileTab?: "overview" | "sessions" | "records"
   openNewPatient?: boolean
   onNewPatientOpenChange?: (open: boolean) => void
+  onBreadcrumbChange?: (items: HeaderBreadcrumbItem[] | null) => void
 } = {}) {
-  const { t } = useTranslation()
+  const { t, pageLabel } = useTranslation()
   const {
     patients,
     activeCount,
@@ -300,8 +304,34 @@ export function PatientsPage({
     setSelectedId(patientId)
   }
 
+  function closeProfile() {
+    setSelectedId(null)
+  }
+
   const selectedPatient =
     patients.find((patient) => patient.id === selectedId) ?? null
+
+  useEffect(() => {
+    if (!onBreadcrumbChange) return
+
+    if (selectedPatient) {
+      onBreadcrumbChange([
+        {
+          label: pageLabel(APP_PAGE_ID.pacientes),
+          onClick: closeProfile,
+        },
+        { label: selectedPatient.name },
+      ])
+    } else {
+      onBreadcrumbChange(null)
+    }
+  }, [onBreadcrumbChange, pageLabel, selectedPatient])
+
+  useEffect(() => {
+    return () => {
+      onBreadcrumbChange?.(null)
+    }
+  }, [onBreadcrumbChange])
 
   const schedulePatient =
     patients.find((patient) => patient.id === schedulePatientId) ?? null
@@ -333,8 +363,8 @@ export function PatientsPage({
         <PatientProfile
           patient={selectedPatient}
           initialTab={profileTab}
-          onBack={() => setSelectedId(null)}
-          onPatientDeleted={() => setSelectedId(null)}
+          onBack={closeProfile}
+          onPatientDeleted={closeProfile}
         />
       </div>
     )

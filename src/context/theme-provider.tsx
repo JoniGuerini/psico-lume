@@ -9,43 +9,33 @@ import {
 
 import {
   applyThemeToDocument,
-  DEFAULT_DENSITY,
   DEFAULT_THEME,
-  persistDensity,
   persistTheme,
-  readStoredDensity,
   readStoredTheme,
-  type DensityId,
   type ThemeId,
 } from "@/lib/theme"
 
 type ThemeContextValue = {
   theme: ThemeId
-  density: DensityId
   setTheme: (theme: ThemeId) => void
-  setDensity: (density: DensityId) => void
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeId>(() => readStoredTheme())
-  const [density, setDensityState] = useState<DensityId>(() => readStoredDensity())
 
   useEffect(() => {
-    applyThemeToDocument(theme, density)
+    applyThemeToDocument(theme)
     persistTheme(theme)
-    persistDensity(density)
-  }, [theme, density])
+  }, [theme])
 
   const value = useMemo(
     () => ({
       theme,
-      density,
       setTheme: setThemeState,
-      setDensity: setDensityState,
     }),
-    [theme, density]
+    [theme]
   )
 
   return (
@@ -61,4 +51,4 @@ export function useTheme() {
   return context
 }
 
-export { DEFAULT_DENSITY, DEFAULT_THEME, type DensityId, type ThemeId }
+export { DEFAULT_THEME, type ThemeId }
