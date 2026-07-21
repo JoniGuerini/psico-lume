@@ -155,6 +155,7 @@ export type ClinicBackupFile = {
     events: StoredCalendarEvent[]
     sessionNotes: SessionNote[]
     notifications: StoredNotification[]
+    activity: ActivityEntry[]
   }
   preferences: ClinicBackupPreferences
 }

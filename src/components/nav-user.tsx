@@ -33,10 +33,10 @@ export function NavUser({ user, onOpenAccount }: NavUserProps) {
           size="lg"
           tooltip={user.name}
           data-tour="nav-account"
-          className="group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:[&>div]:hidden"
+          className="group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!gap-0 group-data-[collapsible=icon]:!p-2 group-data-[collapsible=icon]:justify-center"
           onClick={onOpenAccount}
         >
-          <Avatar className="size-8 rounded-lg after:rounded-lg">
+          <Avatar className="size-8 shrink-0 rounded-lg after:rounded-lg">
             <AvatarImage
               src={user.avatar}
               alt={user.name}
@@ -44,9 +44,11 @@ export function NavUser({ user, onOpenAccount }: NavUserProps) {
             />
             <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
           </Avatar>
-          <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">{user.name}</span>
-            <span className="truncate text-xs text-sidebar-foreground/70">
+          <div className="grid min-w-0 flex-1 text-left text-sm leading-tight transition-[opacity,width] duration-200 ease-out group-data-[collapsible=icon]:pointer-events-none group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:min-w-0 group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:overflow-hidden">
+            <span className="truncate font-semibold whitespace-nowrap">
+              {user.name}
+            </span>
+            <span className="truncate text-xs whitespace-nowrap text-sidebar-foreground/70">
               {user.email}
             </span>
           </div>

@@ -153,7 +153,7 @@ export function AppSidebar({
                   />
                 </svg>
               </span>
-              <span className="truncate font-heading text-lg font-semibold group-data-[collapsible=icon]:hidden">
+              <span className="truncate font-heading text-lg font-semibold whitespace-nowrap transition-[opacity,width] duration-200 ease-out group-data-[collapsible=icon]:pointer-events-none group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:min-w-0 group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:overflow-hidden">
                 {t("nav.brand")}
               </span>
             </SidebarMenuButton>
