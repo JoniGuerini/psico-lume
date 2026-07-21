@@ -412,7 +412,7 @@ function SidebarGroup({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="sidebar-group"
       data-sidebar="group"
       className={cn(
-        "relative flex w-full min-w-0 flex-col p-2 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-0",
+        "relative flex w-full min-w-0 flex-col p-2 group-data-[collapsible=icon]:items-stretch group-data-[collapsible=icon]:p-0",
         className
       )}
       {...props}
@@ -432,7 +432,7 @@ function SidebarGroupLabel({
       data-slot="sidebar-group-label"
       data-sidebar="group-label"
       className={cn(
-        "flex h-8 shrink-0 items-center rounded-xl px-3 text-xs font-medium text-sidebar-foreground/70 ring-sidebar-ring outline-hidden transition-[margin,opacity] duration-200 ease-linear group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0 focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
+        "flex h-8 shrink-0 items-center rounded-xl px-3 text-xs font-medium text-sidebar-foreground/70 ring-sidebar-ring outline-hidden transition-[margin,opacity] duration-200 ease-linear group-data-[collapsible=icon]:hidden focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0",
         className
       )}
       {...props}
@@ -480,7 +480,7 @@ function SidebarMenu({ className, ...props }: React.ComponentProps<"ul">) {
       data-slot="sidebar-menu"
       data-sidebar="menu"
       className={cn(
-        "flex w-full min-w-0 flex-col gap-0.5 group-data-[collapsible=icon]:items-center",
+        "flex w-full min-w-0 flex-col gap-0.5 group-data-[collapsible=icon]:items-stretch",
         className
       )}
       {...props}
@@ -494,7 +494,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
       data-slot="sidebar-menu-item"
       data-sidebar="menu-item"
       className={cn(
-        "group/menu-item relative group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center",
+        "group/menu-item relative w-full group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center",
         className
       )}
       {...props}
