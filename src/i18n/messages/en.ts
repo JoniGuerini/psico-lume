@@ -180,7 +180,7 @@ export const en = {
         "End your guest account in this browser. This removes your profile and everything you added.",
       whatWillBeRemoved: "What will be removed",
       whatWillBeRemovedDescription:
-        "The account for {{name}} and all its data: patients, calendar, records, notifications, and locally saved preferences.",
+        "The account for {{name}} and all its data: patients, calendar, records, notifications, activity, and locally saved preferences.",
       dangerZone: "Danger zone",
       dangerZoneDescription:
         "This action is permanent and cannot be undone. You will be signed out and need to create a new guest account to use Lume again in this browser.",
@@ -197,7 +197,7 @@ export const en = {
         "The file contains sensitive clinical data. Store it safely and do not share it.",
       downloadTitle: "Download backup",
       downloadDescription:
-        "Creates a .json file with patients, calendar, records, and preferences.",
+        "Creates a .json file with patients, calendar, records, notifications, activity, and preferences.",
       downloadButton: "Download backup",
       restoreTitle: "Restore backup",
       restoreDescription:

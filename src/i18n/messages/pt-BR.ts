@@ -178,7 +178,7 @@ export const ptBR = {
         "Encerre sua conta convidada neste navegador. Esta ação apaga o perfil e tudo o que foi cadastrado.",
       whatWillBeRemoved: "O que será removido",
       whatWillBeRemovedDescription:
-        "A conta de {{name}} e todos os dados dela: pacientes, agenda, prontuários, notificações e preferências salvas localmente.",
+        "A conta de {{name}} e todos os dados dela: pacientes, agenda, prontuários, notificações, atividade e preferências salvas localmente.",
       dangerZone: "Zona de perigo",
       dangerZoneDescription:
         "Esta ação é permanente e não pode ser desfeita. Você será desconectado e precisará criar uma nova conta convidada para usar o Lume de novo neste navegador.",
@@ -195,7 +195,7 @@ export const ptBR = {
         "O arquivo contém dados clínicos sensíveis. Guarde-o em local seguro e não compartilhe.",
       downloadTitle: "Baixar backup",
       downloadDescription:
-        "Gera um arquivo .json com pacientes, agenda, prontuários e preferências.",
+        "Gera um arquivo .json com pacientes, agenda, prontuários, notificações, atividade e preferências.",
       downloadButton: "Baixar backup",
       restoreTitle: "Restaurar backup",
       restoreDescription:
