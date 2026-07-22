@@ -113,16 +113,16 @@ export function GlobalSearchDialog({
                     key={action.id}
                     type="button"
                     onClick={() => handleSelect(action.action)}
-                    className="flex items-center gap-3 rounded-2xl border border-border bg-primary px-3 py-3 text-left text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                    className="flex items-center gap-3 rounded-2xl border border-border bg-card px-3 py-3 text-left shadow-sm transition-colors hover:bg-accent/50"
                   >
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-background/40 text-foreground">
                       <action.icon className="size-4" />
                     </div>
                     <div className="flex min-w-0 flex-col gap-0.5">
                       <span className="truncate text-sm font-medium leading-none">
                         {action.title}
                       </span>
-                      <span className="truncate text-xs leading-snug text-primary-foreground/75">
+                      <span className="truncate text-xs leading-snug text-muted-foreground">
                         {action.subtitle}
                       </span>
                     </div>
