@@ -113,16 +113,16 @@ export function GlobalSearchDialog({
                     key={action.id}
                     type="button"
                     onClick={() => handleSelect(action.action)}
-                    className="flex items-center gap-3 rounded-2xl border border-border bg-card px-3 py-3 text-left shadow-sm transition-colors hover:bg-accent/50"
+                    className="flex items-center gap-3 rounded-2xl border border-border bg-primary px-3 py-3 text-left text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
                   >
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-background/40 text-foreground">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground">
                       <action.icon className="size-4" />
                     </div>
                     <div className="flex min-w-0 flex-col gap-0.5">
                       <span className="truncate text-sm font-medium leading-none">
                         {action.title}
                       </span>
-                      <span className="truncate text-xs leading-snug text-muted-foreground">
+                      <span className="truncate text-xs leading-snug text-primary-foreground/75">
                         {action.subtitle}
                       </span>
                     </div>
@@ -154,9 +154,9 @@ export function GlobalSearchDialog({
                               onSelect={() => handleSelect(item.action)}
                               className={cn(
                                 "mx-1.5 items-center gap-3 rounded-xl border border-transparent px-2.5 py-2.5 transition-colors",
-                                "data-[selected=true]:border-sidebar-primary/40 data-[selected=true]:bg-sidebar-primary/25 data-[selected=true]:text-foreground data-[selected=true]:shadow-sm",
-                                "data-[selected=true]:[&>div:first-child]:border-sidebar-primary/60 data-[selected=true]:[&>div:first-child]:bg-sidebar-primary/30 data-[selected=true]:[&>div:first-child]:text-sidebar-primary-foreground",
-                                "data-[selected=true]:[&_span.font-medium]:font-semibold data-[selected=true]:[&_span.text-muted-foreground]:text-foreground/75"
+                                "data-[selected=true]:border-border data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground data-[selected=true]:shadow-sm",
+                                "data-[selected=true]:[&>div:first-child]:border-border data-[selected=true]:[&>div:first-child]:bg-background/60",
+                                "data-[selected=true]:[&_span.font-medium]:font-semibold"
                               )}
                             >
                               <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-background/40 text-foreground">

@@ -11,6 +11,7 @@ import { SearchInput } from "@/components/ui/search-input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useTranslation } from "@/context/locale-provider"
 import { formatRelativeTimeLabel } from "@/lib/i18n-helpers"
+import { cn } from "@/lib/utils"
 
 type Filter = "todas" | "nao-lidas" | NotificationCategory
 
@@ -198,7 +199,12 @@ export function NotificationsPage() {
                       <li key={item.id}>
                         <Card
                           size="sm"
-                          className="p-0 transition-colors hover:bg-accent/50"
+                          className={cn(
+                            "p-0 transition-colors",
+                            item.read
+                              ? "border-transparent hover:bg-accent/50"
+                              : "border-border bg-accent"
+                          )}
                         >
                           <div className="group flex items-start gap-3 p-3">
                             <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-background/40 text-foreground">
@@ -206,7 +212,12 @@ export function NotificationsPage() {
                             </div>
                             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                               <div className="flex items-start gap-2">
-                                <span className="text-sm font-medium">
+                                <span
+                                  className={cn(
+                                    "text-sm",
+                                    item.read ? "font-medium" : "font-semibold"
+                                  )}
+                                >
                                   {item.title}
                                 </span>
                                 {!item.read ? (

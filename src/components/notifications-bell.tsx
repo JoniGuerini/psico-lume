@@ -103,15 +103,17 @@ export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
                 : t("notifications.emptyAll")}
             </p>
           ) : (
-            <div className="flex flex-col divide-y">
+            <div className="flex flex-col gap-2 p-3">
               {filtered.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => markAsRead(item.id)}
                   className={cn(
-                    "flex gap-3 px-3 py-3 text-left transition-colors hover:bg-accent/50",
-                    !item.read && "bg-accent/30"
+                    "flex gap-3 rounded-2xl border p-3 text-left transition-colors",
+                    item.read
+                      ? "border-transparent hover:bg-accent/50"
+                      : "border-border bg-accent"
                   )}
                 >
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-background/40 text-foreground">
@@ -119,7 +121,14 @@ export function NotificationsBell({ onViewAll }: NotificationsBellProps) {
                   </div>
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <div className="flex items-start gap-2">
-                      <span className="text-sm font-medium">{item.title}</span>
+                      <span
+                        className={cn(
+                          "text-sm",
+                          item.read ? "font-medium" : "font-semibold"
+                        )}
+                      >
+                        {item.title}
+                      </span>
                       {!item.read ? (
                         <span className="mt-1 ml-auto size-2 shrink-0 rounded-full bg-primary" />
                       ) : null}
