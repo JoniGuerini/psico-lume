@@ -119,8 +119,8 @@ export function HomePage({
 
   return (
     <div className="flex min-h-0 flex-1 w-full flex-col gap-4 overflow-y-auto overscroll-contain">
-      <Card className="flex flex-row flex-wrap items-center justify-between gap-4 border-transparent bg-sidebar p-6 text-sidebar-foreground">
-        <div className="flex flex-col gap-1">
+      <Card className="flex shrink-0 flex-row flex-wrap items-center justify-between gap-4 overflow-visible border-transparent bg-sidebar p-6 text-sidebar-foreground">
+        <div className="flex min-w-0 flex-col gap-1">
           <h2 className="text-2xl font-semibold tracking-tight text-surface-navy-heading">
             {greeting}
           </h2>
@@ -138,7 +138,10 @@ export function HomePage({
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" data-tour="home-stats">
+      <div
+        className="grid shrink-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        data-tour="home-stats"
+      >
         {stats.map((stat) => (
           <Card
             key={stat.label}
@@ -176,28 +179,28 @@ export function HomePage({
 
       <div
         className={cn(
-          "flex flex-col gap-4",
-          showAgendaEmpty && "min-h-0 flex-1"
+          "flex min-h-0 flex-col gap-4",
+          showAgendaEmpty && "flex-1"
         )}
       >
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex flex-col">
+        <div className="flex shrink-0 items-center justify-between gap-2">
+          <div className="flex min-w-0 flex-col">
             <h3 className="font-semibold">{t("home.todayAgenda")}</h3>
             <p className="text-sm text-muted-foreground">
               {t("home.agendaSubtitle", { day: weekdayName })}
             </p>
           </div>
-          <Button size="sm" onClick={onViewAgenda}>
+          <Button size="sm" className="shrink-0" onClick={onViewAgenda}>
             {t("home.viewAgenda")}
             <ArrowRight />
           </Button>
         </div>
 
         {patients.length === 0 ? (
-          <Card className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+          <Card className="flex min-h-48 flex-1 flex-col overflow-hidden p-0">
             <div className="flex min-h-0 flex-1 flex-col p-4">
               <div className="flex h-full w-full min-h-0 flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/40 p-10 text-center">
-                <div className="flex size-12 items-center justify-center rounded-full border border-border bg-background/40">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-background/40">
                   <Users className="size-5 text-muted-foreground" />
                 </div>
                 <div className="flex max-w-sm flex-col gap-1">
@@ -220,10 +223,10 @@ export function HomePage({
             </div>
           </Card>
         ) : todaysEvents.length === 0 ? (
-          <Card className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+          <Card className="flex min-h-48 flex-1 flex-col overflow-hidden p-0">
             <div className="flex min-h-0 flex-1 flex-col p-4">
               <div className="flex h-full w-full min-h-0 flex-1 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/40 p-10 text-center">
-                <div className="flex size-12 items-center justify-center rounded-full border border-border bg-background/40">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-background/40">
                   <CalendarDays className="size-5 text-muted-foreground" />
                 </div>
                 <div className="flex flex-col gap-1">
@@ -236,7 +239,7 @@ export function HomePage({
             </div>
           </Card>
         ) : (
-          <div className="flex flex-col gap-3">
+          <div className="flex shrink-0 flex-col gap-3">
             {todaysEvents.map((event) => {
               const patient = event.patientId
                 ? patientById.get(event.patientId)
