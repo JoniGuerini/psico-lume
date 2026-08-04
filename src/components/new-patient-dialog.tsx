@@ -534,76 +534,496 @@ export function NewPatientDialog({
         >
           <ScrollArea className="h-[calc(92vh-10rem)] shrink-0">
             <div className="flex flex-col gap-4 p-6">
-              <div className="grid gap-4 lg:grid-cols-2">
-                <FormSection title={t("patientForm.sections.personal")}>
-                  <div className="grid grid-cols-12 gap-3">
+              <FormSection title={t("patientForm.sections.personal")}>
+                <div className="grid grid-cols-12 gap-3">
+                  <Field
+                    label={t("patientForm.fields.fullName")}
+                    htmlFor="patient-name"
+                    required
+                    className="col-span-12 lg:col-span-5"
+                  >
+                    <Input
+                      id="patient-name"
+                      value={form.name}
+                      onChange={(event) => update("name", event.target.value)}
+                      placeholder={t("patientForm.placeholders.fullName")}
+                      className={fieldClass}
+                      autoComplete="lume-patient-name"
+                      autoFocus
+                    />
+                  </Field>
+                  <Field
+                    label={t("patientForm.fields.cpf")}
+                    htmlFor="patient-cpf"
+                    className="col-span-12 sm:col-span-6 lg:col-span-2"
+                  >
+                    <Input
+                      id="patient-cpf"
+                      value={form.cpf}
+                      onChange={(event) => handleCpfChange(event.target.value)}
+                      placeholder={t("patientForm.placeholders.cpf")}
+                      inputMode="numeric"
+                      maxLength={14}
+                      className={fieldClass}
+                      autoComplete="lume-patient-cpf"
+                    />
+                  </Field>
+                  <Field
+                    label={t("patientForm.fields.birthDate")}
+                    htmlFor="patient-birth"
+                    className="col-span-12 sm:col-span-6 lg:col-span-2"
+                  >
+                    <DatePicker
+                      id="patient-birth"
+                      value={form.birthDate}
+                      onChange={(next) => update("birthDate", next)}
+                      maxDate={new Date()}
+                      className={fieldClass}
+                    />
+                  </Field>
+                  <Field
+                    label={t("patientForm.fields.gender")}
+                    htmlFor="patient-gender"
+                    className="col-span-12 lg:col-span-3"
+                  >
+                    <Select
+                      onOpenChange={onSelectOpenChange}
+                      value={form.gender}
+                      onValueChange={(value) => update("gender", value)}
+                    >
+                      <SelectTrigger
+                        id="patient-gender"
+                        className={cn("w-full", fieldClass)}
+                      >
+                        <SelectValue
+                          placeholder={t("patientForm.selectPlaceholder")}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {genderOptions.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {getStoredOptionLabel(t, "gender", option)}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value={OTHER}>
+                          {t("patientForm.otherSpecify")}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  {form.gender === OTHER ? (
                     <Field
-                      label={t("patientForm.fields.fullName")}
-                      htmlFor="patient-name"
-                      required
+                      label={t("patientForm.fields.genderOther")}
+                      htmlFor="patient-gender-other"
                       className="col-span-12"
                     >
                       <Input
-                        id="patient-name"
-                        value={form.name}
-                        onChange={(event) => update("name", event.target.value)}
-                        placeholder={t("patientForm.placeholders.fullName")}
+                        id="patient-gender-other"
+                        value={form.genderOther}
+                        onChange={(event) =>
+                          update("genderOther", event.target.value)
+                        }
+                        placeholder={t("patientForm.genderOtherPlaceholder")}
                         className={fieldClass}
-                        autoComplete="lume-patient-name"
-                        autoFocus
                       />
                     </Field>
-                    <Field
-                      label={t("patientForm.fields.birthDate")}
-                      htmlFor="patient-birth"
-                      className="col-span-12 sm:col-span-6"
+                  ) : null}
+                </div>
+              </FormSection>
+
+              <FormSection title={t("patientForm.sections.schedules")}>
+                <Field
+                  label={t("patientForm.fields.sessionFrequency")}
+                  htmlFor="patient-session-frequency"
+                  className="max-w-md"
+                >
+                  <Select
+                    onOpenChange={onSelectOpenChange}
+                    value={form.sessionFrequency || undefined}
+                    onValueChange={(value) =>
+                      update("sessionFrequency", value as SessionFrequency)
+                    }
+                  >
+                    <SelectTrigger
+                      id="patient-session-frequency"
+                      className={cn("w-full", fieldClass)}
                     >
-                      <DatePicker
-                        id="patient-birth"
-                        value={form.birthDate}
-                        onChange={(next) => update("birthDate", next)}
-                        maxDate={new Date()}
-                        className={fieldClass}
+                      <SelectValue
+                        placeholder={t("patientForm.frequencyPlaceholder")}
                       />
-                    </Field>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sessionFrequencyOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {getSessionFrequencyLabel(t, option.value)} ·{" "}
+                          {t(
+                            `patientForm.frequencyDescriptions.${option.value}`
+                          )}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+
+                {schedules.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-border bg-background/40 px-4 py-5 text-sm text-muted-foreground">
+                    {t("patientForm.noSchedules")}
+                  </p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {schedules.map((row, index) => (
+                      <div
+                        key={index}
+                        className="grid grid-cols-1 items-end gap-3 rounded-xl border border-border bg-background/40 p-3 sm:grid-cols-[1.4fr_1fr_1fr_1.2fr_auto]"
+                      >
+                        <Field label={t("patientForm.fields.weekday")}>
+                          <Select
+                            onOpenChange={onSelectOpenChange}
+                            value={row.weekday || undefined}
+                            onValueChange={(value) =>
+                              updateSchedule(index, "weekday", value)
+                            }
+                          >
+                            <SelectTrigger className={cn("w-full", fieldClass)}>
+                              <SelectValue
+                                placeholder={t(
+                                  "patientForm.weekdayPlaceholder"
+                                )}
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {weekdayValues.map((value) => (
+                                <SelectItem key={value} value={value}>
+                                  {getWeekdayLabel(t, value)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </Field>
+                        <Field label={t("patientForm.fields.time")}>
+                          <TimePicker
+                            value={row.time}
+                            onChange={(next) =>
+                              updateSchedule(index, "time", next)
+                            }
+                            placeholder={t("patientForm.placeholders.time")}
+                            startHour={6}
+                            endHour={22}
+                            className={fieldClass}
+                          />
+                        </Field>
+                        <Field label={t("patientForm.fields.duration")}>
+                          <Select
+                            onOpenChange={onSelectOpenChange}
+                            value={row.duration || undefined}
+                            onValueChange={(value) =>
+                              updateSchedule(index, "duration", value)
+                            }
+                          >
+                            <SelectTrigger className={cn("w-full", fieldClass)}>
+                              <SelectValue
+                                placeholder={t(
+                                  "patientForm.placeholders.duration"
+                                )}
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {durations.map((duration) => (
+                                <SelectItem
+                                  key={duration}
+                                  value={String(duration)}
+                                >
+                                  {t("patientForm.durationMinutes", {
+                                    count: duration,
+                                  })}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </Field>
+                        <Field label={t("patientForm.fields.modality")}>
+                          <Select
+                            onOpenChange={onSelectOpenChange}
+                            value={row.modality || undefined}
+                            onValueChange={(value) =>
+                              updateSchedule(
+                                index,
+                                "modality",
+                                value as PatientModality
+                              )
+                            }
+                          >
+                            <SelectTrigger className={cn("w-full", fieldClass)}>
+                              <SelectValue
+                                placeholder={t(
+                                  "patientForm.selectPlaceholder"
+                                )}
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {scheduleModalityValues.map((value) => (
+                                <SelectItem key={value} value={value}>
+                                  {getModalityLabel(t, value)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </Field>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => removeSchedule(index)}
+                          aria-label={t("patientForm.removeSchedule")}
+                        >
+                          <Trash2 />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="self-start border-border bg-background/40 hover:bg-accent/50"
+                  onClick={addSchedule}
+                >
+                  <Plus />
+                  {t("patientForm.addSchedule")}
+                </Button>
+              </FormSection>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                <FormSection title={t("patientForm.sections.contact")}>
+                  <div className="grid grid-cols-12 gap-3">
                     <Field
-                      label={t("patientForm.fields.cpf")}
-                      htmlFor="patient-cpf"
+                      label={t("patientForm.fields.mobile")}
+                      htmlFor="patient-phone"
                       className="col-span-12 sm:col-span-6"
                     >
                       <Input
-                        id="patient-cpf"
-                        value={form.cpf}
+                        id="patient-phone"
+                        type="tel"
+                        value={form.phone}
                         onChange={(event) =>
-                          handleCpfChange(event.target.value)
+                          handlePhoneChange("phone", event.target.value)
                         }
-                        placeholder={t("patientForm.placeholders.cpf")}
+                        placeholder={t("patientForm.placeholders.mobile")}
                         inputMode="numeric"
-                        maxLength={14}
+                        maxLength={15}
                         className={fieldClass}
-                        autoComplete="lume-patient-cpf"
+                        autoComplete="lume-patient-phone"
                       />
                     </Field>
                     <Field
-                      label={t("patientForm.fields.gender")}
-                      htmlFor="patient-gender"
+                      label={t("patientForm.fields.email")}
+                      htmlFor="patient-email"
+                      className="col-span-12 sm:col-span-6"
+                    >
+                      <Input
+                        id="patient-email"
+                        type="email"
+                        value={form.email}
+                        onChange={(event) =>
+                          update("email", event.target.value)
+                        }
+                        placeholder={t("patientForm.placeholders.email")}
+                        className={fieldClass}
+                        autoComplete="lume-patient-email"
+                      />
+                    </Field>
+                    <Field
+                      label={t("patientForm.fields.contactName")}
+                      htmlFor="patient-contact-name"
+                      className="col-span-12"
+                    >
+                      <Input
+                        id="patient-contact-name"
+                        value={form.contactName}
+                        onChange={(event) =>
+                          update("contactName", event.target.value)
+                        }
+                        placeholder={t("patientForm.placeholders.optional")}
+                        className={fieldClass}
+                        autoComplete="lume-patient-contact-name"
+                      />
+                    </Field>
+                    <Field
+                      label={t("patientForm.fields.contactPhone")}
+                      htmlFor="patient-contact-phone"
+                      className="col-span-12 sm:col-span-6"
+                    >
+                      <Input
+                        id="patient-contact-phone"
+                        type="tel"
+                        value={form.contactPhone}
+                        onChange={(event) =>
+                          handlePhoneChange(
+                            "contactPhone",
+                            event.target.value
+                          )
+                        }
+                        placeholder={t("patientForm.placeholders.mobile")}
+                        inputMode="numeric"
+                        maxLength={15}
+                        className={fieldClass}
+                        autoComplete="lume-patient-contact-phone"
+                      />
+                    </Field>
+                    <Field
+                      label={t("patientForm.fields.contactRelation")}
+                      htmlFor="patient-contact-relation"
+                      className="col-span-12 sm:col-span-6"
+                    >
+                      <Input
+                        id="patient-contact-relation"
+                        value={form.contactRelation}
+                        onChange={(event) =>
+                          update("contactRelation", event.target.value)
+                        }
+                        placeholder={t(
+                          "patientForm.placeholders.contactRelation"
+                        )}
+                        className={fieldClass}
+                      />
+                    </Field>
+                  </div>
+                </FormSection>
+
+                <FormSection title={t("patientForm.sections.therapy")}>
+                  <div className="grid grid-cols-12 gap-3">
+                    <Field
+                      label={t("patientForm.fields.complaint")}
+                      htmlFor="patient-complaint"
+                      className="col-span-12 sm:col-span-6"
+                    >
+                      <Input
+                        id="patient-complaint"
+                        value={form.complaint}
+                        onChange={(event) =>
+                          update("complaint", event.target.value)
+                        }
+                        placeholder={t("patientForm.placeholders.complaint")}
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label={t("patientForm.fields.patientType")}
+                      htmlFor="patient-type"
+                      className="col-span-12 sm:col-span-6"
+                    >
+                      <Select
+                        onOpenChange={onSelectOpenChange}
+                        value={form.patientType || undefined}
+                        onValueChange={(value) =>
+                          update("patientType", value)
+                        }
+                      >
+                        <SelectTrigger
+                          id="patient-type"
+                          className={cn("w-full", fieldClass)}
+                        >
+                          <SelectValue
+                            placeholder={t("patientForm.selectPlaceholder")}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {patientTypes.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {getStoredOptionLabel(t, "patientType", type)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    <Field
+                      label={t("patientForm.fields.status")}
+                      htmlFor="patient-status"
+                      className="col-span-12 sm:col-span-6"
+                    >
+                      <Select
+                        onOpenChange={onSelectOpenChange}
+                        value={form.status || undefined}
+                        onValueChange={(value) =>
+                          update("status", value as PatientStatus)
+                        }
+                      >
+                        <SelectTrigger
+                          id="patient-status"
+                          className={cn("w-full", fieldClass)}
+                        >
+                          <SelectValue
+                            placeholder={t("patientForm.selectPlaceholder")}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {patientStatusValues.map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {getPatientStatusLabel(t, status)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    <Field
+                      label={t("patientForm.fields.therapyStart")}
+                      htmlFor="patient-therapy-start"
+                      className="col-span-12 sm:col-span-6"
+                    >
+                      <DatePicker
+                        id="patient-therapy-start"
+                        value={form.therapyStart}
+                        onChange={(next) => update("therapyStart", next)}
+                        className={fieldClass}
+                      />
+                    </Field>
+                    <Field
+                      label={t("patientForm.fields.sessionPrice")}
+                      htmlFor="patient-price"
+                      className="col-span-12 sm:col-span-6"
+                    >
+                      <div className="relative">
+                        <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
+                          R$
+                        </span>
+                        <Input
+                          id="patient-price"
+                          value={form.price}
+                          onChange={(event) =>
+                            update("price", event.target.value)
+                          }
+                          placeholder={t(
+                            "patientForm.placeholders.sessionPrice"
+                          )}
+                          inputMode="decimal"
+                          className={cn("pl-9", fieldClass)}
+                        />
+                      </div>
+                    </Field>
+                    <Field
+                      label={t("patientForm.fields.referral")}
+                      htmlFor="patient-referral"
                       className="col-span-12"
                     >
                       <Select
                         onOpenChange={onSelectOpenChange}
-                        value={form.gender}
-                        onValueChange={(value) => update("gender", value)}
+                        value={form.referral}
+                        onValueChange={(value) => update("referral", value)}
                       >
                         <SelectTrigger
-                          id="patient-gender"
+                          id="patient-referral"
                           className={cn("w-full", fieldClass)}
                         >
-                          <SelectValue placeholder={t("patientForm.selectPlaceholder")} />
+                          <SelectValue
+                            placeholder={t("patientForm.referralPlaceholder")}
+                          />
                         </SelectTrigger>
                         <SelectContent>
-                          {genderOptions.map((option) => (
+                          {referralOptions.map((option) => (
                             <SelectItem key={option} value={option}>
-                              {getStoredOptionLabel(t, "gender", option)}
+                              {getStoredOptionLabel(t, "referral", option)}
                             </SelectItem>
                           ))}
                           <SelectItem value={OTHER}>
@@ -612,19 +1032,21 @@ export function NewPatientDialog({
                         </SelectContent>
                       </Select>
                     </Field>
-                    {form.gender === OTHER ? (
+                    {form.referral === OTHER ? (
                       <Field
-                        label={t("patientForm.fields.genderOther")}
-                        htmlFor="patient-gender-other"
+                        label={t("patientForm.fields.referralOther")}
+                        htmlFor="patient-referral-other"
                         className="col-span-12"
                       >
                         <Input
-                          id="patient-gender-other"
-                          value={form.genderOther}
+                          id="patient-referral-other"
+                          value={form.referralOther}
                           onChange={(event) =>
-                            update("genderOther", event.target.value)
+                            update("referralOther", event.target.value)
                           }
-                          placeholder={t("patientForm.genderOtherPlaceholder")}
+                          placeholder={t(
+                            "patientForm.referralOtherPlaceholder"
+                          )}
                           className={fieldClass}
                         />
                       </Field>
@@ -632,12 +1054,15 @@ export function NewPatientDialog({
                   </div>
                 </FormSection>
 
-                <FormSection title={t("patientForm.sections.address")}>
+                <FormSection
+                  title={t("patientForm.sections.address")}
+                  className="lg:col-span-2"
+                >
                   <div className="grid grid-cols-12 gap-3">
                     <Field
                       label={t("patientForm.fields.cep")}
                       htmlFor="patient-cep"
-                      className="col-span-4 sm:col-span-3"
+                      className="col-span-4 sm:col-span-3 lg:col-span-2"
                     >
                       <div className="relative">
                         <Input
@@ -678,7 +1103,7 @@ export function NewPatientDialog({
                     <Field
                       label={t("patientForm.fields.street")}
                       htmlFor="patient-street"
-                      className="col-span-8 sm:col-span-9"
+                      className="col-span-8 sm:col-span-9 lg:col-span-4"
                     >
                       <Input
                         id="patient-street"
@@ -726,7 +1151,7 @@ export function NewPatientDialog({
                     <Field
                       label={t("patientForm.fields.neighborhood")}
                       htmlFor="patient-neighborhood"
-                      className="col-span-12 sm:col-span-6"
+                      className="col-span-12 sm:col-span-6 lg:col-span-4"
                     >
                       <Input
                         id="patient-neighborhood"
@@ -734,7 +1159,9 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           update("neighborhood", event.target.value)
                         }
-                        placeholder={t("patientForm.placeholders.neighborhood")}
+                        placeholder={t(
+                          "patientForm.placeholders.neighborhood"
+                        )}
                         className={fieldClass}
                         autoComplete="lume-patient-neighborhood"
                       />
@@ -742,12 +1169,14 @@ export function NewPatientDialog({
                     <Field
                       label={t("patientForm.fields.city")}
                       htmlFor="patient-city"
-                      className="col-span-8 sm:col-span-9"
+                      className="col-span-8 sm:col-span-9 lg:col-span-3"
                     >
                       <Input
                         id="patient-city"
                         value={form.city}
-                        onChange={(event) => update("city", event.target.value)}
+                        onChange={(event) =>
+                          update("city", event.target.value)
+                        }
                         placeholder={t("patientForm.placeholders.city")}
                         className={fieldClass}
                         autoComplete="lume-patient-city"
@@ -756,7 +1185,7 @@ export function NewPatientDialog({
                     <Field
                       label={t("patientForm.fields.state")}
                       htmlFor="patient-state"
-                      className="col-span-4 sm:col-span-3"
+                      className="col-span-4 sm:col-span-3 lg:col-span-1"
                     >
                       <Input
                         id="patient-state"
@@ -764,7 +1193,9 @@ export function NewPatientDialog({
                         onChange={(event) =>
                           update(
                             "state",
-                            event.target.value.toUpperCase().replace(/[^A-Z]/g, "")
+                            event.target.value
+                              .toUpperCase()
+                              .replace(/[^A-Z]/g, "")
                           )
                         }
                         placeholder={t("patientForm.placeholders.state")}
@@ -775,394 +1206,7 @@ export function NewPatientDialog({
                     </Field>
                   </div>
                 </FormSection>
-
-                <FormSection title={t("patientForm.sections.contact")} className="lg:col-span-1">
-                  <div className="grid grid-cols-12 gap-3">
-                    <Field
-                      label={t("patientForm.fields.mobile")}
-                      htmlFor="patient-phone"
-                      className="col-span-12 sm:col-span-6"
-                    >
-                      <Input
-                        id="patient-phone"
-                        type="tel"
-                        value={form.phone}
-                        onChange={(event) =>
-                          handlePhoneChange("phone", event.target.value)
-                        }
-                        placeholder={t("patientForm.placeholders.mobile")}
-                        inputMode="numeric"
-                        maxLength={15}
-                        className={fieldClass}
-                        autoComplete="lume-patient-phone"
-                      />
-                    </Field>
-                    <Field
-                      label={t("patientForm.fields.email")}
-                      htmlFor="patient-email"
-                      className="col-span-12 sm:col-span-6"
-                    >
-                      <Input
-                        id="patient-email"
-                        type="email"
-                        value={form.email}
-                        onChange={(event) => update("email", event.target.value)}
-                        placeholder={t("patientForm.placeholders.email")}
-                        className={fieldClass}
-                        autoComplete="lume-patient-email"
-                      />
-                    </Field>
-                    <Field
-                      label={t("patientForm.fields.contactName")}
-                      htmlFor="patient-contact-name"
-                      className="col-span-12"
-                    >
-                      <Input
-                        id="patient-contact-name"
-                        value={form.contactName}
-                        onChange={(event) =>
-                          update("contactName", event.target.value)
-                        }
-                        placeholder={t("patientForm.placeholders.optional")}
-                        className={fieldClass}
-                        autoComplete="lume-patient-contact-name"
-                      />
-                    </Field>
-                    <Field
-                      label={t("patientForm.fields.contactPhone")}
-                      htmlFor="patient-contact-phone"
-                      className="col-span-12 sm:col-span-6"
-                    >
-                      <Input
-                        id="patient-contact-phone"
-                        type="tel"
-                        value={form.contactPhone}
-                        onChange={(event) =>
-                          handlePhoneChange("contactPhone", event.target.value)
-                        }
-                        placeholder={t("patientForm.placeholders.mobile")}
-                        inputMode="numeric"
-                        maxLength={15}
-                        className={fieldClass}
-                        autoComplete="lume-patient-contact-phone"
-                      />
-                    </Field>
-                    <Field
-                      label={t("patientForm.fields.contactRelation")}
-                      htmlFor="patient-contact-relation"
-                      className="col-span-12 sm:col-span-6"
-                    >
-                      <Input
-                        id="patient-contact-relation"
-                        value={form.contactRelation}
-                        onChange={(event) =>
-                          update("contactRelation", event.target.value)
-                        }
-                        placeholder={t("patientForm.placeholders.contactRelation")}
-                        className={fieldClass}
-                      />
-                    </Field>
-                  </div>
-                </FormSection>
-
-                <FormSection title={t("patientForm.sections.therapy")} className="lg:col-span-1">
-                  <div className="grid grid-cols-12 gap-3">
-                    <Field
-                      label={t("patientForm.fields.complaint")}
-                      htmlFor="patient-complaint"
-                      className="col-span-12 sm:col-span-6"
-                    >
-                      <Input
-                        id="patient-complaint"
-                        value={form.complaint}
-                        onChange={(event) =>
-                          update("complaint", event.target.value)
-                        }
-                        placeholder={t("patientForm.placeholders.complaint")}
-                        className={fieldClass}
-                      />
-                    </Field>
-                    <Field
-                      label={t("patientForm.fields.patientType")}
-                      htmlFor="patient-type"
-                      className="col-span-12 sm:col-span-6"
-                    >
-                      <Select
-                        onOpenChange={onSelectOpenChange}
-                        value={form.patientType || undefined}
-                        onValueChange={(value) => update("patientType", value)}
-                      >
-                        <SelectTrigger
-                          id="patient-type"
-                          className={cn("w-full", fieldClass)}
-                        >
-                          <SelectValue placeholder={t("patientForm.selectPlaceholder")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {patientTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {getStoredOptionLabel(t, "patientType", type)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field
-                      label={t("patientForm.fields.status")}
-                      htmlFor="patient-status"
-                      className="col-span-12 sm:col-span-6"
-                    >
-                      <Select
-                        onOpenChange={onSelectOpenChange}
-                        value={form.status || undefined}
-                        onValueChange={(value) =>
-                          update("status", value as PatientStatus)
-                        }
-                      >
-                        <SelectTrigger
-                          id="patient-status"
-                          className={cn("w-full", fieldClass)}
-                        >
-                          <SelectValue placeholder={t("patientForm.selectPlaceholder")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {patientStatusValues.map((status) => (
-                            <SelectItem key={status} value={status}>
-                              {getPatientStatusLabel(t, status)}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    <Field
-                      label={t("patientForm.fields.therapyStart")}
-                      htmlFor="patient-therapy-start"
-                      className="col-span-12 sm:col-span-6"
-                    >
-                      <DatePicker
-                        id="patient-therapy-start"
-                        value={form.therapyStart}
-                        onChange={(next) => update("therapyStart", next)}
-                        className={fieldClass}
-                      />
-                    </Field>
-                    <Field
-                      label={t("patientForm.fields.sessionPrice")}
-                      htmlFor="patient-price"
-                      className="col-span-12 sm:col-span-6"
-                    >
-                      <div className="relative">
-                        <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
-                          R$
-                        </span>
-                        <Input
-                          id="patient-price"
-                          value={form.price}
-                          onChange={(event) =>
-                            update("price", event.target.value)
-                          }
-                          placeholder={t("patientForm.placeholders.sessionPrice")}
-                          inputMode="decimal"
-                          className={cn("pl-9", fieldClass)}
-                        />
-                      </div>
-                    </Field>
-                    <Field
-                      label={t("patientForm.fields.referral")}
-                      htmlFor="patient-referral"
-                      className="col-span-12"
-                    >
-                      <Select
-                        onOpenChange={onSelectOpenChange}
-                        value={form.referral}
-                        onValueChange={(value) => update("referral", value)}
-                      >
-                        <SelectTrigger
-                          id="patient-referral"
-                          className={cn("w-full", fieldClass)}
-                        >
-                          <SelectValue placeholder={t("patientForm.referralPlaceholder")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {referralOptions.map((option) => (
-                            <SelectItem key={option} value={option}>
-                              {getStoredOptionLabel(t, "referral", option)}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value={OTHER}>
-                            {t("patientForm.otherSpecify")}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                    {form.referral === OTHER ? (
-                      <Field
-                        label={t("patientForm.fields.referralOther")}
-                        htmlFor="patient-referral-other"
-                        className="col-span-12"
-                      >
-                        <Input
-                          id="patient-referral-other"
-                          value={form.referralOther}
-                          onChange={(event) =>
-                            update("referralOther", event.target.value)
-                          }
-                          placeholder={t("patientForm.referralOtherPlaceholder")}
-                          className={fieldClass}
-                        />
-                      </Field>
-                    ) : null}
-                  </div>
-                </FormSection>
               </div>
-
-              <FormSection title={t("patientForm.sections.schedules")}>
-                <Field
-                  label={t("patientForm.fields.sessionFrequency")}
-                  htmlFor="patient-session-frequency"
-                  className="max-w-md"
-                >
-                  <Select
-                    onOpenChange={onSelectOpenChange}
-                    value={form.sessionFrequency || undefined}
-                    onValueChange={(value) =>
-                      update("sessionFrequency", value as SessionFrequency)
-                    }
-                  >
-                    <SelectTrigger
-                      id="patient-session-frequency"
-                      className={cn("w-full", fieldClass)}
-                    >
-                      <SelectValue placeholder={t("patientForm.frequencyPlaceholder")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sessionFrequencyOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {getSessionFrequencyLabel(t, option.value)} ·{" "}
-                          {t(`patientForm.frequencyDescriptions.${option.value}`)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-
-                {schedules.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-border bg-background/40 px-4 py-5 text-sm text-muted-foreground">
-                    {t("patientForm.noSchedules")}
-                  </p>
-                ) : (
-                  <div className="flex flex-col gap-2">
-                    {schedules.map((row, index) => (
-                      <div
-                        key={index}
-                        className="grid grid-cols-1 items-end gap-3 rounded-xl border border-border bg-background/40 p-3 sm:grid-cols-[1.4fr_1fr_1fr_1.2fr_auto]"
-                      >
-                        <Field label={t("patientForm.fields.weekday")}>
-                          <Select
-                            onOpenChange={onSelectOpenChange}
-                            value={row.weekday || undefined}
-                            onValueChange={(value) =>
-                              updateSchedule(index, "weekday", value)
-                            }
-                          >
-                            <SelectTrigger className={cn("w-full", fieldClass)}>
-                              <SelectValue placeholder={t("patientForm.weekdayPlaceholder")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {weekdayValues.map((value) => (
-                                <SelectItem key={value} value={value}>
-                                  {getWeekdayLabel(t, value)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </Field>
-                        <Field label={t("patientForm.fields.time")}>
-                          <TimePicker
-                            value={row.time}
-                            onChange={(next) =>
-                              updateSchedule(index, "time", next)
-                            }
-                            placeholder={t("patientForm.placeholders.time")}
-                            startHour={6}
-                            endHour={22}
-                            className={fieldClass}
-                          />
-                        </Field>
-                        <Field label={t("patientForm.fields.duration")}>
-                          <Select
-                            onOpenChange={onSelectOpenChange}
-                            value={row.duration || undefined}
-                            onValueChange={(value) =>
-                              updateSchedule(index, "duration", value)
-                            }
-                          >
-                            <SelectTrigger className={cn("w-full", fieldClass)}>
-                              <SelectValue placeholder={t("patientForm.placeholders.duration")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {durations.map((duration) => (
-                                <SelectItem
-                                  key={duration}
-                                  value={String(duration)}
-                                >
-                                  {t("patientForm.durationMinutes", {
-                                    count: duration,
-                                  })}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </Field>
-                        <Field label={t("patientForm.fields.modality")}>
-                          <Select
-                            onOpenChange={onSelectOpenChange}
-                            value={row.modality || undefined}
-                            onValueChange={(value) =>
-                              updateSchedule(
-                                index,
-                                "modality",
-                                value as PatientModality
-                              )
-                            }
-                          >
-                            <SelectTrigger className={cn("w-full", fieldClass)}>
-                              <SelectValue placeholder={t("patientForm.selectPlaceholder")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {scheduleModalityValues.map((value) => (
-                                <SelectItem key={value} value={value}>
-                                  {getModalityLabel(t, value)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </Field>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => removeSchedule(index)}
-                          aria-label={t("patientForm.removeSchedule")}
-                        >
-                          <Trash2 />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="self-start border-border bg-background/40 hover:bg-accent/50"
-                  onClick={addSchedule}
-                >
-                  <Plus />
-                  {t("patientForm.addSchedule")}
-                </Button>
-              </FormSection>
 
               <FormSection title={t("patientForm.sections.notes")}>
                 <Textarea
