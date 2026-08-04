@@ -37,6 +37,7 @@ import {
 } from "@/lib/activity-log"
 import { buildDemoActivityLog } from "@/data/activity-demo"
 import { buildClinicAlerts } from "@/lib/clinic-alerts"
+import { estimateWeeklyRevenue } from "@/lib/finance-metrics"
 import {
   linkNotesToUniquePatientDayEvents,
   unlinkNotesFromDeletedEvent,
@@ -341,11 +342,7 @@ export function ClinicDataProvider({
     [patients]
   )
   const weekRevenue = useMemo(
-    () =>
-      getScheduledPatients(patients).reduce(
-        (sum, patient) => sum + parsePrice(patient.price),
-        0
-      ),
+    () => estimateWeeklyRevenue(patients),
     [patients]
   )
   const overduePatients = useMemo(

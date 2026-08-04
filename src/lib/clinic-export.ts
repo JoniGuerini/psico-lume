@@ -12,7 +12,7 @@ import {
   type ExportSheetKey,
   type StyledSheetConfig,
 } from "@/lib/clinic-export-xlsx"
-import { getMonthlyFinanceSummary, getPatientBillableSummary } from "@/lib/finance-metrics"
+import { getMonthlyFinanceSummary, getPatientBillableSummary, estimateMonthlySessionCount, estimateMonthlyForecastRevenue } from "@/lib/finance-metrics"
 import {
   formatLocaleCurrency,
   formatLocaleDate,
@@ -42,8 +42,6 @@ import {
   isSessionPaymentOverdue,
   isSessionUnpaid,
 } from "@/lib/session-payment"
-
-const WEEKS_PER_MONTH = 4.33
 
 export type ClinicExportData = {
   patients: Patient[]
@@ -356,7 +354,8 @@ function buildFinancePatientRows(
       .filter((event) => isSessionPaymentOverdue(event))
       .reduce((sum, event) => sum + getSessionAmount(event, patient), 0)
     const monthlyForecast = scheduled.some((item) => item.id === patient.id)
-      ? Math.round(sessionPrice * WEEKS_PER_MONTH)
+      ? Math.round(sessionPrice * estimateMonthlySessionCount(patient) * 100) /
+        100
       : 0
     const overdue = isPatientOverdue(patient, events)
 
@@ -437,16 +436,7 @@ function buildSummaryRows(
   const overduePatients = patients.filter((patient) =>
     isPatientOverdue(patient, events, anchor)
   )
-  const scheduled = patients.filter(
-    (patient) =>
-      patient.status === "ativo" &&
-      (patient.sessionTime || (patient.schedules?.length ?? 0) > 0)
-  )
-  const weeklyRevenue = scheduled.reduce(
-    (sum, patient) => sum + parsePrice(patient.price),
-    0
-  )
-  const monthlyForecast = Math.round(weeklyRevenue * WEEKS_PER_MONTH)
+  const monthlyForecast = estimateMonthlyForecastRevenue(patients)
   const realizedSessions = events.filter(
     (event) => getEventStatus(event) === "realizada"
   ).length

@@ -28,7 +28,7 @@ export const en = {
       agenda: "Session calendar",
       pacientes: "List and profiles",
       financeiro: "Revenue and overdue accounts",
-      aReceber: "Completed sessions awaiting payment",
+      aReceber: "Billable sessions awaiting payment",
       notificacoes: "Clinic alerts",
       relatorios: "Attendance and revenue by modality",
       dados: "Spreadsheet view of clinic data",
@@ -660,7 +660,7 @@ export const en = {
     stats: {
       totalPatients: "Total patients",
       weekSessions: "Sessions this week",
-      weekRevenue: "Revenue this week",
+      weekRevenue: "Weekly forecast",
       overduePayments: "Overdue payments",
       activeHint: "{{count}} active",
       scheduledHint: "{{count}} scheduled",
@@ -669,7 +669,7 @@ export const en = {
       sessionsToday_plural: "{{count}} sessions today",
       inTreatmentHint: "{{count}} in treatment",
       recurringSessions: "Recurring sessions",
-      forecast: "Forecast",
+      forecast: "Based on schedules and frequency",
       overdueSession: "{{count}} session",
       overdueSessions: "{{count}} sessions",
     },
@@ -834,11 +834,11 @@ export const en = {
   receivables: {
     title: "Receivables",
     subtitle:
-      "Completed sessions not yet paid — mark as received when payment is confirmed.",
+      "Billable sessions not yet paid (completed or no-shows without notice) — mark as received when payment is confirmed.",
     markVisiblePaid: "Mark visible as paid",
     stats: {
       openSessions: "Open sessions",
-      openSessionsHint: "Completed without payment",
+      openSessionsHint: "Billable without payment",
       totalDue: "Total due",
       totalDueHint: "Consolidated amount",
       overdue: "Overdue",
@@ -855,10 +855,10 @@ export const en = {
     listed_other: "{{count}} sessions listed",
     empty: {
       overdueTitle: "No overdue sessions",
-      overdueDescription: "Nothing pending for more than a week.",
+      overdueDescription: "Nothing pending after the session month.",
       allTitle: "All caught up",
       allDescription:
-        "When a session is completed and unpaid, it appears in this list.",
+        "When a billable session is still unpaid, it appears in this list.",
     },
     badges: {
       overdue: "Overdue",
@@ -889,6 +889,7 @@ export const en = {
       receivedPct: "{{pct}}% of billed",
       pending: "Receivable",
       overdueAmount: "{{amount}} overdue",
+      overdueAmountTotal: "{{amount}} overdue in total",
       onTrack: "On track",
       avgTicket: "Average ticket",
       forecastSessions: "{{count}} forecast sessions",
@@ -900,7 +901,7 @@ export const en = {
       revenueByModality: "Revenue by modality",
       revenueByModalityHint: "Monthly split by session type",
       topPatients: "Revenue by patient",
-      topPatientsHint: "Patients with highest accumulated billing",
+      topPatientsHint: "Highest billable revenue in the current month",
       sessionsPerSession: "{{count}} sessions · {{price}}/session",
     },
     chartLabels: {

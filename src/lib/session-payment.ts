@@ -17,8 +17,18 @@ function startOfDay(date: Date) {
 }
 
 export function parseAmountInput(value: string): number {
-  const normalized = value.replace(/[^\d,.-]/g, "").replace(",", ".")
-  const parsed = Number.parseFloat(normalized)
+  const cleaned = value.replace(/[^\d,.-]/g, "").trim()
+  if (!cleaned) return 0
+
+  // Formato BR: "1.180,00" / "1180,50" — vírgula é decimal; pontos são milhar.
+  if (cleaned.includes(",")) {
+    const normalized = cleaned.replace(/\./g, "").replace(",", ".")
+    const parsed = Number.parseFloat(normalized)
+    return Number.isFinite(parsed) ? parsed : 0
+  }
+
+  // Formato simples / US: "1180.50" ou "1180"
+  const parsed = Number.parseFloat(cleaned)
   return Number.isFinite(parsed) ? parsed : 0
 }
 
@@ -33,7 +43,7 @@ export function getSessionAmount(
   event: CalendarEvent,
   patient?: Patient
 ): number {
-  if (event.amount != null && event.amount > 0) {
+  if (event.amount != null) {
     return event.amount
   }
   if (patient) {
@@ -54,11 +64,13 @@ export function seedAbsenceWithNotice(patientId: string, date: Date): boolean {
   return seed === 0
 }
 
-/** Cobrança: realizada, ou faltou sem aviso prévio. */
+/** Cobrança: realizada, faltou sem aviso, ou remarcada com dívida preservada. */
 export function isBillableSession(event: CalendarEvent): boolean {
   const status = getEventStatus(event)
   if (status === "realizada") return true
   if (status === "faltou") return event.absenceWithNotice !== true
+  // Remarcada após falta sem aviso: mantém a cobrança do no-show.
+  if (status === "remarcada") return event.amount != null
   return false
 }
 
@@ -128,6 +140,22 @@ export function resolveEventBilling(
   }
 
   if (!isBillableSession(nextEvent)) {
+    const previousStatus = getEventStatus(previous)
+    const wasUnpaidNoShow =
+      previousStatus === "faltou" &&
+      previous.absenceWithNotice !== true &&
+      previous.paid !== true
+
+    // Remarcar uma falta cobrável não apaga a dívida do no-show.
+    if (nextStatus === "remarcada" && wasUnpaidNoShow) {
+      return {
+        paid: false,
+        amount:
+          previous.amount ?? (patient ? parsePrice(patient.price) : 0),
+        absenceWithNotice: undefined,
+      }
+    }
+
     return { paid: undefined, amount: undefined, absenceWithNotice }
   }
 

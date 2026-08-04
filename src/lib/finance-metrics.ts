@@ -1,11 +1,20 @@
 import type { CalendarEvent, Patient } from "@/data/types"
 import {
+  getPatientRecurrenceSlots,
+  getScheduledPatients,
+  parsePrice,
+} from "@/data/patients"
+import { normalizeSessionFrequency } from "@/lib/session-frequency"
+import {
   getOverdueSessionRows,
   getSessionAmount,
   isBillableSession,
   isSessionPaid,
+  isSessionPaymentOverdue,
   isSessionUnpaid,
 } from "@/lib/session-payment"
+
+const WEEKS_PER_MONTH = 4.33
 
 function isSameMonth(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()
@@ -13,6 +22,47 @@ function isSameMonth(a: Date, b: Date) {
 
 function patientByIdMap(patients: Patient[]) {
   return new Map(patients.map((patient) => [patient.id, patient]))
+}
+
+function roundMoney(value: number) {
+  return Math.round(value * 100) / 100
+}
+
+/** Sessões/mês estimadas a partir da frequência e dos horários recorrentes. */
+export function estimateMonthlySessionCount(patient: Patient): number {
+  const slots = Math.max(1, getPatientRecurrenceSlots(patient).length)
+  const freq = normalizeSessionFrequency(patient.sessionFrequency)
+
+  switch (freq) {
+    case "1x-mes":
+      return 1
+    case "2x-mes":
+      return 2
+    case "3x-mes":
+      return 3
+    case "4x-mes":
+      return slots * WEEKS_PER_MONTH
+  }
+}
+
+/** Previsão semanal: preço × sessões/mês ÷ 4.33. */
+export function estimateWeeklyRevenue(patients: Patient[]): number {
+  return roundMoney(
+    getScheduledPatients(patients).reduce((sum, patient) => {
+      const price = parsePrice(patient.price)
+      return sum + (price * estimateMonthlySessionCount(patient)) / WEEKS_PER_MONTH
+    }, 0)
+  )
+}
+
+export function estimateMonthlyForecastRevenue(patients: Patient[]): number {
+  return roundMoney(
+    getScheduledPatients(patients).reduce((sum, patient) => {
+      return (
+        sum + parsePrice(patient.price) * estimateMonthlySessionCount(patient)
+      )
+    }, 0)
+  )
 }
 
 export function getBillableEventsInMonth(
@@ -30,7 +80,8 @@ export function sumSessionAmounts(
 ) {
   const patientMap = patientByIdMap(patients)
   return sessionEvents.reduce(
-    (sum, event) => sum + getSessionAmount(event, patientMap.get(event.patientId)),
+    (sum, event) =>
+      sum + getSessionAmount(event, patientMap.get(event.patientId)),
     0
   )
 }
@@ -38,29 +89,35 @@ export function sumSessionAmounts(
 export function getMonthlyFinanceSummary(
   events: CalendarEvent[],
   patients: Patient[],
-  month: Date = new Date()
+  month: Date = new Date(),
+  today = new Date()
 ) {
   const billable = getBillableEventsInMonth(events, month)
-  const received = sumSessionAmounts(
-    billable.filter(isSessionPaid),
-    patients
-  )
-  const pending = sumSessionAmounts(
-    billable.filter(isSessionUnpaid),
-    patients
-  )
+  const unpaidInMonth = billable.filter(isSessionUnpaid)
+  const received = sumSessionAmounts(billable.filter(isSessionPaid), patients)
+  const pending = sumSessionAmounts(unpaidInMonth, patients)
   const total = received + pending
-  const overdueRows = getOverdueSessionRows(events, patients)
-  const overdue = overdueRows.reduce((sum, row) => sum + row.amount, 0)
+
+  const overdueInMonth = sumSessionAmounts(
+    unpaidInMonth.filter((event) => isSessionPaymentOverdue(event, today)),
+    patients
+  )
+  const overdueRows = getOverdueSessionRows(events, patients, today)
+  const overdueTotal = overdueRows.reduce((sum, row) => sum + row.amount, 0)
 
   return {
     total,
     received,
     pending,
-    overdue,
+    /** Atrasos entre as sessões do mês (escopo alinhado ao pending). */
+    overdueInMonth,
+    /** Todas as sessões em atraso, de qualquer mês. */
+    overdueTotal,
+    /** @deprecated use overdueTotal — mantido para compat. */
+    overdue: overdueTotal,
     billableCount: billable.length,
     paidCount: billable.filter(isSessionPaid).length,
-    unpaidCount: billable.filter(isSessionUnpaid).length,
+    unpaidCount: unpaidInMonth.length,
   }
 }
 
@@ -75,7 +132,11 @@ export function getMonthlyRevenueHistory(
   const patientMap = patientByIdMap(patients)
 
   return Array.from({ length: months }, (_, index) => {
-    const date = new Date(now.getFullYear(), now.getMonth() - (months - 1 - index), 1)
+    const date = new Date(
+      now.getFullYear(),
+      now.getMonth() - (months - 1 - index),
+      1
+    )
     const label = date
       .toLocaleDateString(intl, { month: "short" })
       .replace(".", "")
@@ -90,7 +151,7 @@ export function getMonthlyRevenueHistory(
 
     return {
       month: label.charAt(0).toUpperCase() + label.slice(1),
-      receita: Math.round(receita),
+      receita: roundMoney(receita),
     }
   })
 }
@@ -106,13 +167,13 @@ export function getRevenueByModality(
   for (const event of getBillableEventsInMonth(events, month)) {
     const patient = patientMap.get(event.patientId)
     if (!patient) continue
-    const key = patient.modality
+    const key = event.modality ?? patient.modality
     totals.set(key, (totals.get(key) ?? 0) + getSessionAmount(event, patient))
   }
 
   return Array.from(totals.entries()).map(([modality, value]) => ({
     modality,
-    value: Math.round(value),
+    value: roundMoney(value),
   }))
 }
 
@@ -139,26 +200,37 @@ export function getPatientBillableSummary(
 export function getTopPatientsByRevenue(
   events: CalendarEvent[],
   patients: Patient[],
-  limit = 6
+  limit = 6,
+  month?: Date
 ) {
   const patientMap = patientByIdMap(patients)
-  const totals = new Map<string, number>()
+  const totals = new Map<string, { total: number; billableCount: number }>()
+  const scoped = month
+    ? getBillableEventsInMonth(events, month)
+    : events.filter(isBillableSession)
 
-  for (const event of events.filter(isBillableSession)) {
+  for (const event of scoped) {
     const patient = patientMap.get(event.patientId)
     if (!patient) continue
-    totals.set(
-      event.patientId,
-      (totals.get(event.patientId) ?? 0) + getSessionAmount(event, patient)
-    )
+    const current = totals.get(event.patientId) ?? {
+      total: 0,
+      billableCount: 0,
+    }
+    totals.set(event.patientId, {
+      total: current.total + getSessionAmount(event, patient),
+      billableCount: current.billableCount + 1,
+    })
   }
 
   return Array.from(totals.entries())
-    .map(([patientId, total]) => ({
+    .map(([patientId, stats]) => ({
       patient: patientMap.get(patientId)!,
-      total,
+      total: stats.total,
+      billableCount: stats.billableCount,
     }))
     .filter((row) => row.patient)
     .sort((a, b) => b.total - a.total)
     .slice(0, limit)
 }
+
+export { WEEKS_PER_MONTH }

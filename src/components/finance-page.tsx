@@ -35,10 +35,12 @@ import { useTranslation } from "@/context/locale-provider"
 import { getScheduledPatients, parsePrice } from "@/data/patients"
 import type { PatientModality } from "@/data/types"
 import {
+  estimateWeeklyRevenue,
   getMonthlyFinanceSummary,
   getMonthlyRevenueHistory,
   getRevenueByModality,
   getTopPatientsByRevenue,
+  WEEKS_PER_MONTH,
 } from "@/lib/finance-metrics"
 import {
   formatLocaleCurrency,
@@ -47,8 +49,6 @@ import {
 } from "@/lib/i18n-helpers"
 import { LUME_PAGE_CONTENT_CLASS } from "@/lib/design-system"
 import { cn } from "@/lib/utils"
-
-const WEEKS_PER_MONTH = 4.33
 
 const modalityColor: Record<PatientModality, string> = {
   presencial: "var(--chart-1)",
@@ -100,15 +100,16 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
   )
 
   const weeklyRevenue = useMemo(
-    () =>
-      scheduled.reduce((sum, patient) => sum + parsePrice(patient.price), 0),
-    [scheduled]
+    () => estimateWeeklyRevenue(patients),
+    [patients]
   )
 
   const avgTicket = monthlySummary.billableCount
-    ? Math.round(monthlySummary.total / monthlySummary.billableCount)
+    ? Math.round(
+        (monthlySummary.total / monthlySummary.billableCount) * 100
+      ) / 100
     : scheduled.length
-      ? Math.round(weeklyRevenue / scheduled.length)
+      ? Math.round((weeklyRevenue / scheduled.length) * 100) / 100
       : 0
 
   const history = useMemo(
@@ -140,7 +141,7 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
   const modalityTotal = modalityData.reduce((sum, item) => sum + item.value, 0)
 
   const topPatients = useMemo(
-    () => getTopPatientsByRevenue(events, patients),
+    () => getTopPatientsByRevenue(events, patients, 6, new Date()),
     [events, patients]
   )
 
@@ -168,12 +169,18 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
           label: t("finance.kpis.pending"),
           value: formatLocaleCurrency(monthlySummary.pending, locale),
           hint:
-            monthlySummary.overdue > 0
-              ? t("finance.kpis.overdueAmount", {
-                  amount: formatLocaleCurrency(monthlySummary.overdue, locale),
+            monthlySummary.overdueTotal > 0
+              ? t("finance.kpis.overdueAmountTotal", {
+                  amount: formatLocaleCurrency(
+                    monthlySummary.overdueTotal,
+                    locale
+                  ),
                 })
               : t("finance.kpis.onTrack"),
-          tone: monthlySummary.overdue > 0 ? ("attention" as const) : undefined,
+          tone:
+            monthlySummary.overdueTotal > 0
+              ? ("attention" as const)
+              : undefined,
         },
         {
           label: t("finance.kpis.avgTicket"),
@@ -391,7 +398,7 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
           </p>
         </div>
         <div className="divide-y divide-border">
-          {topPatients.map(({ patient, total }, index) => (
+          {topPatients.map(({ patient, total, billableCount }, index) => (
             <div key={patient.id} className="flex items-center gap-3 py-3">
               <span className="w-5 text-center font-heading text-sm font-semibold text-muted-foreground">
                 {index + 1}
@@ -402,7 +409,7 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {t("finance.charts.sessionsPerSession", {
-                    count: patient.sessions,
+                    count: billableCount,
                     price: formatLocaleCurrency(parsePrice(patient.price), locale),
                   })}
                 </span>

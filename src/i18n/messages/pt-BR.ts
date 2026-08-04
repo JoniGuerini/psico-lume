@@ -26,7 +26,7 @@ export const ptBR = {
       agenda: "Calendário de sessões",
       pacientes: "Lista e perfis",
       financeiro: "Receita e inadimplência",
-      aReceber: "Sessões realizadas sem pagamento",
+      aReceber: "Sessões cobráveis sem pagamento",
       notificacoes: "Alertas da clínica",
       relatorios: "Comparecimento e receita por modalidade",
       dados: "Visão em planilha dos dados da clínica",
@@ -660,7 +660,7 @@ export const ptBR = {
     stats: {
       totalPatients: "Total de pacientes",
       weekSessions: "Sessões da semana",
-      weekRevenue: "Receita da semana",
+      weekRevenue: "Previsão da semana",
       overduePayments: "Pagamentos em atraso",
       activeHint: "{{count}} ativos",
       scheduledHint: "{{count}} agendados",
@@ -669,7 +669,7 @@ export const ptBR = {
       sessionsToday_plural: "{{count}} sessões hoje",
       inTreatmentHint: "{{count}} em acompanhamento",
       recurringSessions: "Sessões recorrentes",
-      forecast: "Prevista",
+      forecast: "Com base nos horários e frequência",
       overdueSession: "{{count}} sessão",
       overdueSessions: "{{count}} sessões",
     },
@@ -833,11 +833,11 @@ export const ptBR = {
   receivables: {
     title: "Sessões a receber",
     subtitle:
-      "Sessões realizadas ainda não pagas — marque como recebidas quando o pagamento for confirmado.",
+      "Sessões cobráveis ainda não pagas (realizadas ou faltas sem aviso) — marque como recebidas quando o pagamento for confirmado.",
     markVisiblePaid: "Marcar visíveis como pagas",
     stats: {
       openSessions: "Sessões em aberto",
-      openSessionsHint: "Realizadas sem pagamento",
+      openSessionsHint: "Cobráveis sem pagamento",
       totalDue: "Total a receber",
       totalDueHint: "Valor consolidado",
       overdue: "Em atraso",
@@ -854,10 +854,11 @@ export const ptBR = {
     listed_other: "{{count}} sessões listadas",
     empty: {
       overdueTitle: "Nenhuma sessão em atraso",
-      overdueDescription: "Não há pendências com mais de uma semana.",
+      overdueDescription:
+        "Não há pendências após o mês da sessão.",
       allTitle: "Tudo recebido por aqui",
       allDescription:
-        "Quando uma sessão for realizada e ainda não paga, ela aparece nesta lista.",
+        "Quando uma sessão cobrável ainda não estiver paga, ela aparece nesta lista.",
     },
     badges: {
       overdue: "Em atraso",
@@ -888,6 +889,7 @@ export const ptBR = {
       receivedPct: "{{pct}}% do faturado",
       pending: "A receber",
       overdueAmount: "{{amount}} em atraso",
+      overdueAmountTotal: "{{amount}} em atraso no total",
       onTrack: "Em dia",
       avgTicket: "Ticket médio",
       forecastSessions: "{{count}} sessões previstas",
@@ -899,7 +901,7 @@ export const ptBR = {
       revenueByModality: "Receita por modalidade",
       revenueByModalityHint: "Distribuição mensal por tipo de sessão",
       topPatients: "Faturamento por paciente",
-      topPatientsHint: "Acompanhamentos com maior faturamento acumulado",
+      topPatientsHint: "Maiores faturamentos cobráveis no mês atual",
       sessionsPerSession: "{{count}} sessões · {{price}}/sessão",
     },
     chartLabels: {
