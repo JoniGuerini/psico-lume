@@ -25,7 +25,7 @@ export function SessionStatusLegend({
         className
       )}
     >
-      <span className="text-xs font-medium text-muted-foreground">
+      <span className="hidden text-xs font-medium text-muted-foreground sm:inline">
         {t("calendar.legend")}
       </span>
       {sessionStatusOptions.map((status) => {
@@ -34,7 +34,7 @@ export function SessionStatusLegend({
           <div key={status} className="flex items-center gap-1.5">
             <span
               className={cn(
-                "relative h-3.5 w-8 shrink-0 overflow-hidden rounded-sm border shadow-sm",
+                "relative h-3.5 w-6 shrink-0 overflow-hidden rounded-sm border shadow-sm sm:w-8",
                 config.block
               )}
               aria-hidden

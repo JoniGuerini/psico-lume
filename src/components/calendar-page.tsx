@@ -1029,39 +1029,42 @@ export function CalendarPage({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <Card className="flex flex-row flex-wrap items-center gap-3 p-3">
-        <div className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full border border-border bg-background/40 p-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={t("calendar.previous")}
-            onClick={() => navigate(-1)}
-            className="size-7 rounded-full hover:bg-accent/50"
-          >
-            <ChevronLeft />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={t("calendar.next")}
-            onClick={() => navigate(1)}
-            className="size-7 rounded-full hover:bg-accent/50"
-          >
-            <ChevronRight />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={goToToday}
-            className="h-7 rounded-full hover:bg-accent/50"
-          >
-            {t("calendar.today")}
-          </Button>
-        </div>
-        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-between gap-x-6 gap-y-3">
-          <h2 className="shrink-0 text-lg font-semibold">{title}</h2>
-          <SessionStatusLegend inline />
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
+      <Card className="flex flex-col gap-3 p-3 xl:flex-row xl:items-center xl:gap-4">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:gap-3">
+          <div className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full border border-border bg-background/40 p-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={t("calendar.previous")}
+              onClick={() => navigate(-1)}
+              className="size-7 rounded-full hover:bg-accent/50"
+            >
+              <ChevronLeft />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={t("calendar.next")}
+              onClick={() => navigate(1)}
+              className="size-7 rounded-full hover:bg-accent/50"
+            >
+              <ChevronRight />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToToday}
+              className="h-7 rounded-full hover:bg-accent/50"
+            >
+              {t("calendar.today")}
+            </Button>
+          </div>
+
+          <h2 className="min-w-0 flex-1 basis-[min(100%,14rem)] truncate text-lg font-semibold sm:basis-auto sm:flex-none">
+            {title}
+          </h2>
+
+          <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto xl:ml-0">
             <Tabs
               value={view}
               onValueChange={(value) =>
@@ -1070,7 +1073,9 @@ export function CalendarPage({
             >
               <TabsList className="border border-border bg-background/40">
                 <TabsTrigger value="mes">{t("calendar.views.month")}</TabsTrigger>
-                <TabsTrigger value="semana">{t("calendar.views.week")}</TabsTrigger>
+                <TabsTrigger value="semana">
+                  {t("calendar.views.week")}
+                </TabsTrigger>
                 <TabsTrigger value="dia">{t("calendar.views.day")}</TabsTrigger>
               </TabsList>
             </Tabs>
@@ -1086,13 +1091,18 @@ export function CalendarPage({
               onFormDockedChange={handleFormDockedChange}
               onDockGhostChange={handleDockGhostChange}
             >
-              <Button size="sm">
+              <Button size="sm" className="shrink-0">
                 <CalendarPlus />
-                {t("calendar.newSession")}
+                <span className="max-[380px]:hidden">{t("calendar.newSession")}</span>
               </Button>
             </NewSessionPopover>
           </div>
         </div>
+
+        <SessionStatusLegend
+          inline
+          className="max-xl:border-t max-xl:border-border/50 max-xl:pt-3 xl:ml-auto xl:shrink-0"
+        />
       </Card>
 
       <div className="flex min-h-0 flex-1 gap-4">
