@@ -14,6 +14,10 @@ import {
   XAxis,
 } from "recharts"
 
+import {
+  FinanceDetailsButton,
+  FinanceDetailsPanel,
+} from "@/components/finance-details-panel"
 import { NoPatientsEmptyPage } from "@/components/no-patients-empty-page"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
@@ -47,7 +51,6 @@ import {
   formatLocaleCurrencyCompact,
   getModalityLabel,
 } from "@/lib/i18n-helpers"
-import { LUME_PAGE_CONTENT_CLASS } from "@/lib/design-system"
 import { cn } from "@/lib/utils"
 
 const modalityColor: Record<PatientModality, string> = {
@@ -60,6 +63,7 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
   const { t, locale } = useTranslation()
   const { patients, events } = useClinicData()
   const [range, setRange] = useState("12")
+  const [view, setView] = useState<"dashboard" | "details">("dashboard")
 
   const revenueConfig = useMemo(
     () =>
@@ -211,25 +215,32 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
   }
 
   return (
-    <div className={LUME_PAGE_CONTENT_CLASS}>
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+      {view === "details" ? (
+        <FinanceDetailsPanel onBack={() => setView("dashboard")} />
+      ) : (
+        <div className="flex min-h-0 w-full flex-1 flex-col gap-4 overflow-y-auto overscroll-contain">
+      <div className="flex shrink-0 flex-wrap items-end justify-between gap-3">
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-semibold">{t("finance.title")}</h2>
           <p className="text-sm text-muted-foreground">{t("finance.subtitle")}</p>
         </div>
-        <Select value={range} onValueChange={setRange}>
-          <SelectTrigger className="border-0 bg-muted shadow-none hover:bg-muted/80 sm:w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="3">{t("finance.range.months3")}</SelectItem>
-            <SelectItem value="6">{t("finance.range.months6")}</SelectItem>
-            <SelectItem value="12">{t("finance.range.months12")}</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap items-center gap-2">
+          <Select value={range} onValueChange={setRange}>
+            <SelectTrigger className="border-0 bg-muted shadow-none hover:bg-muted/80 sm:w-44">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="3">{t("finance.range.months3")}</SelectItem>
+              <SelectItem value="6">{t("finance.range.months6")}</SelectItem>
+              <SelectItem value="12">{t("finance.range.months12")}</SelectItem>
+            </SelectContent>
+          </Select>
+          <FinanceDetailsButton onClick={() => setView("details")} />
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid shrink-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => (
           <Card key={kpi.label} className="gap-2 p-5">
             <span className="text-sm text-muted-foreground">{kpi.label}</span>
@@ -263,7 +274,7 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
         ))}
       </div>
 
-      <Card className="gap-4 p-6">
+      <Card className="shrink-0 gap-4 p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-col">
             <h3 className="font-heading text-base font-semibold">
@@ -331,7 +342,7 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
         </ChartContainer>
       </Card>
 
-      <Card className="gap-4 p-6">
+      <Card className="shrink-0 gap-4 p-6">
           <div className="flex flex-col">
             <h3 className="font-heading text-base font-semibold">
               {t("finance.charts.revenueByModality")}
@@ -388,7 +399,7 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
           </div>
         </Card>
 
-      <Card className="gap-0 p-6">
+      <Card className="shrink-0 gap-0 p-6">
         <div className="flex flex-col pb-2">
           <h3 className="font-heading text-base font-semibold">
             {t("finance.charts.topPatients")}
@@ -424,6 +435,8 @@ export function FinancePage({ onNewPatient }: { onNewPatient?: () => void } = {}
           ))}
         </div>
       </Card>
+        </div>
+      )}
     </div>
   )
 }

@@ -877,6 +877,45 @@ export const ptBR = {
     subtitle: "Acompanhe seus ganhos, recebimentos e indicadores da clínica.",
     emptyDescription:
       "Cadastre seu primeiro paciente para começar a acompanhar receitas e indicadores financeiros.",
+    details: {
+      open: "Ver dados",
+      back: "Voltar ao painel",
+      title: "Dados do financeiro",
+      description:
+        "Conferência das sessões cobráveis e totais por paciente em {{month}} — a mesma base dos indicadores desta página.",
+      monthPlaceholder: "Mês",
+      monthCurrent: "Mês atual",
+      monthPrevious: "Mês anterior",
+      billableCount: "Sessões cobráveis",
+      tabs: {
+        sessions: "Por sessão",
+        patients: "Por paciente",
+        periods: "Por período",
+      },
+      columns: {
+        date: "Data",
+        period: "Período",
+        patient: "Paciente",
+        status: "Status",
+        modality: "Modalidade",
+        amount: "Valor",
+        payment: "Pagamento",
+        sessions: "Sessões",
+        received: "Recebido",
+        pending: "A receber",
+        total: "Total",
+      },
+      payment: {
+        paid: "Pago",
+        pending: "Pendente",
+        overdue: "Em atraso",
+      },
+      overdueSessions:
+        "{{count}} em atraso",
+      emptySessions: "Nenhuma sessão cobrável neste mês.",
+      emptyPatients: "Nenhum paciente com sessão cobrável neste mês.",
+      emptyPeriods: "Nenhum dia com sessão cobrável neste mês.",
+    },
     range: {
       months3: "Últimos 3 meses",
       months6: "Últimos 6 meses",
